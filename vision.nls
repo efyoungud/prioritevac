@@ -1,0 +1,7 @@
+to see
+  set vision
+  patches in-cone (10 - (5 * smoke)) (120 - (100 * smoke))
+
+;; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
+;; cone of radius 10 ahead of itself
+end

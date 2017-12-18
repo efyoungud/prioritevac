@@ -1,0 +1,31 @@
+to evac
+ask people [seekexit
+    fd speed
+    if not inside-building? [die] ; not really working because people don't really exit
+    if ticks > 60 [seekegress]]
+end
+
+to seekexit
+  ifelse visited? = false
+    [closestvisible]
+    [closest] ;the logic is that people with previous acquaintance with the bar will know where the exits are
+end
+
+to seekegress
+  ask people [face min-one-of closeexit [distance myself]] ;exits at 60 21 15 and 17, windows aren't exits but should be
+end
+
+to-report closeexit
+  report min-one-of exits [distance myself]
+  report min-one-of windows [distance myself]
+end
+
+to closestvisible
+  ifelse age < 40 ;this is a placeholder until 'visible' works
+    [face exit 17] ;this is a placeholder until I can figure out hot to make it visible. might need to be long code?
+    [face exit 60]
+end
+
+to closest
+  ask people [ face min-one-of exits [distance myself]]
+end
