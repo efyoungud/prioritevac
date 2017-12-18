@@ -1,14 +1,14 @@
 Issues to solve:
-<ol><li>Improved smoke model (Roni)</li>
-<li>Visibility and making it dependent on smoke</li>
-<li>Translating leader-follower model into NetLogo</li>
-<li>Exit preference</li>
-<li>Windows become exits as a matter of urgency + proximity + time</li>
-<li>Jieshiâ€™s equations influence direction but not the primary determinant of direction (patch in-radius?) (Eileen)</li>
-<li>Set speed to decrease with damage.</li>
-<li>Reporters
-<li>Xy at beginning vs end</li>
-<li>time to exit or death</li>
-<li>group size</li>
-<li>group composition</li>
-<li>Did group members survive?</li></li>
+	Improved smoke model (Roni)
+	Visibility and making it dependent on smoke
+	Translating leader-follower model into NetLogo
+	Exit preference
+	Windows become exits as a matter of urgency + proximity + time
+	Jieshi’s equations influence direction but not the primary determinant of direction (patch in-radius?) (Eileen)
+	Set speed to decrease with damage.
+	Reporters
+		Xy at beginning vs end
+		time to exit or death
+		group size
+		group composition
+		Did group members survive?
