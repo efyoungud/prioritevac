@@ -1,0 +1,57 @@
+;;used for helping labeling patches whether inside building or outside
+to color-patches [x1 y1 x2 y2]
+  ask patches with [pxcor >= x1 and pxcor <= x2 and pycor <= y1 and pycor >= y2 ][set pcolor pink]
+end
+to write-patch-labels-to-file [filename]
+  csv:to-file filename (sentence  (list (list "x" "y" "inside?") ) [(list pxcor pycor (pcolor != pink))] of patches )
+end
+
+
+to diffuse-smoke [diffusion-rate ]
+    ;; assumes patches-own [ value new-value ]
+    if 0 > diffusion-rate or diffusion-rate > 1 [ diffuse plabel diffusion-rate ] ;; cause a run-time error
+    
+    ask patches with [inside-building?]
+    [
+      set temp-smoke (smoke * (1 - diffusion-rate)) + 
+      diffusion-rate * (sum [ smoke / (count neighbors with [inside-building?])  ] of neighbors with [inside-building?])
+    ]
+    ask patches with [inside-building?] [set smoke temp-smoke]
+end
+
+
+to-report connected-non-visited-turtles [a-turtle]
+  let building-turtles (turtle-set walls exits windows)
+  let turtle-first [first-end] of a-turtle
+  let turtle-second [second-end] of a-turtle
+
+  let non-visited building-turtles with [visited? = false]
+  let first-end-connected non-visited with [turtle-first = first-end or turtle-first = second-end]
+  let second-end-connected non-visited with [turtle-second = first-end or turtle-second = second-end]
+  report (turtle-set first-end-connected second-end-connected)
+end
+to validate-building-end-points
+  ;; Need to make sure turtles have a visited? attribute
+  let building-turtles (turtle-set walls exits windows)
+  ask building-turtles [set shape "thick-line"]
+  let group-id 0
+  let colors [5 15 25 35 45 55 65 75 85 95 105 115 125 135 145 155 165]
+
+ ;; Breadth First Search-ish? Instead of picking the first of the queue, it's randomly chosen.
+  ask building-turtles [ set visited? false]
+  while [ count building-turtles with [ visited? = false] > 0]
+  [
+   let current one-of building-turtles with [ visited? = false]
+   ask current [set visited? true]
+   ask current [set color (item group-id colors)]
+   let queue  connected-non-visited-turtles current
+   while [count queue > 0]
+   [
+     ask current [set visited? true]
+     ask current [set color (item group-id colors)]
+     set queue (turtle-set queue connected-non-visited-turtles current) with [visited? = false]
+     set current one-of queue
+   ]
+   set group-id group-id + 1
+  ]
+end
