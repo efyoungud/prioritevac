@@ -18,7 +18,7 @@ globals [max-wall-distance]
 patches-own [inside-building? smoke temp-smoke]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" ]
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls"]
 ;;------------------
 
 

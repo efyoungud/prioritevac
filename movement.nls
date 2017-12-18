@@ -1,0 +1,66 @@
+
+
+to-report valid-next-locations [a-person]
+  show a-person
+  let x1 [xcor] of a-person
+  let y1 [ycor] of a-person
+  let valid-neighbors (list)
+  ;ask patches with [ member? (wall 95) (walls in-radius ] [set pcolor yellow]
+  let n 5
+  let max-width 3
+  let max-height 2
+  let all-positions  get-grid n max-width max-height x1 y1
+  foreach all-positions
+  [[pos] ->
+    let x2 (first pos)
+    let y2 (last pos)
+
+    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
+    [
+      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
+        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
+      ] of patch x2 y2) [
+
+        set valid-neighbors fput pos valid-neighbors
+      ]
+    ]
+  ]
+  report valid-neighbors
+end
+
+to-report get-grid [n max-width max-height startx starty]
+  let stepx max-width / (2 * n )
+  let stepy max-height / (2 * n)
+  let minx startx - n * stepx
+  let miny starty - n * stepy
+  let maxx startx + n * stepx
+  let maxy starty + n * stepy
+  let result (list)
+  let currx minx
+  while [currx <= maxx]
+  [
+    let curry miny
+    while [curry <= maxy]
+    [
+      set result fput (list (precision currx 2) (precision curry 2)) result
+      set curry curry + stepy
+    ]
+    set currx currx + stepx
+  ]
+  report result
+end
+
+to move
+
+  let possible-positions valid-next-locations self
+  if not empty? possible-positions
+  [
+    let next-pos one-of possible-positions
+    setxy (first next-pos) (last next-pos)
+  ]
+
+
+end
+to movetest
+  ask people [move]
+end
