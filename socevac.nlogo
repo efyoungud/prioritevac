@@ -3,17 +3,22 @@ breed [ exits exit]
 breed [ windows window]
 breed [ fires fire]
 breed [ people person]
+undirected-link-breed [friends friend]
+undirected-link-breed [coworkers coworker]
+undirected-link-breed [partners partner]
+undirected-link-breed [families family]
+undirected-link-breed [multiples multiple]
 walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [visited?]
+turtles-own [gender age visited? group-number group-type speed]
 globals [max-wall-distance]
 
 patches-own [inside-building? smoke temp-smoke]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "benchmarks/Line Benchmarks/line_detection.nls" "utils.nls" ]; "tests.nls"]
+__includes ["setup.nls" "line_detection.nls" "utils.nls" ]
 ;;------------------
 
 
@@ -551,7 +556,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
