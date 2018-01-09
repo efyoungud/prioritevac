@@ -1,3 +1,5 @@
+extensions [csv]
+
 breed [ walls wall]
 breed [ exits exit]
 breed [ windows window]
@@ -12,13 +14,12 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [gender age visited? group-number group-type speed]
+turtles-own [gender age visited? group-number group-type speed strength vision]
 globals [max-wall-distance]
 
 patches-own [inside-building? smoke temp-smoke]
 ;;------------------
-extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls"]
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movementey.nls" ]; "tests.nls"]
 ;;------------------
 
 
@@ -33,101 +34,41 @@ to setup
  read-fire-from-file "fires/fire_nightclub_merged.csv"
  read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
- set max-wall-distance (max [size] of walls) / 2
-
+  set max-wall-distance (max [size] of walls) / 2
+soclink
+setspeed
  ;import-drawing "floorplan.png"
  ask walls [set color hsb  216 50 100]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
- ;;agents should have size of .46meters
- ask people [set color white]
+ ask people [set color white ]
  ;ask one-of patches with [inside-building?] [sprout-people 1]
  ;;there's initially no smoke
  ask patches [set smoke 0]
-
-  ask people with[ who != 435] [die]
-
 end
 
 to go
   tick
-
   ask fires with [arrival < ticks]
   [
     ask patch-here [ set smoke 1]
-    ask people-here [die]
   ]
-  ask people [ move]
-
+  evac
   diffuse-smoke 1
+  see
   recolor-patches
-end
-to-report valid-next-locations [a-person]
-  show a-person
-  let x1 [xcor] of a-person
-  let y1 [ycor] of a-person
-  let valid-neighbors (list)
-  ;ask patches with [ member? (wall 95) (walls in-radius ] [set pcolor yellow]
-  let n 5
-  let max-width 3
-  let max-height 2
-  let all-positions  get-grid n max-width max-height x1 y1
-  foreach all-positions
-  [[pos] ->
-    let x2 (first pos)
-    let y2 (last pos)
-
-    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
-    [
-      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
-        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
-      ] of patch x2 y2) [
-
-        set valid-neighbors fput pos valid-neighbors
-      ]
-    ]
-  ]
-  report valid-neighbors
-end
-
-to-report get-grid [n max-width max-height startx starty]
-  let stepx max-width / (2 * n )
-  let stepy max-height / (2 * n)
-  let minx startx - n * stepx
-  let miny starty - n * stepy
-  let maxx startx + n * stepx
-  let maxy starty + n * stepy
-  let result (list)
-  let currx minx
-  while [currx <= maxx]
-  [
-    let curry miny
-    while [curry <= maxy]
-    [
-      set result fput (list (precision currx 2) (precision curry 2)) result
-      set curry curry + stepy
-    ]
-    set currx currx + stepx
-  ]
-  report result
-end
-
-to move
-
-  let possible-positions valid-next-locations self
-  if not empty? possible-positions
-  [
-    let next-pos one-of possible-positions
-    setxy (first next-pos) (last next-pos)
-  ]
-
-
 end
 
 to recolor-patches
   ask fires with [arrival < ticks][set color red]
   ask patches [ set pcolor scale-color white smoke 0 1]
+end
+
+to see
+  ask people [set vision
+    patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
+; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -210,9 +151,7 @@ NIL
 
 @#$#@#$#@
 ## WHAT IS IT?
-
-(a general understanding of what the model is trying to show or explain)
-
+A simulation of the Station nightclub fire. Can be used with other fires if building floorplan and ignition points are documented and formatted in line with .csv files currently in use.
 ## HOW IT WORKS
 
 (what rules the agents use to create the overall behavior of the model)
@@ -419,7 +358,7 @@ Polygon -7500403 true true 150 15 15 120 60 285 240 285 285 120
 person
 false
 0
-Circle -7500403 true true 110 5 80
+Circle -7500403 true true 110 20 80
 Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 195 90
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
