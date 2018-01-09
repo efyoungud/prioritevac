@@ -1,8 +1,6 @@
 Issues to solve:
 	Improved smoke model (Roni)
-	Visibility and making it dependent on smoke
 	Translating leader-follower model into NetLogo
-	Exit preference
 	Windows become exits as a matter of urgency + proximity + time
 	Jieshi’s equations influence direction but not the primary determinant of direction (patch in-radius?) (Eileen)
 	Set speed to decrease with damage.
