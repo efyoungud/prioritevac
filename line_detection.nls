@@ -42,7 +42,6 @@ to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
   ]
   ;; is t2 vertical? if so, handle specially
   if m2 = nobody[
-    show "m2 vertical"
      ;; represent t1 line in slope-intercept form (y=mx+c)
       let c1 y1 - (x1 * m1)
       ;; t2 is vertical so we know x already
@@ -52,9 +51,6 @@ to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
       ;; check if intersection point lies on both segments
       if not within? x x1 x2 [ report false ]
       if not within? y y3 y4 [ report false ]
-      show "----"
-      show (list x1 y1 x2 y2 x3 y3 x4 y4) 
-      show (list "intersects at " x y)
       
       report true
   ]
@@ -73,44 +69,15 @@ to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
    report false ]
   if not within? x x3 x4 [
    report false ]
-  show "intersection-----"
-  show (list x1 y1 x2 y2 x3 y3 x4 y4)
- show (list "intersects at " x ) 
+  
   report true
 end
-
-;;------------
-;;Planarary Model
-;to-report crossed? [x1 y1 x2 y2 x3 y3 x4 y4]
-;  ;; store nodes in variables for easy access
-;  let a1 [end1] of link-a
-;  let a2 [end2] of link-a
-;  let b1 [end1] of link-b
- ; let b2 [end2] of link-b
- ;; let nodes (turtle-set a1 a2 b1 b2)
-  ;; if the links share a node, they don't cross
-;  if 4 > count nodes [ report false ]
-;  ;; but if two nodes are on top of each other, we will say
-  ;; the links do cross (so you can't cheat that way)
-;  if 4 > length remove-duplicates (list (list x1 y1) (list x2 y2) (list x3 y3) (list x4 y4))
-;    [ report true ]
-  ;; if the ends of link-a are on opposite sides of link-b,
-  ;; and the ends of link-b are on opposite sides of link-a,
-  ;; then the links cross
-;  report [subtract-headings towards a2 towards b1 < 0 xor
-;          subtract-headings towards a2 towards b2 < 0] of a1
-;     and [subtract-headings towards b2 towards a1 < 0 xor
-;          subtract-headings towards b2 towards a2 < 0] of b1
-;end
 
 to-report crossed? [x1 y1 x2 y2 x3 y3 x4 y4]
   if 4 > length remove-duplicates (list (list x1 y1) (list x2 y2) (list x3 y3) (list x4 y4)) ;;checks if any end-points are the same
   [report true]
   
-  show  (subtract-headings (towards-coords x1 y1 x2 y2) (towards-coords x1 y1 x3 y3))
-  show  (subtract-headings towards-coords x1 y1 x2 y2 towards-coords x1 y1 x4 y4) 
-  show (subtract-headings towards-coords x3 y3 x4 y4 towards-coords x3 y3 x1 y1)
-  show (subtract-headings (towards-coords x3 y3 x4 y4) (towards-coords x3 y3 x2 y2))
+
   report ((subtract-headings (towards-coords x1 y1 x2 y2) (towards-coords x1 y1 x3 y3) < 0) xor
   (subtract-headings towards-coords x1 y1 x2 y2 towards-coords x1 y1 x4 y4) < 0)
   and (((subtract-headings towards-coords x3 y3 x4 y4 towards-coords x3 y3 x1 y1) < 0) xor 
@@ -146,30 +113,3 @@ end
 to-report heading-to-angle [ h ]
   report (90 - h) mod 360
 end
-;;;can use subtrack-headings (consumes to headings).
-
-;;note: ask b1 [ towards b2] fromX and fromY are b1's xy.
-;  public double towards(double fromX, double fromY,
-;                        double toX, double toY,
-;                        boolean wrap)
-;      throws AgentException {
-;    if (fromX == toX && fromY == toY) {
-;      throw new AgentException
-;          (I18N.errorsJ().getN("org.nlogo.agent.Protractor.noHeadingFromPointToSelf", fromX, fromY));
-;    }
-;    double dx = toX - fromX;
-;    double dy = toY - fromY;
-;    if (wrap) {
-;      return world.topology.towardsWrap(dx, dy);
-;    }
-;    if (dx == 0) {
-;      return dy > 0 ? 0 : 180;
- ;   }
-;    if (dy == 0) {
-;      return dx > 0 ? 90 : 270;
-;    }
-;    return
-;        (270 + StrictMath.toDegrees
-;            (StrictMath.PI + StrictMath.atan2(-dy, dx)))
-;            % 360;
-;  }

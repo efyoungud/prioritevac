@@ -1,0 +1,98 @@
+to testlinkdirection
+  ask people [show link-type-destination]
+end
+
+to test-urge
+  ask people [show find-multiples-urge]
+end
+
+to-report preferreddirection
+  ifelse (group-number > 300) or (find-coworkers-urge <= 0) or (find-multiples-urge <= 0) or (find-family-urge <= 0) or (find-friends-urge <= 0) or (find-partners-urge <= 0) or ((no-links) = true)
+  [report preferredexit]
+  [report link-type-destination]
+end
+
+to-report link-type-destination ; need to figure out groups AND how to handle the list thing
+   report find-group-friends
+  report find-group-coworkers
+  report find-group-families
+  report find-group-multiples
+  report find-group-partners
+end
+
+to-report closefire
+  report (min-one-of fires [distance myself])
+end
+
+to-report find-coworkers-urge
+  if group-type = 1 and group-number < 300 [report (c-constant * (10 / distance closefire))]
+end
+
+to-report find-multiples-urge
+  if group-type = 5 [report (m-constant * (10 / distance closefire + 1))]
+end
+to-report find-family-urge
+  if group-type = 4 [report (fam-constant * (10 / distance closefire))]
+end
+to-report find-friends-urge
+  if group-type = 2 [report (fr-constant * (10 / distance closefire))]
+end
+to-report find-partners-urge
+  if group-type = 3 [report (p-constant * (10 / distance closefire))]
+end
+
+to-report find-group-friends
+ if group-type = 2 [report
+    (map
+      [ [a b] -> b - a ]
+      (list xcor ycor)
+      (list
+        mean [ xcor ] of friends
+        mean [ ycor ] of friends
+  ) )]
+end
+to-report find-group-partners
+if group-type = 3 [report
+    (map
+      [ [a b] -> b - a ]
+      (list xcor ycor)
+      (list
+        mean [ xcor ] of partners
+      mean [ ycor ] of partners
+  ) )]
+end
+to-report find-group-families
+  if group-type = 4 [report
+    (map
+      [ [a b] -> b - a ]
+      (list xcor ycor)
+      (list
+        mean [ xcor ] of families
+        mean [ ycor ] of families
+  ) )]
+end
+
+to-report find-group-multiples
+ if group-type = 5 [report
+    (map
+      [ [a b] -> b - a ]
+      (list xcor ycor)
+      (list
+        mean [ xcor ] of multiples
+        mean [ ycor ] of multiples
+  ) )]
+end
+
+to-report find-group-coworkers
+  if group-type = 1 [report
+    (map
+      [ [a b] -> b - a ]
+      (list xcor ycor)
+      (list
+        mean [ xcor ] of coworkers
+        mean [ ycor ] of coworkers
+  ) )]
+end
+
+
+
