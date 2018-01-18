@@ -1,4 +1,4 @@
-to-report valid-next-locations [a-person]
+to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
 
   let x1 [xcor] of a-person
   let y1 [ycor] of a-person
@@ -52,12 +52,24 @@ to move
   let possible-positions valid-next-locations self
   if not empty? possible-positions
   [
-    let next-pos (one-of possible-positions)
+    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)] ; bug: people get stuck behind walls
     setxy (first next-pos) (last next-pos)
   ]
 end
 
-
+to-report argmin [alist f]
+  let min-element (first alist)
+  let min-value (runresult f (first alist)) 
+  foreach alist
+   [ [element] -> 
+     if (runresult f element) < min-value 
+     [
+      set min-element element
+      set min-value (runresult f element)  
+     ] 
+   ]
+  report min-element
+end
 
 to movetest
   ask people [move]

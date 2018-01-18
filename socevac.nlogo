@@ -1,5 +1,3 @@
-extensions [csv]
-
 breed [ walls wall]
 breed [ exits exit]
 breed [ windows window]
@@ -14,16 +12,17 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [gender age visited? group-number group-type speed strength vision]
+turtles-own [gender age visited? group-number group-type speed vision]
 globals [max-wall-distance]
 
 patches-own [inside-building? smoke temp-smoke]
 ;;------------------
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movementey.nls" ]; "tests.nls"]
+extensions [csv]
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "priorities.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
 ;;------------------
 
 
-to setup
+to setup ; sets up the initial environment
  ca
  reset-ticks
  set-default-shape walls "line"
@@ -34,29 +33,32 @@ to setup
  read-fire-from-file "fires/fire_nightclub_merged.csv"
  read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
-  set max-wall-distance (max [size] of walls) / 2
+ set max-wall-distance (max [size] of walls) / 2
 soclink
-setspeed
- ;import-drawing "floorplan.png"
  ask walls [set color hsb  216 50 100]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
- ask people [set color white ]
+ ;;agents should have size of .46meters
+ ask people [set color white]
  ;ask one-of patches with [inside-building?] [sprout-people 1]
  ;;there's initially no smoke
  ask patches [set smoke 0]
+  see
+
 end
 
 to go
   tick
+
   ask fires with [arrival < ticks]
   [
     ask patch-here [ set smoke 1]
+    ask people-here [die]
   ]
-  evac
+  ask people [ move]
+
   diffuse-smoke 1
-  see
   recolor-patches
 end
 
@@ -67,8 +69,29 @@ end
 
 to see
   ask people [set vision
-    patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
-; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
+   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
+  ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
+end
+
+to testdirection ; demonstrates whether straight exit preference works
+  ask people [show preferredexit]
+end
+
+to-report preferredexit
+  ifelse visited? = false
+    [report closestvisible]
+    [report closest] ;the logic is that people with previous acquaintance with the bar will know where the exits are
+end
+
+to-report closestvisible ; selects closest visible exit
+  let seen (exits in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) = true) ; same parameters as 'see' - smoke reduces visual distance and peripheral vision, starts at 10m ahead and 210 degrees
+  ifelse seen
+  [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
+  [report exit 60];they would know the door they came in from
+end
+
+to-report closest ; selects closest exit regardless of visibility
+  report (min-one-of exits [distance myself])
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -149,9 +172,103 @@ NIL
 NIL
 1
 
+SLIDER
+28
+152
+200
+185
+coworkers-constant
+coworkers-constant
+0
+100
+51.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+28
+189
+200
+222
+multiples-constant
+multiples-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+29
+233
+201
+266
+family-constant
+family-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+29
+276
+201
+309
+friends-constant
+friends-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+30
+317
+202
+350
+partners-constant
+partners-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+105
+111
+206
+144
+NIL
+testdirection
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
-A simulation of the Station nightclub fire. Can be used with other fires if building floorplan and ignition points are documented and formatted in line with .csv files currently in use.
+
+(a general understanding of what the model is trying to show or explain)
+
 ## HOW IT WORKS
 
 (what rules the agents use to create the overall behavior of the model)
@@ -358,7 +475,7 @@ Polygon -7500403 true true 150 15 15 120 60 285 240 285 285 120
 person
 false
 0
-Circle -7500403 true true 110 20 80
+Circle -7500403 true true 110 5 80
 Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 195 90
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105

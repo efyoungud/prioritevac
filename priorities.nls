@@ -1,18 +1,12 @@
-to testlinkdirection
-  ask people [show link-type-destination]
-end
-
-to test-urge
-  ask people [show find-multiples-urge]
-end
-
-to-report preferreddirection
-  ifelse (group-number > 300) or (find-coworkers-urge <= 0) or (find-multiples-urge <= 0) or (find-family-urge <= 0) or (find-friends-urge <= 0) or (find-partners-urge <= 0) or ((no-links) = true)
+to-report preferreddirection ; selects direction by either sending someone towards their loved ones or an exit
+  ; they only go towards an exit if they stop caring, if their loved ones are within 2m, or if they are alone (either from the time they arrive or because people are dead
+  ifelse (group-type = 0) or (find-coworkers-urge <= 0) or (find-multiples-urge <= 0) or (find-family-urge <= 0) or (find-friends-urge <= 0) or (find-partners-urge <= 0) or ((no-links) = true) 
+      ; or (link-length < 2 myself) link-length is link-only and this is for turtles, unsure how to implement in this context
   [report preferredexit]
   [report link-type-destination]
 end
 
-to-report link-type-destination ; need to figure out groups AND how to handle the list thing
+to-report link-type-destination ; need to figure out groups
    report find-group-friends
   report find-group-coworkers
   report find-group-families
@@ -25,20 +19,20 @@ to-report closefire
 end
 
 to-report find-coworkers-urge
-  if group-type = 1 and group-number < 300 [report (c-constant * (10 / distance closefire))]
+  if group-type = 1 [report (coworkers-constant * (10 / distance closefire))] ; the logic is that with proximity to fire people will care less, so the experimental control is the constant, controlled by the slider
 end
 
 to-report find-multiples-urge
-  if group-type = 5 [report (m-constant * (10 / distance closefire + 1))]
+  if group-type = 5 [report (multiples-constant * (10 / distance closefire))]
 end
 to-report find-family-urge
-  if group-type = 4 [report (fam-constant * (10 / distance closefire))]
+  if group-type = 4 [report (family-constant * (10 / distance closefire))]
 end
 to-report find-friends-urge
-  if group-type = 2 [report (fr-constant * (10 / distance closefire))]
+  if group-type = 2 [report (friends-constant * (10 / distance closefire))]
 end
 to-report find-partners-urge
-  if group-type = 3 [report (p-constant * (10 / distance closefire))]
+  if group-type = 3 [report (partners-constant * (10 / distance closefire))]
 end
 
 to-report find-group-friends
