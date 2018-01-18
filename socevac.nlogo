@@ -12,17 +12,17 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [gender age visited? group-number group-type speed]
+turtles-own [gender age visited? group-number group-type speed vision]
 globals [max-wall-distance]
 
 patches-own [inside-building? smoke temp-smoke]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls"]
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "priorities.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
 ;;------------------
 
 
-to setup
+to setup ; sets up the initial environment
  ca
  reset-ticks
  set-default-shape walls "line"
@@ -34,8 +34,7 @@ to setup
  read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2
-
- ;import-drawing "floorplan.png"
+soclink
  ask walls [set color hsb  216 50 100]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
@@ -45,8 +44,7 @@ to setup
  ;ask one-of patches with [inside-building?] [sprout-people 1]
  ;;there's initially no smoke
  ask patches [set smoke 0]
-
-  ask people with[ who != 435] [die]
+  see
 
 end
 
@@ -63,71 +61,37 @@ to go
   diffuse-smoke 1
   recolor-patches
 end
-to-report valid-next-locations [a-person]
-  show a-person
-  let x1 [xcor] of a-person
-  let y1 [ycor] of a-person
-  let valid-neighbors (list)
-  ;ask patches with [ member? (wall 95) (walls in-radius ] [set pcolor yellow]
-  let n 5
-  let max-width 3
-  let max-height 2
-  let all-positions  get-grid n max-width max-height x1 y1
-  foreach all-positions
-  [[pos] ->
-    let x2 (first pos)
-    let y2 (last pos)
-
-    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
-    [
-      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
-        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
-      ] of patch x2 y2) [
-
-        set valid-neighbors fput pos valid-neighbors
-      ]
-    ]
-  ]
-  report valid-neighbors
-end
-
-to-report get-grid [n max-width max-height startx starty]
-  let stepx max-width / (2 * n )
-  let stepy max-height / (2 * n)
-  let minx startx - n * stepx
-  let miny starty - n * stepy
-  let maxx startx + n * stepx
-  let maxy starty + n * stepy
-  let result (list)
-  let currx minx
-  while [currx <= maxx]
-  [
-    let curry miny
-    while [curry <= maxy]
-    [
-      set result fput (list (precision currx 2) (precision curry 2)) result
-      set curry curry + stepy
-    ]
-    set currx currx + stepx
-  ]
-  report result
-end
-
-to move
-
-  let possible-positions valid-next-locations self
-  if not empty? possible-positions
-  [
-    let next-pos one-of possible-positions
-    setxy (first next-pos) (last next-pos)
-  ]
-
-
-end
 
 to recolor-patches
   ask fires with [arrival < ticks][set color red]
   ask patches [ set pcolor scale-color white smoke 0 1]
+end
+
+to see
+  ask people [set vision
+   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
+  ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
+end
+
+to testdirection ; demonstrates whether straight exit preference works
+  ask people [show preferredexit]
+end
+
+to-report preferredexit
+  ifelse visited? = false
+    [report closestvisible]
+    [report closest] ;the logic is that people with previous acquaintance with the bar will know where the exits are
+end
+
+to-report closestvisible ; selects closest visible exit
+  let seen (exits in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) = true) ; same parameters as 'see' - smoke reduces visual distance and peripheral vision, starts at 10m ahead and 210 degrees
+  ifelse seen
+  [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
+  [report exit 60];they would know the door they came in from
+end
+
+to-report closest ; selects closest exit regardless of visibility
+  report (min-one-of exits [distance myself])
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -198,6 +162,98 @@ BUTTON
 143
 step
 go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+28
+152
+200
+185
+coworkers-constant
+coworkers-constant
+0
+100
+51.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+28
+189
+200
+222
+multiples-constant
+multiples-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+29
+233
+201
+266
+family-constant
+family-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+29
+276
+201
+309
+friends-constant
+friends-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+30
+317
+202
+350
+partners-constant
+partners-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+105
+111
+206
+144
+NIL
+testdirection
 NIL
 1
 T

@@ -1,7 +1,5 @@
-
-
 to-report valid-next-locations [a-person]
-  show a-person
+
   let x1 [xcor] of a-person
   let y1 [ycor] of a-person
   let valid-neighbors (list)
@@ -47,20 +45,20 @@ to-report get-grid [n max-width max-height startx starty]
     ]
     set currx currx + stepx
   ]
-  report result
+  report result 
 end
 
 to move
-
   let possible-positions valid-next-locations self
   if not empty? possible-positions
   [
-    let next-pos one-of possible-positions
+    let next-pos (one-of possible-positions)
     setxy (first next-pos) (last next-pos)
   ]
-
-
 end
+
+
+
 to movetest
   ask people [move]
 end
