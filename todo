@@ -11,3 +11,5 @@ Issues to solve:
 	Reset button that returns to the end of setup without having to read everything in again.
 	There is currently a bug in that in the 'priorities' file link-length isn't being included in preferreddirection reporter: the logic of that command is that if people have their loved ones within arms length then they will try to go to the exit with them. If after being united people aren't going towards the same exit, worth revisiting Eric Best's leader-follower model.
 	Bug fix: people get stuck behind walls and also don't actually exit, just congregate near the exits.
+	Possibly include more likely to go looking if one person has been there before and the others haven’t.
+	Make exit preference based on distance from fire and smoke
