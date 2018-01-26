@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Extension-Name: radius
+Class-Manager: RadiusExtension
+NetLogo-Extension-API-Version: 6.0
