@@ -1,0 +1,59 @@
+2.1.18
+Matt was absent.
+
+Nihar is doing good progress with the window problem. An issue that still must be solved is the problem that people bunch up in 
+front of exits and cannot exit or do so very slowly because there are other avatars in front of them. We agruee that
+it will take one second per person to exit through the window.
+
+The next task for Eileen. 
+
+Eileen is working on a different problem. She finds that some avatars are immmobilized in the corners inside the Station. 
+Other avatars get to the doors and do not pass through them to the outside of the building. There are two options. 
+They do not go through because there is a problem in the subroutine. Or they do not go through because there are many others 
+in front of her and she has to wait her turn.
+
+we need to find out from engineering texts what is the volume of people per second that can cross a door of a given width. 
+Once this is done then we can locate the number of avatars in front of each of the doors at the time the avatar reaches the 
+area, and calculate the time period in seconds it will take them to evavuate the building, 
+and then apply this time delay to the avatar in question. 
+
+I promised to help find the information on the flow of people through different doors. Eileen can find these door widths in 
+NIST reports. I think that Matt found it when he worked on the floor plan of the building.
+
+We agree that the programming will be done as follows. 
+
+First, there will be an entry describing the goal of the sub program. 
+
+Second, the actual subroutine is presented.
+
+Third, in a separate folder there will be a file with the test of the sub routine.
+
+The tests of the subroutine will be placed in a separate folder so as to keep the main program neat, 
+but it will be linked to it through  a number key.
+
+We also agreed on the following procedural arrangeemnt: 
+
+Eileen will initiate the action by discussing with and eventually telling Nihar what needs to be done next. 
+Then Nihar will take as much time as is required to get it done, including testing the subroutine. He will decide 
+whether or not to ask Matt for advise. 
+
+After he is done with the task Nihar will discuss what he did with the entire group and if there are no misgivings 
+he will enter the material in the boards folder for completed subroutines.
+
+As it has been the cse so far, Matt will continue to provide critical insights into any aspect of the project.
+His tecnical expertise is appreciated by all.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
