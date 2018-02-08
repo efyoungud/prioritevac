@@ -30,15 +30,13 @@ to setup
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2
 
- ;import-drawing "floorplan.png"
  ask walls [set color hsb  216 50 100]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
- ;;agents should have size of .46meters
+ ;;Agents should have size of .46meters
  ask people [set color white]
- ;ask one-of patches with [inside-building?] [sprout-people 1]
- ;;there's initially no smoke
+ ;There's initially no smoke
  ask patches [set smoke 0]
 
   ask people with[ who != 435] [die]
@@ -48,6 +46,8 @@ end
 to go
   tick
 
+  ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
+  ;people in that area die and surrounding people that live move to the closest exit
   ask fires with [arrival < ticks]
   [
     ask patch-here [ set smoke 1]
@@ -55,8 +55,10 @@ to go
   ]
   ask people [ move]
 
-  if ticks = 100 [ ask windows with [who = 57 or who = 34] [ set breed exits]]
-  if ticks = 150 [ ask windows with [who = 59] [ set breed exits]]
+  ;Windows are turned into exits based on timings provided by NIST Documentation
+  ;Windows are then recolored to represent exits
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
 
   diffuse-smoke 1
   recolor-patches
@@ -67,7 +69,6 @@ to-report valid-next-locations [a-person]
   let x1 [xcor] of a-person
   let y1 [ycor] of a-person
   let valid-neighbors (list)
-  ;ask patches with [ member? (wall 95) (walls in-radius ] [set pcolor yellow]
   let n 5
   let max-width 3
   let max-height 2
@@ -117,12 +118,25 @@ to move
   let possible-positions valid-next-locations self
   if not empty? possible-positions
   [
-    let next-pos one-of possible-positions
+    let preferred-exit min-one-of exits [distancexy [xcor] of myself [ycor] of myself]
+    show preferred-exit
+    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferred-exit)]
+    show possible-positions
+    show next-pos
+    if any? exits with [intersects (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
+    [
+     show "exited" 
+      error "done"
+     
+    ]
     setxy (first next-pos) (last next-pos)
   ]
+
 end
 
 to recolor-patches
+
+  ;Recolors patches based on time fire has reached a location/patch
   ask fires with [arrival < ticks][set color red]
   ask patches [ set pcolor scale-color white smoke 0 1]
 end

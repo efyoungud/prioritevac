@@ -141,6 +141,23 @@ ticks
 30.0
 
 BUTTON
+32
+22
+121
+55
+death test
+ask people with[ age > 23] [die]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
 28
 68
 94
