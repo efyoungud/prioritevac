@@ -12,13 +12,18 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [gender age visited? group-number group-type speed vision]
-globals [max-wall-distance]
+turtles-own [gender age visited? group-number group-type speed vision path]
+globals [max-wall-distance open closed current-path ]
 
-patches-own [inside-building? smoke temp-smoke]
+patches-own [inside-building? smoke temp-smoke pid
+parent-patch ; patch's predecessor
+  f1 ; the value of knowledge plus heuristic cost function f()
+  g ; the value of knowledge cost function g()
+  h1 ; the value of heuristic cost function h()
+]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "priorities.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "priorities.nls" ] ; priorities file is an initial concept for the social behavior and does not impact behavior
 ;;------------------
 
 
@@ -54,14 +59,28 @@ to go
   ask fires with [arrival < ticks]
   [
     ask patch-here [ set smoke 1]
-    ask people-here [die]
+    ask people-here [die-by-fire]
   ]
   ask people [ move]
+  ask people [if ((distance closest < .25 ) = true) [exit-building]] ; if an exit is less than a quarter patch away, treats it as if the agent can exit through it
 
   diffuse-smoke 1
   recolor-patches
+  see
 end
 
+to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
+  show "Died by proximity to fire at second" ; this can be changed to output-print when the outputs are set up
+  print ticks
+  die
+end
+
+to exit-building ; prints the time the agent is removed from simulation
+  show "Exited building at exit, time"
+  print closest ; shows the closest exit, which should map the exit they exited by: this needs tested
+  print ticks
+  die ; removes from simulation
+end
 to recolor-patches
   ask fires with [arrival < ticks][set color red]
   ask patches [ set pcolor scale-color white smoke 0 1]
@@ -126,8 +145,8 @@ BUTTON
 68
 94
 101
-NIL
 setup
+setup\n
 NIL
 1
 T
@@ -181,7 +200,7 @@ coworkers-constant
 coworkers-constant
 0
 100
-51.0
+0.0
 1
 1
 NIL
@@ -196,7 +215,7 @@ multiples-constant
 multiples-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -211,7 +230,7 @@ family-constant
 family-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -226,7 +245,7 @@ friends-constant
 friends-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -241,7 +260,7 @@ partners-constant
 partners-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -254,6 +273,57 @@ BUTTON
 144
 NIL
 testdirection
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+32
+22
+121
+55
+death test
+ask people with[ age > 23] [die]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+36
+370
+251
+403
+NIL
+find-shortest-path-to-destination
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+155
+420
+218
+453
+a* go
+  tick\n\n  ask fires with [arrival < ticks]\n  [\n    ask patch-here [ set smoke 1]\n    ask people-here [die]\n  ]\n  ask people [ find-shortest-path-to-destination]\n\n  diffuse-smoke 1\n  recolor-patches\n
 NIL
 1
 T
