@@ -11,15 +11,20 @@ This simulation is of the 2003 Station Nightclub Fire and is part of the Interde
 
 ##Component Details##
 Physical environment, fire, and smoke all built by Matt Saponaro.  
-  	- Physical Environment: The physical environment consists of an interface of the ground level of The Station nighclub in Warwick Rhode Island. The
-	building had 4 exits and were set to a red color to distinguish them from the model for significance while windows are represented with a yellow
-	color. The building remains intact throughout the fire, however, up until the fire reaches near the windows.  
-  	- Fire & Smoke: The spreading of the fire as well as the smoke is based on the temperatures within in an area provided by the NIST documentation.
-	An equation is used to determine a range of temperatures to define whether an area of patches is light smoke, heavy smoke, light fire or heavy fire.
-	The fire starts on stage near the pyrotechnics and eventually spreads throughout the night club with each "tick" (representing a second in real-time).
-	Based on NIST documentation and a video of the nightclub fire, a couple front-facing windows towards the main exit were broken down by attendees
-	wanting to escape. The transition from these windows becoming exits have been given an equation and change their color from yellow to red to signify
-	an exit.
+  -Physical Environment: The physical environment models the ground level of The Station nightclub in Warwick
+  Rhode Island. The building had four exits (designated by red in the simulation) and eleven (yellow).
+  The walls of the building (blue) remains intact throughout the fire; however, the fire reaches the windows
+  towards the end of the disaster.
+
+-Fire & Smoke: The fire and smoke models are based on the temperatures within in an area provided by the NIST
+documentation <insert ref>. Based on Nist's temperature model, we assume that there were fires in locations
+(at 1.5m height for the first 90 seconds, then at .6m height for the rest of the fire) exceeding 200 celsius.
+The fire starts on stage near the pyrotechnics and eventually spreads throughout the night club.
+For our simulation, we represent a "tick" as a second in real-time. Based on NIST documentation <insert ref>
+and a video of the nightclub fire, we model two front-facing windows being broken down by attendees wanting to
+escape at 90 and 104 seconds. In our simulation, when these windows become exits, they change their color from
+yellow to red to signify occupants are able to leave.
+
 	
 People were built by Matt Saponaro and Eileen Young. Placement within reported ecologies was done by Nihar Junagade. Reported ecologies and all additional details come from interview with survivors of the fire.
 Information from interviews has been anonymized for use in the simulation. The code book describes how the information is structured.
