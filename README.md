@@ -45,3 +45,10 @@ Boards contain current to do list as well as items underway.
 
 http://udspace.udel.edu/handle/19716/35 is a link to the DRC library.
 
+##Citations##
+
+From Setup:
+
+Isobe, Motoshige, Taku Adachi and Takashi Nagatani, Experiment and simulation of pedestrian counter flow, Physica A: Statistical Mechanics and its Applications,
+Volume 336, Issues 3–4,2004, Pages 638-650, ISSN 0378-4371,
+https://doi.org/10.1016/j.physa.2004.01.043. (http://www.sciencedirect.com/science/article/pii/S037843710400130X)
