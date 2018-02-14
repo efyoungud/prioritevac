@@ -16,7 +16,7 @@ Physical environment, fire, and smoke all built by Matt Saponaro.
   The walls of the building (blue) remains intact throughout the fire; however, the fire reaches the windows
   towards the end of the disaster.
 
--Fire & Smoke: The fire and smoke models are based on the temperatures within in an area provided by the NIST
+ -Fire & Smoke: The fire and smoke models are based on the temperatures within in an area provided by the NIST
 documentation <insert ref>. Based on Nist's temperature model, we assume that there were fires in locations
 (at 1.5m height for the first 90 seconds, then at .6m height for the rest of the fire) exceeding 200 celsius.
 The fire starts on stage near the pyrotechnics and eventually spreads throughout the night club.
@@ -24,10 +24,17 @@ For our simulation, we represent a "tick" as a second in real-time. Based on NIS
 and a video of the nightclub fire, we model two front-facing windows being broken down by attendees wanting to
 escape at 90 and 104 seconds. In our simulation, when these windows become exits, they change their color from
 yellow to red to signify occupants are able to leave.
-
+ 
+ -Agents (people): Agents within the model are based on people in attendence at the night of the fire. Information was
+ collected on all people and included their age, sex, group type, group number, and if they had visited the club prior
+ to the night of the fire. Our model presents the agents placed within their area based on their initial location.
+ Placement of these agents is randomized based on their initial location given the area that they are in (bar area, dance floor,
+ etc).
 	
-People were built by Matt Saponaro and Eileen Young. Placement within reported ecologies was done by Nihar Junagade. Reported ecologies and all additional details come from interview with survivors of the fire.
-Information from interviews has been anonymized for use in the simulation. The code book describes how the information is structured.
+People were built by Matt Saponaro and Eileen Young. Placement within reported ecologies was done by Nihar Junagade.
+Reported ecologies and all additional details come from interview with survivors of the fire.
+Information from interviews has been anonymized for use in the simulation. The code book describes how the
+information is structured.
 
 ##Git Status##
 Master contains latest fully working copy.
