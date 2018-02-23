@@ -23,7 +23,7 @@ parent-patch ; patch's predecessor
 ]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "priorities.nls" ] ; priorities file is an initial concept for the social behavior and does not impact behavior
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "tests.nls" "priorities.nls"  "benchmarks/search benchmarks/search.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
 ;;------------------
 
 
@@ -50,7 +50,7 @@ soclink
  ;;there's initially no smoke
  ask patches [set smoke 0]
   see
-
+set-pid
 end
 
 to go
@@ -63,7 +63,10 @@ to go
   ]
   ask people [ move]
   ask people [if ((distance closest < .25 ) = true) [exit-building]] ; if an exit is less than a quarter patch away, treats it as if the agent can exit through it
-
+;Windows are turned into exits based on timings provided by NIST Documentation
+  ;Windows are then recolored to represent exits
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
   diffuse-smoke 1
   recolor-patches
   see
@@ -103,7 +106,7 @@ to-report preferredexit
 end
 
 to-report closestvisible ; selects closest visible exit
-  let seen (exits in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) = true) ; same parameters as 'see' - smoke reduces visual distance and peripheral vision, starts at 10m ahead and 210 degrees
+  let seen (any? exits in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) = true) ; same parameters as 'see' - smoke reduces visual distance and peripheral vision, starts at 10m ahead and 210 degrees
   ifelse seen
   [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
   [report exit 60];they would know the door they came in from
@@ -111,6 +114,10 @@ end
 
 to-report closest ; selects closest exit regardless of visibility
   report (min-one-of exits [distance myself])
+end
+
+to-report get-out
+  report patch-at (0)( 0 )
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -300,61 +307,10 @@ NIL
 NIL
 1
 
-BUTTON
-32
-22
-121
-55
-death test
-ask people with[ age > 23] [die]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-36
-370
-251
-403
-NIL
-find-shortest-path-to-destination
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-155
-420
-218
-453
-a* go
-  tick\n\n  ask fires with [arrival < ticks]\n  [\n    ask patch-here [ set smoke 1]\n    ask people-here [die]\n  ]\n  ask people [ find-shortest-path-to-destination]\n\n  diffuse-smoke 1\n  recolor-patches\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This is a model of the evacuation from the Station Nightclub Fire in Rhode Island in 2003. It uses agent-based modeling and information from interviews and documentation of technical aspects of the fire.
 
 ## HOW IT WORKS
 

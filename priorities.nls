@@ -6,6 +6,12 @@ to-report preferreddirection ; selects direction by either sending someone towar
   [report link-type-destination]
 end
 
+;to-report closest-group-mate
+ ; ask people 
+  ;if is-link? ! = 0 = true
+  ;report person with shortest link-length
+;end
+
 to-report link-type-destination ; need to figure out groups
    report find-group-friends
   report find-group-coworkers

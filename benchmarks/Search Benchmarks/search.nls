@@ -1,4 +1,35 @@
 extensions [table]
+
+;to-report fexit ; potential energy formula from Jieshi Fang's thesis, obviated by a*
+ ; report 200 * (distance preferredexit + 10 - (.5 *(dy))) ; assumes agent is facing their preferred exit
+;end ; this should probably be replaced with a path-length heuristic, and the preferred exit should be the one with the lowest value. not sure how to structure that.
+
+to-report fprivatespace ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
+ if (distance (min-one-of other people [distance myself])) < 3
+  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(.3333))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
+;original equation included 'dodging behavior' but inclusion in a* negates the necessity
+end
+
+to-report fwall ; also applies only in sphere of influence, constant is 1
+  ifelse (distance (min-one-of walls [distance myself]) < 30)
+    [report  1 * (1 /(distance (min-one-of walls [distance myself]) - .46) - .3333)] ; original equation included 1/'influence distance' which has been replaced by .3333 because 3m is the comfortable distance : need to find citation
+      [report 0] ; reports number when the distance between the agent and the wall is less than 30, 0 when it's more than 30
+      ;radius of agent is .46
+end
+to-report crowd-at-exit ; counts how many people are between the agent and their closest door
+  ;this slightly discourages going to crowded exits
+  let door (distance (min-one-of exits [distance myself])) ;does not incorporate vision, not sure how to do that
+  report count people in-cone door 90
+end
+
+to-report fire-distance
+  report 500 * (distance (min-one-of fires [distance myself])) ; runs based on how close fires are: multiplier is arbitary
+end
+
+to-report fh
+  report fprivatespace + fwall + fire-distance + (10 * crowd-at-exit)
+end
+
 to-report A-star [start h goals successors]
   let infinity 10000000
   let closed-set (patch-set)

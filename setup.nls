@@ -64,7 +64,7 @@ to read-patch-labels-from-file [filename]
 end
 
 to soclink ;groups that came together have links based type of relationship
-ask people [if group-type < 0 ;type 0 is 'alone'
+ask people [if group-type != 0 ;type 0 is 'alone'
  [
 if group-type = 1 [ask other people with [group-number = [group-number] of myself] [create-coworker-with myself]]
 if group-type = 2 [ask other people with [group-number = [group-number] of myself] [create-friend-with myself]]
@@ -75,6 +75,11 @@ if group-type = 5 [ask other people with [group-number = [group-number] of mysel
   ask links [hide-link]
 end
 
-to setspeed ; currently not used in movement, but based on an article by Isobe that looked at maximum standard walking paces, units are m/s
+to set-pid
+  ask patches 
+  [set pid (((pxcor) * 10 ^ 6) + ((pycor) * 10 ^ 3))]
+end
+
+to setspeed ; units are m/s, from Isobe (see full reference in readme)
   ask people [set speed 1.1 + random-float .2]
 end
