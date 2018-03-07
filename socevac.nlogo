@@ -56,7 +56,9 @@ end
 to go
   tick
 
-  ask fires with [arrival < ticks]
+  ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
+  ;people in that area die and surrounding people that live move to the closest exit
+   ask fires with [arrival < ticks]
   [
     ask patch-here [ set smoke 1]
     ask people-here [die-by-fire]
@@ -85,7 +87,8 @@ to exit-building ; prints the time the agent is removed from simulation
   die ; removes from simulation
 end
 to recolor-patches
-  ask fires with [arrival < ticks][set color red]
+ ;Recolors patches based on time fire has reached a location/patch
+   ask fires with [arrival < ticks][set color red]
   ask patches [ set pcolor scale-color white smoke 0 1]
 end
 

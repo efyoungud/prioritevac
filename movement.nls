@@ -1,9 +1,8 @@
 to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
-
+show a-person
   let x1 [xcor] of a-person
   let y1 [ycor] of a-person
   let valid-neighbors (list)
-  ;ask patches with [ member? (wall 95) (walls in-radius ] [set pcolor yellow]
   let n 5
   let max-width 3
   let max-height 2
@@ -49,12 +48,14 @@ to-report get-grid [n max-width max-height startx starty]
 end
 
 to move
+  
   let possible-positions valid-next-locations self
   if not empty? possible-positions
   [
     let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)] ; bug: people get stuck behind walls
     setxy (first next-pos) (last next-pos)
   ]
+  
 end
 
 to-report argmin [alist f]
