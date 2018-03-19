@@ -1,5 +1,4 @@
 to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
-show a-person
   let x1 [xcor] of a-person
   let y1 [ycor] of a-person
   let valid-neighbors (list)

@@ -27,6 +27,7 @@ __includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "tests.n
 ;;------------------
 
 
+
 to setup ; sets up the initial environment
  ca
  reset-ticks
@@ -34,8 +35,8 @@ to setup ; sets up the initial environment
  set-default-shape exits "line"
  set-default-shape windows "line"
  set-default-shape fires "square"
- read-building-from-file "buildings/building_nightclub.csv"
- read-fire-from-file "fires/fire_nightclub_merged.csv"
+ read-building-from-file "building_nightclub.csv"
+ read-fire-from-file "fire_nightclub_merged.csv"
  read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2

@@ -1,0 +1,10 @@
+to test-fh ; in 'search' file, jh is the heuristic used in a*
+  ask people [show fh]
+  ; h is the typical abbreviation for 'heuristic' but this is based on Jieshi Fang's work, thus 'j'
+end
+
+to test-a-star
+  ask people [show A-star (patch-here) (fh) (preferredexit) (patch-here)] ; second patch-here is supposed to be successors
+  ; figuring out how to get the tables back to lists and sorted in order to actually use successors was low-priority
+  
+end
