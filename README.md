@@ -36,127 +36,14 @@ Reported ecologies and all additional details come from interview with survivors
 Information from interviews has been anonymized for use in the simulation. The code book describes how the
 information is structured.
 
-##Codebook for People##
-1. AGE
+##Codebook for Group Types##
 
-2. SEX
-0 = Female
-1 = Male
-
-3. PRIOR VISIT (had been to the club before or not)
-0 = No
-1 = Yes
-
-4. SEESPARKS (whether or not patron saw flames)
-0 = No visual or auditory receipt of warning or perception of threat
-1 = Seeing sparks, seeing flames, hearing warning of threat
-
-5. LOCEVENTINT (location at the start of the fire)
-1 = Horseshoe Bar
-2 = Back Bar
-3 = Soundboard/Dance Floor/Dining Area to left of stage
-4 = In or Near Green House Area/Pool Tables
-5 = Near Ticket Booth/Front Entrance
-6 = Near bathrooms or in the hallway
-
-6. LOCFOUNDDEAD-(DEAD ONLY)
-1 = Horseshoe Bar
-2 = Back Bar/Office
-3 = Soundboard/Dance Floor/Dining Area to left of stage
-4 = In or Near Green House Area/Pool Tables
-5 = Near Ticket Booth/Front Entrance
-6 = Near bathrooms or in the hallway
-9 = N/A SURVIVOR
-
-7. ACEXIT (actual exit used- SURVIVORS ONLY)
-1 = Green House windows
-2 = Main entrance
-3 = Side exit by Horseshoe Bar
-4 = Kitchen Exit
-5 = Exit by Stage
-6 = Windows near Horseshoe Bar
-9 = N/A DECEASED
-
-8. INTENDEXIT (intended exit)
-1 = Green House windows
-2 = Main entrance
-3 = Side exit by Horseshoe Bar
-4 = Kitchen Exit
-5 = Exit by Stage
-6 = Windows near Horseshoe Bar
-
-9. EVACUATEALONE (evacuated alone or with others)
-0 = Alone
-1 = With others
-9 = N/A Deceased??
-
-10. EVACUATIONASSISTANCE (whether patron was assisted in escaping)
-0 = No
-1 = Yes
-9 = N/A Deceased??
-
-11. INJURIES
-0 = No
-1 = Yes (*Deceased are defaulted to “yes”)
-
-12. DEAD
-0 = Survived
-1 = Dead
-
-13. COconcentration (amount of CO concentration in blood-need to check with Dr. Laposata what units the numbers are measured in)
-9999 = N/A SURVIVOR
-
-
-Group Variables:
-
-14. GROUPSIZE
-
-Actual number of people in the group (1-10; 10 people was the largest group size)
-99= MISSING GROUP SIZE 
-22= Band or Entourage Members
-33 = Station Employee
-
-15. GROUPRELATIONS
 0 = Alone (no group relationships)
 1 = Work/Business associates
 2 = Friendships
 3 = Dating partners
 4 = Family members/Spouses
 5 = More than one type of relationship
-
-16. GROUPMEMINJURIES
-0 = No
-1=Yes
-
-17. GROUPASSIGNMENT
-
-There are currently 211 groups. They are coded 1-211. People in the same group have the same “group assignment” number. 
-
-Employees = GROUP 300
-
-Band/Entourage = GROUP 400
-Temporarily Excluded Variables
-
-18. ADEVACUATE
-0 = No
-1 = Yes
-
-19. HELPINGBEHAV
-0 = No
-1 = Yes
-9= Outside Only
-
-20. LEADERINSIDEOUTSIDE
-0 = Outside
-1 = Inside
-2 = No leader
-
-21. NUMBEROFLEADERS
-
-22. MEDICALCARE
-0 = No
-1 = Yes
-9 = N/A Deceased
 
 
 ##Git Status##
@@ -173,5 +60,5 @@ http://udspace.udel.edu/handle/19716/35 is a link to the DRC library.
 From Setup:
 
 Isobe, Motoshige, Taku Adachi and Takashi Nagatani, Experiment and simulation of pedestrian counter flow, Physica A: Statistical Mechanics and its Applications,
-Volume 336, Issues 3–4,2004, Pages 638-650, ISSN 0378-4371,
+Volume 336, Issues 3ï¿½4,2004, Pages 638-650, ISSN 0378-4371,
 https://doi.org/10.1016/j.physa.2004.01.043. (http://www.sciencedirect.com/science/article/pii/S037843710400130X)
