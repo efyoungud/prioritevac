@@ -52,12 +52,10 @@ to move
   if not empty? possible-positions
   [
     let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)] ; bug: people get stuck behind walls
-  ]
   if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
     [
-      exit-building
-    ]
-      setxy (first next-pos) (last next-pos)
+      exit-building]
+  setxy (first next-pos) (last next-pos)]
 end
 
 to-report argmin [alist f]
