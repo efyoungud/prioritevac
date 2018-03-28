@@ -1,4 +1,0 @@
-to test-fh ; in 'search' file, jh is the heuristic used in a*
-  ask people [show fh]
-  ; h is the typical abbreviation for 'heuristic' but this is based on Jieshi Fang's work, thus 'f'
-end

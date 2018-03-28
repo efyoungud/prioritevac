@@ -12,21 +12,63 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [gender age visited? group-number group-type speed vision path]
-globals [max-wall-distance open closed current-path ]
+people-own [gender age visited? group-number group-type fh vision speed path current-path   ;; the speed of the turtle
+  goal      ;; where am I currently headed
+speed-limit]
+globals [max-wall-distance open closed optimal-path grid-x-inc               ;; the amount of patches in between two roads in the x direction
+  grid-y-inc               ;; the amount of patches in between two roads in the y direction
+  acceleration             ;; the constant that controls how much a car speeds up or slows down by if
+                           ;; it is to accelerate or decelerate
+  ]
 
-patches-own [inside-building? smoke temp-smoke pid
-parent-patch ; patch's predecessor
-  f1 ; the value of knowledge plus heuristic cost function f()
-  g ; the value of knowledge cost function g()
-  h1 ; the value of heuristic cost function h()
-]
+patches-own [inside-building? parent-patch smoke temp-smoke pid f1 g h intersection?   ;; true if the patch is at the intersection of two roads
+
+  ]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "tests.nls" "priorities.nls"  "benchmarks/search benchmarks/search.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
-;;------------------
+to find-shortest-path-to-destination
+  ask one-of people
+  [
+    set path find-path patch-here goal self
+    set optimal-path path
+    set current-path path
+  ]
+end
 
+to-report find-path [source-patch destination-patch person-at-patch]
+  let current-patch 0
+    let search-path []
+  set open []
+  set closed []
+   set open lput exits open
+ set closed lput fires closed
+  while [next-patch != goal]
+  [
 
+  set open (sort-on ["f1"] patches ); sort the patches in open list in increasing order of their f() values
+
+      ; take the first patch in the open list
+      ; as the current patch (which is currently being explored (n))
+      set current-patch item 0 open
+      set open remove-item 0 open  ; and remove it from the open list
+      set closed lput current-patch closed    ; add the current patch to the closed list
+  ask current-patch
+        [    ask neighbors4 with [ (not member? self closed) ]  ; asks the top, bottom, left and right patches that aren't already closed or the parent patch
+          [  if (self != source-patch) and (self != destination-patch) ; if they're not the source or destination patches
+          [
+              set open lput self open ; adds the current patch to the open list
+              set parent-patch current-patch
+  set g (g + 1)
+                set f1 (g + ([fh] of person-at-patch)) ; needs path length
+   set search-path lput current-patch search-path
+  ]]]]
+     set search-path fput destination-patch search-path
+
+  ; reverse the search path so that it starts from a patch adjacent to the
+  ; source patch and ends at the destination patch
+  set search-path reverse search-path
+     report search-path
+end
 
 to setup ; sets up the initial environment
  ca
@@ -37,7 +79,7 @@ to setup ; sets up the initial environment
  set-default-shape fires "square"
  read-building-from-file "building_nightclub.csv"
  read-fire-from-file "fire_nightclub_merged.csv"
- read-patch-labels-from-file "labels.csv"
+  read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2
 soclink
@@ -45,33 +87,138 @@ soclink
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
- ;;agents should have size of .46meters
- ask people [set color white]
- ;ask one-of patches with [inside-building?] [sprout-people 1]
+ ask people [set color white set-speed-limit set speed .1 + random-float .4
+    if (group-number != 0)  [set goal  min-one-of link-neighbors [distance myself]]]
  ;;there's initially no smoke
  ask patches [set smoke 0]
   see
 set-pid
 end
 
-to go
-  tick
+;;whether the patch is in the building or outside of the building
+to read-patch-labels-from-file [filename]
+   let rows bf csv:from-file filename
+   foreach rows
+   [[row] ->
+     ask patch (item 0 row) (item 1 row)
+     [
+       set inside-building? (item 2 row)
+       ifelse inside-building?
+       [set pcolor black]
+       [set pcolor black]
+     ]
+  ]
+end
 
-  ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
+to read-fire-from-file [ filename]
+  ;;header: x y time
+  let values bf csv:from-file filename
+  foreach values
+  [ [row] ->
+    create-fires 1
+    [
+      setxy item 0 row item 1 row
+      set arrival item 2 row
+      set color blue
+    ]
+  ]
+end
+
+to read-building-from-file [filename]
+  let values bf csv:from-file filename
+  foreach values
+  [ [row] ->
+    let breed-name item 0 row
+    let x1 item 1 row
+    let y1 item 2 row
+    let x2 item 3 row
+    let y2 item 4 row
+    let component nobody
+    if breed-name = "Wall" [ create-walls 1 [set component self]]
+    if breed-name = "Exit" [ create-exits 1 [set component self]]
+    if breed-name = "Window" [ create-windows 1 [set component self]]
+    ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
+    ask component [ facexy x1 y1]
+    ;ask component [ set label (word x1)]
+    ask component [ set size distancexy x1 y1 + distancexy x2 y2]
+    ask component [ set first-end (list x1 y1)]
+    ask component [ set second-end (list x2 y2)]
+  ]
+end
+to read-people-from-file [filename] ; information was encoded in a CSV based on interview data and organized by Database Codebook
+  let rows bf csv:from-file filename
+  foreach rows
+  [[row] ->
+    create-people 1
+    [
+     set size .46
+     setxy (item 0 row) (item 1 row) ; initial position, randomized within an ecology that patrons had reported when interviewd
+     set age (item 2 row)
+     set gender (item 3 row)
+     set visited? (item 4 row) ;true or false
+     set group-number (item 6 row) ; people were assigned group numbers based on the people they came with
+     set group-type (item 7 row) ; based on composition of group
+  ]]
+end
+
+to soclink ;groups that came together have links based type of relationship
+ask people [if group-type != 0 ;type 0 is 'alone'
+ [
+if group-type = 1 [ask other people with [group-number = [group-number] of myself] [create-coworker-with myself]]
+if group-type = 2 [ask other people with [group-number = [group-number] of myself] [create-friend-with myself]]
+if group-type = 3 [ask other people with [group-number = [group-number] of myself] [create-partner-with myself]]
+if group-type = 4 [ask other people with [group-number = [group-number] of myself] [create-family-with myself]]
+if group-type = 5 [ask other people with [group-number = [group-number] of myself] [create-multiple-with myself]]
+ ]]
+  ask links [hide-link]
+end
+
+to set-pid
+  ask patches
+  [set pid (((pxcor) * 10 ^ 6) + ((pycor) * 10 ^ 3))]
+end
+
+to go
+ tick
+   ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
-   ask fires with [arrival < ticks]
+  ask fires with [arrival < ticks]
   [
     ask patch-here [ set smoke 1]
     ask people-here [die-by-fire]
   ]
-  ask people [ move]
-;Windows are turned into exits based on timings provided by NIST Documentation
+
+  ;; set the cars’ speed, move them forward their speed, record data for plotting,
+  ;; and set the color of the cars to an appropriate color based on their speed
+  ask people [
+    face next-patch ;; car heads towards its goal
+    set-speed
+    fd speed
+   let possible-positions valid-next-locations self
+    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
+   if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
+    [
+     exit-building]
+  ]
+  ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
   diffuse-smoke 1
   recolor-patches
   see
+end
+
+to diffuse-smoke [diffusion-rate ]
+    ;; assumes patches-own [ value new-value ]
+    if 0 > diffusion-rate or diffusion-rate > 1 [ diffuse plabel diffusion-rate ] ;; cause a run-time error
+
+    ask patches with [inside-building?]
+    [
+      set temp-smoke (smoke * (1 - diffusion-rate)) +
+      diffusion-rate * (sum [ smoke / (count neighbors with [inside-building?])  ] of neighbors with [inside-building?])
+    ]
+    ask patches with [inside-building?] [set smoke temp-smoke]
 end
 
 to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
@@ -92,14 +239,10 @@ to recolor-patches
   ask patches [ set pcolor scale-color white smoke 0 1]
 end
 
-to see
+to see ; needs to be made actually a cone
   ask people [set vision
    patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
   ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
-end
-
-to testdirection ; demonstrates whether straight exit preference works
-  ask people [show preferredexit]
 end
 
 to-report preferredexit
@@ -119,8 +262,213 @@ to-report closest ; selects closest exit regardless of visibility
   report (min-one-of exits [distance myself])
 end
 
-to-report get-out
-  report patch-at (0)( 0 )
+to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
+  let x1 [xcor] of a-person
+  let y1 [ycor] of a-person
+  let valid-neighbors (list)
+  let n 5
+  let max-width 3
+  let max-height 2
+  let all-positions  get-grid n max-width max-height x1 y1
+  foreach all-positions
+  [[pos] ->
+    let x2 (first pos)
+    let y2 (last pos)
+
+    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
+    [
+      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
+        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
+      ] of patch x2 y2) [
+
+        set valid-neighbors fput pos valid-neighbors
+      ]
+    ]
+  ]
+  report valid-neighbors
+end
+
+to-report get-grid [n max-width max-height startx starty]
+  let stepx max-width / (2 * n )
+  let stepy max-height / (2 * n)
+  let minx startx - n * stepx
+  let miny starty - n * stepy
+  let maxx startx + n * stepx
+  let maxy starty + n * stepy
+  let result (list)
+  let currx minx
+  while [currx <= maxx]
+  [
+    let curry miny
+    while [curry <= maxy]
+    [
+      set result fput (list (precision currx 2) (precision curry 2)) result
+      set curry curry + stepy
+    ]
+    set currx currx + stepx
+  ]
+  report result
+end
+
+to move
+  let possible-positions valid-next-locations self
+  if not empty? possible-positions
+  [
+    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)] ; bug: people get stuck behind walls
+  if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
+    [
+      exit-building]
+  setxy (first next-pos) (last next-pos)]
+end
+
+to-report argmin [alist f]
+  let min-element (first alist)
+  let min-value (runresult f (first alist))
+  foreach alist
+   [ [element] ->
+     if (runresult f element) < min-value
+     [
+      set min-element element
+      set min-value (runresult f element)
+     ]
+   ]
+  report min-element
+end
+
+to-report within? [v v1 v2]  ;;
+  report (v <= v1 and v >= v2) or (v <= v2 and v >= v1)
+end
+
+to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
+  ;show "--started--"
+  ;show (list x1 y1 x2 y2 x3 y3 x4 y4)
+  let m1 nobody
+  let m2 nobody
+  if x1 != x2 [set m1 (y2 - y1) / (x2 - x1)]
+  if x3 != x4 [set m2 (y4 - y3) / (x4 - x3)]
+
+  ;; is t1 vertical? if so, swap the two turtles
+  if m1 = nobody
+  [
+    ifelse m2 = nobody
+      [report false ]
+      [ report intersection x3 y3 x4 y4 x1 y1 x2 y2 ]
+  ]
+  ;; is t2 vertical? if so, handle specially
+  if m2 = nobody[
+     ;; represent t1 line in slope-intercept form (y=mx+c)
+      let c1 y1 - (x1 * m1)
+      ;; t2 is vertical so we know x already
+      let x x3
+      ;; solve for y
+      let y m1 * x + c1
+      ;; check if intersection point lies on both segments
+      if not within? x x1 x2 [ report false ]
+      if not within? y y3 y4 [ report false ]
+
+      report true
+  ]
+  ;; now handle the normal case where neither turtle is vertical;
+  ;; start by representing lines in slope-intercept form (y=mx+c)
+  let c1 y1 - (x1 * m1)
+  let c2 y3 - (x3 * m2)
+  ;treat collinear lines that are ontop of each other as intersecting
+  if m1  = m2 [report c1 = c2 and (within? x1 x3 x4 or within? x2 x3 x4)]
+  ;; now solve for x
+
+  let x (c2 - c1) / (m1 - m2)
+  ;; check if intersection point lies on both segments
+  if not within? x x1 x2 [
+
+   report false ]
+  if not within? x x3 x4 [
+   report false ]
+
+  report true
+end
+
+to-report preferreddirection ; selects direction by either sending someone towards their loved ones or an exit
+  ; they only go towards an exit if they stop caring, if their loved ones are within 2m, or if they are alone (either from the time they arrive or because people are dead
+  if (group-type = 0) or ((no-links) = true)
+      ; or (link-length < 2 myself) link-length is link-only and this is for turtles, unsure how to implement in this context
+  [report preferredexit]
+end
+
+to-report fprivatespace ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
+ if (distance (min-one-of other people [distance myself])) < 3
+  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(.3333))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
+;original equation included 'dodging behavior' but inclusion in a* negates the necessity
+end
+
+to-report fwall ; also applies only in sphere of influence, constant is 1
+  ifelse (distance (min-one-of walls [distance myself]) < 30)
+    [report  1 * (1 /(distance (min-one-of walls [distance myself]) - .46) - .3333)] ; original equation included 1/'influence distance' which has been replaced by .3333 because 3m is the comfortable distance : need to find citation
+      [report 0] ; reports number when the distance between the agent and the wall is less than 30, 0 when it's more than 30
+      ;radius of agent is .46
+end
+to-report crowd-at-exit ; counts how many people are between the agent and their closest door
+  ;this slightly discourages going to crowded exits
+  let door (distance (min-one-of exits [distance myself])) ;does not incorporate vision, not sure how to do that
+  report count people in-cone door 90
+end
+
+to-report fire-distance
+  let door (distance (min-one-of exits [distance myself]))
+  report 500 * (distance (min-one-of fires [distance myself])) ; runs based on how close fires are: multiplier is arbitary
+end
+
+to set-fh
+ask people [set fh fprivatespace + fwall + fire-distance + crowd-at-exit
+    ]
+end
+
+;; Initialize the global variables to appropriate values
+to setup-globals
+  ;; don't make acceleration 0.1 since we could get a rounding error and end up on a patch boundary
+  set acceleration 0.099
+end
+
+to set-speed-limit ; units are m/s, from Isobe
+  ask people [set speed-limit 1.1 + random-float .2]
+end
+
+to set-speed  ;; turtle procedure
+  ;; get the turtles on the patch in front of the turtle
+  let people-ahead people in-cone (1 - (1 * smoke)) (210 - (210 * smoke))
+  ;; if there are turtles in front of the turtle, slow down
+  ;; otherwise, speed up
+  ifelse any? people-ahead
+    [ set speed [speed] of one-of people-ahead
+      slow-down
+    ]
+  [speed-up ]
+end
+
+;; decrease the speed of the car
+to slow-down  ;; turtle procedure
+  ifelse speed <= 0
+    [ set speed 0 ]
+    [ set speed speed - acceleration ]
+end
+;; increase the speed of the car
+to speed-up  ;; turtle procedure
+  ifelse speed > speed-limit
+    [ set speed speed-limit ]
+    [ set speed speed + acceleration ]
+end
+
+;; establish goal of person and move to next patch along the way. does not yet use A* or prioritise people
+to-report next-patch
+  ifelse ((no-links) = false)
+  [if (distance min-one-of link-neighbors [distance myself] < 2) [set goal preferredexit]]
+   [set goal preferredexit]
+  ;; CHOICES is an agentset of the candidate patches that the car can
+  ;; move to (white patches are roads, green and red patches are lights)
+  let choices neighbors with [ pcolor != red]
+  ;; choose the patch closest to the goal, this is the patch the car will move to
+  let choice min-one-of choices [ distance [ goal ] of myself ] ; this needs to be min fh
+  ;; report the chosen patch
+  report choice
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -208,98 +556,6 @@ BUTTON
 143
 step
 go
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-28
-152
-200
-185
-coworkers-constant
-coworkers-constant
-0
-100
-0.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-28
-189
-200
-222
-multiples-constant
-multiples-constant
-0
-100
-0.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-29
-233
-201
-266
-family-constant
-family-constant
-0
-100
-0.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-29
-276
-201
-309
-friends-constant
-friends-constant
-0
-100
-0.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-30
-317
-202
-350
-partners-constant
-partners-constant
-0
-100
-0.0
-1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-105
-111
-206
-144
-NIL
-testdirection
 NIL
 1
 T
