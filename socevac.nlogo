@@ -23,7 +23,7 @@ parent-patch ; patch's predecessor
 ]
 ;;------------------
 extensions [csv]
-__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "tests.nls" "priorities.nls"  "benchmarks/search benchmarks/search.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
+__includes ["setup.nls" "line_detection.nls" "utils.nls" "movement.nls" "tests.nls"  "benchmarks/search benchmarks/search.nls"] ; priorities file is an initial concept for the social behavior and does not impact behavior
 ;;------------------
 
 
