@@ -35,6 +35,12 @@ to find-shortest-path-to-destination
   ]
 end
 
+;to-report possible-goals
+ ; ifelse group-type != 0 [link-neighbors]
+  ;[x]
+  ;rep
+;end
+
 to-report find-path [source-patch destination-patch person-at-patch]
   let current-patch 0
     let search-path []
@@ -415,6 +421,10 @@ end
 to-report fire-distance
   let door (distance (min-one-of exits [distance myself]))
   report 500 * (distance (min-one-of fires [distance myself])) ; runs based on how close fires are: multiplier is arbitary
+end
+
+to-report smoke-distance
+
 end
 
 to set-fh
