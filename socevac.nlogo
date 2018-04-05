@@ -15,13 +15,10 @@ fires-own [arrival]
 people-own [gender age visited? group-number group-type fh vision speed path current-path   ;; the speed of the turtle
   goal      ;; where am I currently headed
 speed-limit]
-globals [max-wall-distance open closed optimal-path grid-x-inc               ;; the amount of patches in between two roads in the x direction
-  grid-y-inc               ;; the amount of patches in between two roads in the y direction
-  acceleration             ;; the constant that controls how much a car speeds up or slows down by if
-                           ;; it is to accelerate or decelerate
+globals [max-wall-distance open closed optimal-path acceleration  ;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
   ]
 
-patches-own [inside-building? parent-patch smoke temp-smoke pid f1 g h intersection?   ;; true if the patch is at the intersection of two roads
+patches-own [inside-building? parent-patch smoke temp-smoke f1 g h intersection?   ;; true if the patch is at the intersection of two roads
 
   ]
 ;;------------------
@@ -82,6 +79,7 @@ to setup ; sets up the initial environment
   read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2
+  set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
  ask walls [set color hsb  216 50 100]
  ask exits [set color hsb  0  50 100]
@@ -92,7 +90,6 @@ soclink
  ;;there's initially no smoke
  ask patches [set smoke 0]
   see
-set-pid
 end
 
 ;;whether the patch is in the building or outside of the building
@@ -173,11 +170,6 @@ if group-type = 5 [ask other people with [group-number = [group-number] of mysel
   ask links [hide-link]
 end
 
-to set-pid
-  ask patches
-  [set pid (((pxcor) * 10 ^ 6) + ((pycor) * 10 ^ 3))]
-end
-
 to go
  tick
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
@@ -187,18 +179,12 @@ to go
     ask patch-here [ set smoke 1]
     ask people-here [die-by-fire]
   ]
-
-  ;; set the cars’ speed, move them forward their speed, record data for plotting,
-  ;; and set the color of the cars to an appropriate color based on their speed
-  ask people [
-    face next-patch ;; car heads towards its goal
+  ask people [ face next-patch ;; person heads towards its goal
     set-speed
-    fd speed
-   let possible-positions valid-next-locations self
-    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
+    fd speed ; need to set it so they can't walk through walls
+    let next-pos [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
    if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
-    [
-     exit-building]
+    [  exit-building]
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
@@ -224,7 +210,7 @@ end
 to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
   show "Died by proximity to fire at second" ; this can be changed to output-print when the outputs are set up
   print ticks
-  die
+  die ; removes from simulation
 end
 
 to exit-building ; prints the time the agent is removed from simulation
@@ -241,7 +227,7 @@ end
 
 to see ; needs to be made actually a cone
   ask people [set vision
-   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
+   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
   ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
 end
 
@@ -260,79 +246,6 @@ end
 
 to-report closest ; selects closest exit regardless of visibility
   report (min-one-of exits [distance myself])
-end
-
-to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
-  let x1 [xcor] of a-person
-  let y1 [ycor] of a-person
-  let valid-neighbors (list)
-  let n 5
-  let max-width 3
-  let max-height 2
-  let all-positions  get-grid n max-width max-height x1 y1
-  foreach all-positions
-  [[pos] ->
-    let x2 (first pos)
-    let y2 (last pos)
-
-    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
-    [
-      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
-        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
-      ] of patch x2 y2) [
-
-        set valid-neighbors fput pos valid-neighbors
-      ]
-    ]
-  ]
-  report valid-neighbors
-end
-
-to-report get-grid [n max-width max-height startx starty]
-  let stepx max-width / (2 * n )
-  let stepy max-height / (2 * n)
-  let minx startx - n * stepx
-  let miny starty - n * stepy
-  let maxx startx + n * stepx
-  let maxy starty + n * stepy
-  let result (list)
-  let currx minx
-  while [currx <= maxx]
-  [
-    let curry miny
-    while [curry <= maxy]
-    [
-      set result fput (list (precision currx 2) (precision curry 2)) result
-      set curry curry + stepy
-    ]
-    set currx currx + stepx
-  ]
-  report result
-end
-
-to move
-  let possible-positions valid-next-locations self
-  if not empty? possible-positions
-  [
-    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)] ; bug: people get stuck behind walls
-  if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
-    [
-      exit-building]
-  setxy (first next-pos) (last next-pos)]
-end
-
-to-report argmin [alist f]
-  let min-element (first alist)
-  let min-value (runresult f (first alist))
-  foreach alist
-   [ [element] ->
-     if (runresult f element) < min-value
-     [
-      set min-element element
-      set min-value (runresult f element)
-     ]
-   ]
-  report min-element
 end
 
 to-report within? [v v1 v2]  ;;
@@ -418,14 +331,8 @@ to-report fire-distance
 end
 
 to set-fh
-ask people [set fh fprivatespace + fwall + fire-distance + crowd-at-exit
+ask people [set fh fprivatespace + fwall + fire-distance + crowd-at-exit ;needs distance to exit too
     ]
-end
-
-;; Initialize the global variables to appropriate values
-to setup-globals
-  ;; don't make acceleration 0.1 since we could get a rounding error and end up on a patch boundary
-  set acceleration 0.099
 end
 
 to set-speed-limit ; units are m/s, from Isobe
@@ -433,9 +340,9 @@ to set-speed-limit ; units are m/s, from Isobe
 end
 
 to set-speed  ;; turtle procedure
-  ;; get the turtles on the patch in front of the turtle
+  ;; count the people on the patch in front of the person
   let people-ahead people in-cone (1 - (1 * smoke)) (210 - (210 * smoke))
-  ;; if there are turtles in front of the turtle, slow down
+  ;; if there are people in front of the person and visible, slow down
   ;; otherwise, speed up
   ifelse any? people-ahead
     [ set speed [speed] of one-of people-ahead
@@ -444,13 +351,13 @@ to set-speed  ;; turtle procedure
   [speed-up ]
 end
 
-;; decrease the speed of the car
+;; decrease the speed of the person
 to slow-down  ;; turtle procedure
   ifelse speed <= 0
     [ set speed 0 ]
     [ set speed speed - acceleration ]
 end
-;; increase the speed of the car
+;; increase the speed of the person
 to speed-up  ;; turtle procedure
   ifelse speed > speed-limit
     [ set speed speed-limit ]
@@ -462,9 +369,8 @@ to-report next-patch
   ifelse ((no-links) = false)
   [if (distance min-one-of link-neighbors [distance myself] < 2) [set goal preferredexit]]
    [set goal preferredexit]
-  ;; CHOICES is an agentset of the candidate patches that the car can
-  ;; move to (white patches are roads, green and red patches are lights)
-  let choices neighbors with [ pcolor != red]
+  ;; CHOICES is an agentset of the candidate patches that the car can move to
+  let choices neighbors with [pcolor != red and turtles-here != walls ] ;and not any? (turtle-set walls windows) in-radius max-wall-distance will cut out walls and windows and needs to go SOMEWHERE
   ;; choose the patch closest to the goal, this is the patch the car will move to
   let choice min-one-of choices [ distance [ goal ] of myself ] ; this needs to be min fh
   ;; report the chosen patch
