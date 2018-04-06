@@ -34,27 +34,24 @@ end
 
 to-report find-path [source-patch destination-patch person-at-patch]
   let current-patch 0
-    let search-path []
+  let search-path []
   set open []
   set closed []
-   set open lput exits open
+  set open lput exits open
  set closed lput fires closed
+  set closed lput walls closed
+   set closed lput windows closed
   while [next-patch != goal]
-  [
-
-  set open (sort-on ["f1"] patches ); sort the patches in open list in increasing order of their f() values
-
+  [set open (sort-on ["f1"] patches ); sort the patches in open list in increasing order of their f() values
       ; take the first patch in the open list
-      ; as the current patch (which is currently being explored (n))
-      set current-patch item 0 open
+      set current-patch item 0 open ; as the current patch (which is currently being explored (n))
       set open remove-item 0 open  ; and remove it from the open list
       set closed lput current-patch closed    ; add the current patch to the closed list
   ask current-patch
         [    ask neighbors4 with [ (not member? self closed) ]  ; asks the top, bottom, left and right patches that aren't already closed or the parent patch
           [  if (self != source-patch) and (self != destination-patch) ; if they're not the source or destination patches
-          [
-              set open lput self open ; adds the current patch to the open list
-              set parent-patch current-patch
+          [set open lput self open ; adds the current patch to the open list
+                set parent-patch current-patch
   set g (g + 1)
                 set f1 (g + ([fh] of person-at-patch)) ; needs path length
    set search-path lput current-patch search-path
@@ -182,7 +179,8 @@ to go
   ask people [ face next-patch ;; person heads towards its goal
     set-speed
     fd speed ; need to set it so they can't walk through walls
-    let next-pos [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
+    let possible-positions valid-next-locations self
+    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
    if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
     [  exit-building]
   ]
@@ -193,6 +191,68 @@ to go
   diffuse-smoke 1
   recolor-patches
   see
+end
+
+to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
+  let x1 [xcor] of a-person
+  let y1 [ycor] of a-person
+  let valid-neighbors (list)
+  let n 5
+  let max-width 3
+  let max-height 2
+  let all-positions  get-grid n max-width max-height x1 y1
+  foreach all-positions
+  [[pos] ->
+    let x2 (first pos)
+    let y2 (last pos)
+
+    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
+    [
+      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
+        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
+      ] of patch x2 y2) [
+
+        set valid-neighbors fput pos valid-neighbors
+      ]
+    ]
+  ]
+  report valid-neighbors
+end
+
+to-report get-grid [n max-width max-height startx starty]
+  let stepx max-width / (2 * n )
+  let stepy max-height / (2 * n)
+  let minx startx - n * stepx
+  let miny starty - n * stepy
+  let maxx startx + n * stepx
+  let maxy starty + n * stepy
+  let result (list)
+  let currx minx
+  while [currx <= maxx]
+  [
+    let curry miny
+    while [curry <= maxy]
+    [
+      set result fput (list (precision currx 2) (precision curry 2)) result
+      set curry curry + stepy
+    ]
+    set currx currx + stepx
+ ]
+  report result
+end
+
+to-report argmin [alist f]
+  let min-element (first alist)
+  let min-value (runresult f (first alist))
+  foreach alist
+   [ [element] ->
+     if (runresult f element) < min-value
+     [
+      set min-element element
+      set min-value (runresult f element)
+     ]
+   ]
+  report min-element
 end
 
 to diffuse-smoke [diffusion-rate ]
@@ -331,9 +391,9 @@ to-report fire-distance
 end
 
 to set-fh
-ask people [set fh fprivatespace + fwall + fire-distance + crowd-at-exit ;needs distance to exit too
-    ]
-end
+ask people [set fh (1 - (1 / (fprivatespace + fwall + fire-distance + crowd-at-exit))) ;needs distance to exit too
+    ]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
+end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
 
 to set-speed-limit ; units are m/s, from Isobe
   ask people [set speed-limit 1.1 + random-float .2]
