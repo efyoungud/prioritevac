@@ -23,6 +23,7 @@ patches-own [inside-building? parent-patch smoke temp-smoke f1 g h intersection?
   ]
 ;;------------------
 extensions [csv]
+__includes [ "tests.nls"]
 to find-shortest-path-to-destination
   ask one-of people
   [
