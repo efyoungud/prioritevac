@@ -1,0 +1,67 @@
+to test-fh ; in jh is the heuristic used in a*
+  ask one-of people [ set-fh ; tests set-fh function and overall admissability of heuristic
+    ifelse fh > 1 ; nothing should exceed 1
+  [show "Heuristic inadmissable"] ; if it does, it's not admissable in A*
+    [show fh]] 
+  ; h is the typical abbreviation for 'heuristic' but this is based on Jieshi Fang's work, thus 'f'
+end
+
+to test-direction ; demonstrates whether straight exit preference works
+  ask one-of people [show preferredexit] ; tests preferredexit, closest
+end ;visual test
+
+to test-closest-visible ; demonstrates whether exit preference works for visibility
+  ask one-of people with [visited? = false] [show preferredexit] ; tests closestvisible, preferredexit
+end ;visual test
+
+to test-soclink ; demonstrates whether soclink works
+  ask one-of people with [group-type != 0] [show link-neighbors] ; tests soclink for all people who came with groups
+end
+
+to tests-not-run
+  ; the fire, people, building, and patch labels are all read in from csvs
+  ; the fact that anything shows up on setup and when things start shows that they work
+  ; go procedure is tested whenever the go button is hit
+  ; recolor-patches is demonstrated on 'go' and can be assessed visually
+  ; die-by-fire and exit-building both print messages, and so can be assessed visually
+end
+
+to test-crowd-at-exit ; tests the number of people between a person and the exit they're aiming for
+  ask one-of people [show crowd-at-exit] ; should always be a whole positive number
+end
+
+to test-fire-distance ; shows the results of fire-distance
+  ask one-of people [show fire-distance] ; might be a bug? returns positive for some people even at 0 ticks
+end
+
+to test-fprivatespace ; tests the private space component of the heuristic
+  ask one-of people [show fprivatespace] ; should return a number
+end
+to test-fwall ; tests the wall distance component of the heuristic
+  ask one-of people [show fwall] ; should return a number
+end
+to test-valid-next-locations ; tests the valid-next-locations search
+  ask one-of people [show valid-next-locations self] ; should return a list of patch locations
+end
+
+to test-speed-limit ; tests that individuals have been assigned a speed limit
+  ask one-of people [show speed-limit] ; should return a positive number smaller than 1.3
+end ; making it an individual property rather than a global allows for later inclusion of information that would impact speed such as disability or age
+
+;need tests for: Argmin
+;Diffuse-smoke - actually, probably not worth it, since it isn't valid and returns smoke values above 100% saturation
+;Find-path
+;Find-shortest-path-to-destination
+;Get-grid
+;Intersection
+;Next-patch
+;Preferred direction
+;Within?
+
+to test-see ; tests both the see command and the vision parameter
+  ask one-of people [see show vision] ; should return an agentset that fluctuates with smoke
+end
+
+to test-speed ; tests set-speed, slow-down, speed-up
+  ask one-of people [ show speed face next-patch set-speed show speed] ; should display two different positive numbers: them being different indicates that the person is responding to their environment
+end ; exception is if person is alone in their environment, in which case if both numbers are equal to the speed limit that is also an acceptable outcome
