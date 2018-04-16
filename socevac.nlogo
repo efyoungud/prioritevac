@@ -111,7 +111,7 @@ to read-patch-labels-from-file [filename]
   ]
 end
 
-to read-fire-from-file [ filename]
+to read-fire-from-file [ filename] ; reads in the fire from a CSV
   ;;header: x y time
   let values bf csv:from-file filename
   foreach values
@@ -125,17 +125,17 @@ to read-fire-from-file [ filename]
   ]
 end
 
-to read-building-from-file [filename]
+to read-building-from-file [filename] ; reads in the building from a CSV
   let values bf csv:from-file filename
   foreach values
   [ [row] ->
-    let breed-name item 0 row
-    let x1 item 1 row
+    let breed-name item 0 row ; defines items
+    let x1 item 1 row ; these define start and end points for a linear stretch
     let y1 item 2 row
     let x2 item 3 row
     let y2 item 4 row
     let component nobody
-    if breed-name = "Wall" [ create-walls 1 [set component self]]
+    if breed-name = "Wall" [ create-walls 1 [set component self]] ; sets up the breed
     if breed-name = "Exit" [ create-exits 1 [set component self]]
     if breed-name = "Window" [ create-windows 1 [set component self]]
     ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
@@ -152,7 +152,7 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
   [[row] ->
     create-people 1
     [
-     set size .46
+     set size .46 ; unsourced and arbitrary, needs revision
      setxy (item 0 row) (item 1 row) ; initial position, randomized within an ecology that patrons had reported when interviewd
      set age (item 2 row)
      set gender (item 3 row)
@@ -174,20 +174,18 @@ if group-type = 5 [ask other people with [group-number = [group-number] of mysel
   ask links [hide-link]
 end
 
-to go
- tick
+to go ; master command to run simulation
+ tick ; makes one second of time pass
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
   ask fires with [arrival < ticks]
-  [
-    ask patch-here [ set smoke 1]
-    ask people-here [die-by-fire]
+  [  ask patch-here [ set smoke 1]
+    ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
   ask people [ face next-patch ;; person heads towards its goal
     set-speed
     fd speed ; need to set it so they can't walk through walls
-    let possible-positions valid-next-locations self
-    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
+    let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
    if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
     [  exit-building]
   ]
@@ -195,7 +193,7 @@ to go
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
-  diffuse-smoke 1
+  diffuse-smoke 1 ; initiates smoke, should be replaced with smokeview csv when available
   recolor-patches
   see
 end
