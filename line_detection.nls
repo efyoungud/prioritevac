@@ -73,10 +73,10 @@ to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
   report true
 end
 
-to-report crossed? [x1 y1 x2 y2 x3 y3 x4 y4]
+to-report crossed? [x1 y1 x2 y2 x3 y3 x4 y4] ;Checks to see if line segment x1 y1 x2 y2 intersects with line segment x3 y3 x4 y4
+  
   if 4 > length remove-duplicates (list (list x1 y1) (list x2 y2) (list x3 y3) (list x4 y4)) ;;checks if any end-points are the same
   [report true]
-  
 
   report ((subtract-headings (towards-coords x1 y1 x2 y2) (towards-coords x1 y1 x3 y3) < 0) xor
   (subtract-headings towards-coords x1 y1 x2 y2 towards-coords x1 y1 x4 y4) < 0)
@@ -107,7 +107,7 @@ end
 to-report radians-to-degrees [rad]
  report rad * (180 / pi)
 end
-to-report atan2 [y x]
+to-report atan2 [y x] ; arctan(y/x) reports angle
   report heading-to-angle (atan x y)
 end
 to-report heading-to-angle [ h ]
