@@ -12,7 +12,7 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-people-own [gender age visited? group-number group-type fh vision speed path current-path   ;; the speed of the turtle
+people-own [gender age visited? group-number group-type fh vision speed path current-path leadership-quality leader  ;; the speed of the turtle
   goal      ;; where am I currently headed
 speed-limit]
 globals [max-wall-distance open closed optimal-path acceleration  ;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
@@ -33,12 +33,6 @@ to find-shortest-path-to-destination
   ]
 end
 
-;to-report possible-goals
- ; ifelse group-type != 0 [link-neighbors]
-  ;[x]
-  ;rep
-;end
-
 to-report find-path [source-patch destination-patch person-at-patch]
   let current-patch 0
   let search-path []
@@ -55,7 +49,7 @@ to-report find-path [source-patch destination-patch person-at-patch]
       set open remove-item 0 open  ; and remove it from the open list
       set closed lput current-patch closed    ; add the current patch to the closed list
   ask current-patch
-        [    ask neighbors4 with [ (not member? self closed) ]  ; asks the top, bottom, left and right patches that aren't already closed or the parent patch
+        [    ask neighbors with [ (not member? self closed) ]  ; asks the neighboring patches that aren't already closed or the parent patch
           [  if (self != source-patch) and (self != destination-patch) ; if they're not the source or destination patches
           [set open lput self open ; adds the current patch to the open list
                 set parent-patch current-patch
@@ -89,7 +83,7 @@ soclink
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
- ask people [set color white set-speed-limit set speed .1 + random-float .4
+ ask people [set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
     if (group-number != 0)  [set goal  min-one-of link-neighbors [distance myself]]]
  ;;there's initially no smoke
  ask patches [set smoke 0]
@@ -182,12 +176,7 @@ to go ; master command to run simulation
   [  ask patch-here [ set smoke 1]
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [ face next-patch ;; person heads towards its goal
-    set-speed
-    fd speed ; need to set it so they can't walk through walls
-    let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
-   if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
-    [  exit-building]
+  ask people [move
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
@@ -196,6 +185,16 @@ to go ; master command to run simulation
   diffuse-smoke 1 ; initiates smoke, should be replaced with smokeview csv when available
   recolor-patches
   see
+end
+
+to move
+ if goal = nobody [preferreddirection]
+    face next-patch ;; person heads towards its goal
+    set-speed
+    fd speed ; need to set it so they can't walk through walls
+    let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
+   if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
+    [  exit-building]
 end
 
 to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
@@ -365,11 +364,28 @@ to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
   report true
 end
 
-to-report preferreddirection ; selects direction by either sending someone towards their loved ones or an exit
-  ; they only go towards an exit if they stop caring, if their loved ones are within 2m, or if they are alone (either from the time they arrive or because people are dead
-  if (group-type = 0) or ((no-links) = true)
-      ; or (link-length < 2 myself) link-length is link-only and this is for turtles, unsure how to implement in this context
-  [report preferredexit]
+to preferreddirection ; selects direction by either sending someone towards their loved ones or an exit
+  ifelse (group-type = 0) or (any? link-neighbors = false) ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
+  [set goal preferredexit]
+  [ ifelse (min-one-of link-neighbors [distance myself] < 2 ) ; if they have loved ones they have not given up on, they go towards them
+    [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
+    [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
+  ]
+end
+
+to leader-follower
+  let close-group people with [group-number = [group-number] of myself and distance myself < 2]
+ ask close-group
+    [foreach list (visited? = true) (gender = "male") ; needs something for being closer to the exit, closer to 40, and less injured
+      [set leadership-quality leadership-quality + 1]
+      if leader = true [set leadership-quality (leadership-quality * 2) ]
+    ]
+  ask close-group with-max [leadership-quality] [set leader true]
+   if goal = nobody [set goal preferredexit]
+ ; all? link-neighbors [distance myself < 2]
+  ; leader set goal min-one-of link-neighbors [distance myself] with [distance myself] > 2
+ ; [set goal preferredexit]
+
 end
 
 to-report fprivatespace ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
@@ -415,7 +431,6 @@ to set-speed  ;; turtle procedure
   ;; otherwise, speed up
   ifelse any? people-ahead
     [ set speed [speed] of one-of people-ahead
-      slow-down
     ]
   [speed-up ]
 end
@@ -433,14 +448,11 @@ to speed-up  ;; turtle procedure
     [ set speed speed + acceleration ]
 end
 
-;; establish goal of person and move to next patch along the way. does not yet use A* or prioritise people
+;; moves to next patch along the way to goal. does not yet use A*
 to-report next-patch
-  ifelse ((no-links) = false)
-  [if (distance min-one-of link-neighbors [distance myself] < 2) [set goal preferredexit]]
-   [set goal preferredexit]
   ;; CHOICES is an agentset of the candidate patches that the car can move to
-  let choices neighbors with [pcolor != red and turtles-here != walls ] ;and not any? (turtle-set walls windows) in-radius max-wall-distance will cut out walls and windows and needs to go SOMEWHERE
-  ;; choose the patch closest to the goal, this is the patch the car will move to
+  let choices neighbors with [(pcolor = red) = false ] ;cuts out fire, needs to cut out walls and windows
+  ;; choose the patch closest to the goal, this is the patch the person will move to
   let choice min-one-of choices [ distance [ goal ] of myself ] ; this needs to be min fh
   ;; report the chosen patch
   report choice
