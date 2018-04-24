@@ -189,12 +189,14 @@ end
 
 to move
  if goal = nobody [preferreddirection]
+  let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
     face next-patch ;; person heads towards its goal
     set-speed
-    fd speed ; need to set it so they can't walk through walls
-    let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
+  ifelse next-patch != invalid-next-locations self
+    [ fd speed ]
+  [setxy (first next-pos) (last next-pos)]
    if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
-    [  exit-building]
+    [ exit-building]
 end
 
 to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
@@ -221,6 +223,28 @@ to-report valid-next-locations [a-person] ; reports locations that are not walls
     ]
   ]
   report valid-neighbors
+end
+
+to-report invalid-next-locations [a-person] ; reports locations that are not walls or fire
+  let x1 [xcor] of a-person
+  let y1 [ycor] of a-person
+  let invalid-neighbors (list)
+  let n 5
+  let max-width 3
+  let max-height 2
+  let all-positions  get-grid n max-width max-height x1 y1
+  foreach all-positions
+  [[pos] ->
+    let x2 (first pos)
+    let y2 (last pos)
+      if any? ([((turtle-set walls windows) in-radius max-wall-distance
+        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
+      ] of patch x2 y2) [
+
+        set invalid-neighbors fput pos invalid-neighbors
+      ]
+  ]
+  report invalid-neighbors
 end
 
 to-report get-grid [n max-width max-height startx starty]
@@ -367,7 +391,7 @@ end
 to preferreddirection ; selects direction by either sending someone towards their loved ones or an exit
   ifelse (group-type = 0) or (any? link-neighbors = false) ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
   [set goal preferredexit]
-  [ ifelse (min-one-of link-neighbors [distance myself] < 2 ) ; if they have loved ones they have not given up on, they go towards them
+  [ ifelse (distance min-one-of link-neighbors [distance myself] < 2 ) ; if they have loved ones they have not given up on, they go towards them
     [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
     [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
   ]
@@ -381,10 +405,8 @@ to leader-follower
       if leader = true [set leadership-quality (leadership-quality * 2) ]
     ]
   ask close-group with-max [leadership-quality] [set leader true]
-   if goal = nobody [set goal preferredexit]
- ; all? link-neighbors [distance myself < 2]
+  ask leader [if goal = nobody  or all? link-neighbors [distance myself < 2] = true [set goal preferredexit]]
   ; leader set goal min-one-of link-neighbors [distance myself] with [distance myself] > 2
- ; [set goal preferredexit]
 
 end
 
