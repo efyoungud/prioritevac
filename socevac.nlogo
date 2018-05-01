@@ -33,6 +33,10 @@ to find-shortest-path-to-destination
   ]
 end
 
+to set-f1 [destination-patch person-at-patch]
+  set f1 ((distance destination-patch) + ([fh] of person-at-patch))
+end
+
 to-report find-path [source-patch destination-patch person-at-patch]
   let current-patch 0
   let search-path []
@@ -83,8 +87,8 @@ soclink
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
- ask people [set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
-    if (group-number != 0)  [set goal  min-one-of link-neighbors [distance myself]]]
+  ask people [set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
+    preferreddirection]
  ;;there's initially no smoke
  ask patches [set smoke 0]
   see
@@ -193,7 +197,7 @@ to move
     face next-patch ;; person heads towards its goal
     set-speed
   ifelse next-patch != invalid-next-locations self
-    [ fd speed ]
+    [fd speed ]
   [setxy (first next-pos) (last next-pos)]
    if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
     [ exit-building]
@@ -405,7 +409,9 @@ to leader-follower
       if leader = true [set leadership-quality (leadership-quality * 2) ]
     ]
   ask close-group with-max [leadership-quality] [set leader true]
-  ask leader [if goal = nobody  or all? link-neighbors [distance myself < 2] = true [set goal preferredexit]]
+  let group-leader close-group with [leader = true]
+  ask group-leader [if goal = nobody  or all? link-neighbors [distance myself < 2] = true
+    [set goal preferredexit]]
   ; leader set goal min-one-of link-neighbors [distance myself] with [distance myself] > 2
 
 end
@@ -474,8 +480,9 @@ end
 to-report next-patch
   ;; CHOICES is an agentset of the candidate patches that the car can move to
   let choices neighbors with [(pcolor = red) = false ] ;cuts out fire, needs to cut out walls and windows
+  foreach choices [set-f1 goal myself] ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
   ;; choose the patch closest to the goal, this is the patch the person will move to
-  let choice min-one-of choices [ distance [ goal ] of myself ] ; this needs to be min fh
+  let choice [min f1] of choices ; this needs to be min fh
   ;; report the chosen patch
   report choice
 end

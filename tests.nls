@@ -6,6 +6,13 @@ to test-fh ; in jh is the heuristic used in a*
   ; h is the typical abbreviation for 'heuristic' but this is based on Jieshi Fang's work, thus 'f'
 end
 
+to test-set-f1
+  let this-person one-of people
+  let go-to ([goal] of this-person)
+  set-f1 go-to this-person ; sets the f value of a patch for a random person seeking their goal
+  show f1 ; should be a positive number
+end
+
 to test-exit-preference ; demonstrates whether straight exit preference works
   ask one-of people [show preferredexit] ; tests preferredexit, closest
 end ;visual test
