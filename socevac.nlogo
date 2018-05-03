@@ -34,7 +34,13 @@ to find-shortest-path-to-destination
 end
 
 to set-f1 [destination-patch person-at-patch]
-  set f1 ((distance destination-patch) + ([fh] of person-at-patch))
+  let neighbor-list [self] of neighbors ; list is still borked. why?
+  foreach neighbor-list [set f1 ((distance destination-patch) + ([fh] of person-at-patch))]
+end
+
+to listy
+   let neighbor-list [self] of neighbors
+  show neighbor-list
 end
 
 to-report find-path [source-patch destination-patch person-at-patch]
@@ -193,7 +199,8 @@ end
 
 to move
  if goal = nobody [preferreddirection]
-  let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  goal)]
+  set-f1 goal self
+  let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
     face next-patch ;; person heads towards its goal
     set-speed
   ifelse next-patch != invalid-next-locations self
@@ -403,6 +410,7 @@ end
 
 to leader-follower
   let close-group people with [group-number = [group-number] of myself and distance myself < 2]
+  let far-group people with [group-number = [group-number] of myself and distance myself > 2]
  ask close-group
     [foreach list (visited? = true) (gender = "male") ; needs something for being closer to the exit, closer to 40, and less injured
       [set leadership-quality leadership-quality + 1]
@@ -410,10 +418,10 @@ to leader-follower
     ]
   ask close-group with-max [leadership-quality] [set leader true]
   let group-leader close-group with [leader = true]
-  ask group-leader [if goal = nobody  or all? link-neighbors [distance myself < 2] = true
-    [set goal preferredexit]]
-  ; leader set goal min-one-of link-neighbors [distance myself] with [distance myself] > 2
-
+  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] = true or goal = 0
+    [set goal preferredexit]
+    [set goal min-one-of far-group [distance myself]]]
+  ask close-group with [leader = false ] [set goal group-leader]
 end
 
 to-report fprivatespace ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
@@ -480,9 +488,9 @@ end
 to-report next-patch
   ;; CHOICES is an agentset of the candidate patches that the car can move to
   let choices neighbors with [(pcolor = red) = false ] ;cuts out fire, needs to cut out walls and windows
-  foreach choices [set-f1 goal myself] ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
+  set-f1 goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
   ;; choose the patch closest to the goal, this is the patch the person will move to
-  let choice [min f1] of choices ; this needs to be min fh
+  let choice [min f1] of choices
   ;; report the chosen patch
   report choice
 end

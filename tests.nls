@@ -9,8 +9,8 @@ end
 to test-set-f1
   let this-person one-of people
   let go-to ([goal] of this-person)
-  set-f1 go-to this-person ; sets the f value of a patch for a random person seeking their goal
-  show f1 ; should be a positive number
+  ask this-person [set-f1 go-to this-person ; sets the f value of a patch for a random person seeking their goal
+    ask neighbors [show f1]] ; should be a positive number
 end
 
 to test-exit-preference ; demonstrates whether straight exit preference works
