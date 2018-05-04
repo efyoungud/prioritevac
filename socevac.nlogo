@@ -18,32 +18,20 @@ speed-limit]
 globals [max-wall-distance open closed optimal-path acceleration  ;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
   ]
 
-patches-own [inside-building? parent-patch smoke temp-smoke f1 g h intersection?   ;; true if the patch is at the intersection of two roads
+patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection?   ;; true if the patch is at the intersection of two roads
 
   ]
 ;;------------------
 extensions [csv]
 __includes [ "tests.nls"]
-to find-shortest-path-to-destination
-  ask one-of people
-  [
-    set path find-path patch-here goal self
-    set optimal-path path
-    set current-path path
-  ]
-end
 
-to set-f1 [destination-patch person-at-patch]
+
+to set-f [destination-patch person-at-patch] ; sets the total f-score for relevant patches in order to look for the next patch
   let neighbor-list [self] of neighbors ; list is still borked. why?
-  foreach neighbor-list [set f1 ((distance destination-patch) + ([fh] of person-at-patch))]
+  foreach neighbor-list [set f ((distance destination-patch) + ([fh] of person-at-patch))]
 end
 
-to listy
-   let neighbor-list [self] of neighbors
-  show neighbor-list
-end
-
-to-report find-path [source-patch destination-patch person-at-patch]
+to-report find-path [source-patch destination-patch person-at-patch] ; attempt at a*, not currently in use
   let current-patch 0
   let search-path []
   set open []
@@ -53,7 +41,7 @@ to-report find-path [source-patch destination-patch person-at-patch]
   set closed lput walls closed
    set closed lput windows closed
   while [next-patch != goal]
-  [set open (sort-on ["f1"] patches ); sort the patches in open list in increasing order of their f() values
+  [set open (sort-on ["f"] patches ); sort the patches in open list in increasing order of their f() values
       ; take the first patch in the open list
       set current-patch item 0 open ; as the current patch (which is currently being explored (n))
       set open remove-item 0 open  ; and remove it from the open list
@@ -64,7 +52,7 @@ to-report find-path [source-patch destination-patch person-at-patch]
           [set open lput self open ; adds the current patch to the open list
                 set parent-patch current-patch
   set g (g + 1)
-                set f1 (g + ([fh] of person-at-patch)) ; needs path length
+                set f (g + ([fh] of person-at-patch)) ; needs path length
    set search-path lput current-patch search-path
   ]]]]
      set search-path fput destination-patch search-path
@@ -197,9 +185,9 @@ to go ; master command to run simulation
   see
 end
 
-to move
+to move ; governs where and how people move, triggers goal-setting
  if goal = nobody [preferreddirection]
-  set-f1 goal self
+  set-f goal self
   let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
     face next-patch ;; person heads towards its goal
     set-speed
@@ -236,7 +224,7 @@ to-report valid-next-locations [a-person] ; reports locations that are not walls
   report valid-neighbors
 end
 
-to-report invalid-next-locations [a-person] ; reports locations that are not walls or fire
+to-report invalid-next-locations [a-person] ; reports locations that are walls or fire
   let x1 [xcor] of a-person
   let y1 [ycor] of a-person
   let invalid-neighbors (list)
@@ -280,15 +268,15 @@ to-report get-grid [n max-width max-height startx starty]
   report result
 end
 
-to-report argmin [alist f]
+to-report argmin [alist f1]
   let min-element (first alist)
-  let min-value (runresult f (first alist))
+  let min-value (runresult f1 (first alist))
   foreach alist
    [ [element] ->
-     if (runresult f element) < min-value
+     if (runresult f1 element) < min-value
      [
       set min-element element
-      set min-value (runresult f element)
+      set min-value (runresult f1 element)
      ]
    ]
   report min-element
@@ -318,19 +306,21 @@ to exit-building ; prints the time the agent is removed from simulation
   print ticks
   die ; removes from simulation
 end
-to recolor-patches
+
+to recolor-patches ; recolors patches subject to the hazards present
  ;Recolors patches based on time fire has reached a location/patch
    ask fires with [arrival < ticks][set color red]
   ask patches [ set pcolor scale-color white smoke 0 1]
 end
 
-to see ; needs to be made actually a cone
+to see ; sets how far and how much people can see
   ask people [set vision
-   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
+   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) ; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
+    if vision < 0 [set vision 0]] ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
   ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
 end
 
-to-report preferredexit
+to-report preferredexit ; reports which exit should be the goal for a person
   ifelse visited? = false
     [report closestvisible]
     [report closest] ;the logic is that people with previous acquaintance with the bar will know where the exits are
@@ -399,38 +389,43 @@ to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
   report true
 end
 
-to preferreddirection ; selects direction by either sending someone towards their loved ones or an exit
+to preferreddirection ; sets the goal for a person, either the person or exit
+  ; calls preferredexit, closest, closestvisible, and leader-follower functions
   ifelse (group-type = 0) or (any? link-neighbors = false) ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
-  [set goal preferredexit]
+  [set goal preferredexit] ; selects either closest or closest visible exit depending on visit history
   [ ifelse (distance min-one-of link-neighbors [distance myself] < 2 ) ; if they have loved ones they have not given up on, they go towards them
     [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
     [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
   ]
 end
 
-to leader-follower
-  let close-group people with [group-number = [group-number] of myself and distance myself < 2]
-  let far-group people with [group-number = [group-number] of myself and distance myself > 2]
- ask close-group
-    [foreach list (visited? = true) (gender = "male") ; needs something for being closer to the exit, closer to 40, and less injured
-      [set leadership-quality leadership-quality + 1]
-      if leader = true [set leadership-quality (leadership-quality * 2) ]
+to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
+  let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
+  let far-group link-neighbors with [distance myself > 2] ; defines far groups as people with the same group number who are outside 2m
+  let group-leader close-group with [leader = true] ; defines who the leader is
+  while [group-leader = nobody] ; will only run leadership calculations while there is no leader, this may or may not be appropriate as leadership can change with injury and not just with death or exit
+ [ask close-group
+    [set leadership-quality 0 ; every time leadership has to be re-run they start fresh
+    foreach list (visited? = true) (gender = "male") ; needs something for less injured, also waiting to hear back about other factors
+      [set leadership-quality leadership-quality + 1] ; for every leadership factor that applies, people receive one point
+     ; if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled: this is irrelevant with the 'while,' but will be applicable if injury becomes useful
     ]
-  ask close-group with-max [leadership-quality] [set leader true]
-  let group-leader close-group with [leader = true]
-  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] = true or goal = 0
+      ask close-group with-max [leadership-quality] [set leader true]] ; the person with the highest leadership quality is made the leader
+  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] = true or goal = 0 ; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
-    [set goal min-one-of far-group [distance myself]]]
-  ask close-group with [leader = false ] [set goal group-leader]
+    [set goal min-one-of far-group [distance myself]]] ; aims for the closest group member who is outside the 2m radius
+  ask close-group with [leader = false ] [set goal group-leader] ; other group members aim to follow the leader rather than set individual goals
 end
 
-to-report fprivatespace ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
+to-report fprivatespace ; reports preference to maintain personal space
+  ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
  if (distance (min-one-of other people [distance myself])) < 3
   [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(.3333))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
 ;original equation included 'dodging behavior' but inclusion in a* negates the necessity
 end
 
-to-report fwall ; also applies only in sphere of influence, constant is 1
+to-report fwall ; reports preference to stay away from walls
+  ; also applies only in sphere of influence, constant is 1
   ifelse (distance (min-one-of walls [distance myself]) < 30)
     [report  1 * (1 /(distance (min-one-of walls [distance myself]) - .46) - .3333)] ; original equation included 1/'influence distance' which has been replaced by .3333 because 3m is the comfortable distance : need to find citation
       [report 0] ; reports number when the distance between the agent and the wall is less than 30, 0 when it's more than 30
@@ -442,25 +437,26 @@ to-report crowd-at-exit ; counts how many people are between the agent and their
   report count people in-cone door 90
 end
 
-to-report fire-distance
+to-report fire-distance ; reports distance to closest fire
   let door (distance (min-one-of exits [distance myself]))
   report 500 * (distance (min-one-of fires [distance myself])) ; runs based on how close fires are: multiplier is arbitary
 end
 
 to-report smoke-distance
-
+; this needs to report smoke distance based on information from the CSV as soon as that's integrated
 end
 
-to set-fh
+to set-fh ; reports total heuristic preference
 ask people [set fh (1 - (1 / (fprivatespace + fwall + fire-distance + crowd-at-exit))) ;needs distance to exit too
     ]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
 end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
 
-to set-speed-limit ; units are m/s, from Isobe
+to set-speed-limit ; how fast people can go
+  ; units are m/s, from Isobe
   ask people [set speed-limit 1.1 + random-float .2]
 end
 
-to set-speed  ;; turtle procedure
+to set-speed  ; how fast people will go
   ;; count the people on the patch in front of the person
   let people-ahead people in-cone (1 - (1 * smoke)) (210 - (210 * smoke))
   ;; if there are people in front of the person and visible, slow down
@@ -484,13 +480,12 @@ to speed-up  ;; turtle procedure
     [ set speed speed + acceleration ]
 end
 
-;; moves to next patch along the way to goal. does not yet use A*
-to-report next-patch
+to-report next-patch ; selects the next patch a person will move towards
   ;; CHOICES is an agentset of the candidate patches that the car can move to
-  let choices neighbors with [(pcolor = red) = false ] ;cuts out fire, needs to cut out walls and windows
-  set-f1 goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
-  ;; choose the patch closest to the goal, this is the patch the person will move to
-  let choice [min f1] of choices
+  let choices neighbors with [(pcolor = red) = false ] ; this makes it so the next patch cannot have fire
+  set-f goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
+  ;; choose the patch with the lowest f-score (closest to the exit and most desirable according to the heuristic), this is the patch the person will move to
+  let choice [min f] of choices
   ;; report the chosen patch
   report choice
 end
