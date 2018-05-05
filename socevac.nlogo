@@ -12,7 +12,7 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-people-own [gender age visited? group-number group-type fh vision speed path current-path leadership-quality leader  ;; the speed of the turtle
+people-own [gender age visited? group-number group-type group-constant fh vision speed path current-path leadership-quality leader  ;; the speed of the turtle
   goal      ;; where am I currently headed
 speed-limit]
 globals [max-wall-distance open closed optimal-path acceleration  ;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
@@ -31,37 +31,6 @@ to set-f [destination-patch person-at-patch] ; sets the total f-score for releva
   foreach neighbor-list [set f ((distance destination-patch) + ([fh] of person-at-patch))]
 end
 
-to-report find-path [source-patch destination-patch person-at-patch] ; attempt at a*, not currently in use
-  let current-patch 0
-  let search-path []
-  set open []
-  set closed []
-  set open lput exits open
- set closed lput fires closed
-  set closed lput walls closed
-   set closed lput windows closed
-  while [next-patch != goal]
-  [set open (sort-on ["f"] patches ); sort the patches in open list in increasing order of their f() values
-      ; take the first patch in the open list
-      set current-patch item 0 open ; as the current patch (which is currently being explored (n))
-      set open remove-item 0 open  ; and remove it from the open list
-      set closed lput current-patch closed    ; add the current patch to the closed list
-  ask current-patch
-        [    ask neighbors with [ (not member? self closed) ]  ; asks the neighboring patches that aren't already closed or the parent patch
-          [  if (self != source-patch) and (self != destination-patch) ; if they're not the source or destination patches
-          [set open lput self open ; adds the current patch to the open list
-                set parent-patch current-patch
-  set g (g + 1)
-                set f (g + ([fh] of person-at-patch)) ; needs path length
-   set search-path lput current-patch search-path
-  ]]]]
-     set search-path fput destination-patch search-path
-
-  ; reverse the search path so that it starts from a patch adjacent to the
-  ; source patch and ends at the destination patch
-  set search-path reverse search-path
-     report search-path
-end
 
 to setup ; sets up the initial environment
  ca
@@ -81,11 +50,11 @@ soclink
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
+  see
   ask people [set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
     preferreddirection]
  ;;there's initially no smoke
  ask patches [set smoke 0]
-  see
 end
 
 ;;whether the patch is in the building or outside of the building
@@ -315,8 +284,8 @@ end
 
 to see ; sets how far and how much people can see
   ask people [set vision
-   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) ; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
-    if vision < 0 [set vision 0]] ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
+    patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) ; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
+    if empty? [self] of vision [set vision 0]] ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
   ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
 end
 
@@ -327,8 +296,9 @@ to-report preferredexit ; reports which exit should be the goal for a person
 end
 
 to-report closestvisible ; selects closest visible exit
-  let seen (any? exits in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) = true) ; same parameters as 'see' - smoke reduces visual distance and peripheral vision, starts at 10m ahead and 210 degrees
-  ifelse seen
+  let visibility [self] of vision ; defines the field of vision
+  let seen patches with [visibility = true] ; only those patches in the field of vision are seen
+  ifelse seen = true
   [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
   [report exit 60];they would know the door they came in from
 end
@@ -391,7 +361,7 @@ end
 
 to preferreddirection ; sets the goal for a person, either the person or exit
   ; calls preferredexit, closest, closestvisible, and leader-follower functions
-  ifelse (group-type = 0) or (any? link-neighbors = false) ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
+  ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
   [set goal preferredexit] ; selects either closest or closest visible exit depending on visit history
   [ ifelse (distance min-one-of link-neighbors [distance myself] < 2 ) ; if they have loved ones they have not given up on, they go towards them
     [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
@@ -399,22 +369,26 @@ to preferreddirection ; sets the goal for a person, either the person or exit
   ]
 end
 
-to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
-  let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
-  let far-group link-neighbors with [distance myself > 2] ; defines far groups as people with the same group number who are outside 2m
-  let group-leader close-group with [leader = true] ; defines who the leader is
-  while [group-leader = nobody] ; will only run leadership calculations while there is no leader, this may or may not be appropriate as leadership can change with injury and not just with death or exit
- [ask close-group
-    [set leadership-quality 0 ; every time leadership has to be re-run they start fresh
+to set-leadership ; designates a group leader within a small group
+   let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
+   ask close-group
+    [set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
     foreach list (visited? = true) (gender = "male") ; needs something for less injured, also waiting to hear back about other factors
       [set leadership-quality leadership-quality + 1] ; for every leadership factor that applies, people receive one point
-     ; if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled: this is irrelevant with the 'while,' but will be applicable if injury becomes useful
+    if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled
     ]
-      ask close-group with-max [leadership-quality] [set leader true]] ; the person with the highest leadership quality is made the leader
-  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] = true or goal = 0 ; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
+    ask close-group with-max [leadership-quality] [set leader true]
+end
+
+to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
+ set-leadership
+  let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
+  let group-leader close-group with [leader = true] ; defines who the leader is
+ ; the person with the highest leadership quality is made the leader
+  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] or goal = 0; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
-    [set goal min-one-of far-group [distance myself]]] ; aims for the closest group member who is outside the 2m radius
-  ask close-group with [leader = false ] [set goal group-leader] ; other group members aim to follow the leader rather than set individual goals
+    [set goal min-one-of link-neighbors with [distance myself > 2] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
+  ask close-group with [leader = 0] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
 end
 
 to-report fprivatespace ; reports preference to maintain personal space
@@ -480,12 +454,21 @@ to speed-up  ;; turtle procedure
     [ set speed speed + acceleration ]
 end
 
+to prioritize-group
+  ask links with [ [fh] of self * [group-constant] of self > threshold] [die]
+end
+
+to set-group-constant
+  ask people [if group-type = 1 [set group-constant Coworkers-Constant]
+    if group-type = 2 [set group-constant Friends-Constant]]
+end
+
 to-report next-patch ; selects the next patch a person will move towards
   ;; CHOICES is an agentset of the candidate patches that the car can move to
   let choices neighbors with [(pcolor = red) = false ] ; this makes it so the next patch cannot have fire
   set-f goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
   ;; choose the patch with the lowest f-score (closest to the exit and most desirable according to the heuristic), this is the patch the person will move to
-  let choice [min f] of choices
+  let choice first sort-on [f] choices
   ;; report the chosen patch
   report choice
 end
@@ -584,6 +567,51 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+28
+155
+200
+188
+threshold
+threshold
+0
+10
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+28
+193
+200
+226
+Coworkers-Constant
+Coworkers-Constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+28
+235
+200
+268
+Friends-Constant
+Friends-Constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
