@@ -51,8 +51,7 @@ soclink
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
   see
-  ask people [set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
-    preferreddirection]
+  ask people [preferreddirection set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0]
  ;;there's initially no smoke
  ask patches [set smoke 0]
 end
@@ -143,7 +142,7 @@ to go ; master command to run simulation
   [  ask patch-here [ set smoke 1]
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [move
+  ask people [prioritize-group move
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
@@ -155,7 +154,7 @@ to go ; master command to run simulation
 end
 
 to move ; governs where and how people move, triggers goal-setting
- if goal = nobody [preferreddirection]
+ preferreddirection
   set-f goal self
   let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
     face next-patch ;; person heads towards its goal
@@ -454,21 +453,26 @@ to speed-up  ;; turtle procedure
     [ set speed speed + acceleration ]
 end
 
-to prioritize-group
-  ask links with [ [fh] of self * [group-constant] of self > threshold] [die]
+to prioritize-group ; dictates when people will stop caring about still-living group members
+  ask links with [ [fh] of myself * [group-constant] of myself > threshold] [die] ; as the heuristic rises towards 1, it will eventually hit a threshold, which will be tested
 end
 
-to set-group-constant
+to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
   ask people [if group-type = 1 [set group-constant Coworkers-Constant]
-    if group-type = 2 [set group-constant Friends-Constant]]
+    if group-type = 2 [set group-constant Friends-Constant]
+    if group-type = 3 [set group-constant Dating-Constant]
+  if group-type = 4 [set group-constant Family-Constant]
+  if group-type = 5 [set group-constant Multiple-Constant]]
 end
 
 to-report next-patch ; selects the next patch a person will move towards
   ;; CHOICES is an agentset of the candidate patches that the car can move to
-  let choices neighbors with [(pcolor = red) = false ] ; this makes it so the next patch cannot have fire
+  let choices neighbors with [(pcolor = red) = false] ; this makes it so the next patch cannot have fire
+; set choices remove invalid-next-locations self choices
   set-f goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
   ;; choose the patch with the lowest f-score (closest to the exit and most desirable according to the heuristic), this is the patch the person will move to
-  let choice first sort-on [f] choices
+ set choices sort-on [f] choices
+  let choice first choices
   ;; report the chosen patch
   report choice
 end
@@ -576,8 +580,8 @@ SLIDER
 threshold
 threshold
 0
-10
-5.0
+100
+10.0
 1
 1
 NIL
@@ -605,6 +609,51 @@ SLIDER
 268
 Friends-Constant
 Friends-Constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+28
+275
+200
+308
+Dating-constant
+Dating-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+28
+314
+200
+347
+Family-constant
+Family-constant
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+27
+354
+199
+387
+Multiple-constant
+Multiple-constant
 0
 100
 50.0
