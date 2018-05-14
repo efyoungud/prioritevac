@@ -30,6 +30,13 @@ yellow to red to signify occupants are able to leave.
  to the night of the fire. Our model presents the agents placed within their area based on their initial location.
  Placement of these agents is randomized based on their initial location given the area that they are in (bar area, dance floor,
  etc).
+  The X & Y positions of the people are fixed throughout the randomization process. The distribution of people features 
+  (e.g. age, sex, group type) were uniformally randomally pulled with no replacement from the people.csv within each
+  subecology. For example, in Subecology.jpeg, all the red colored people will be red throughout the randomization process
+  but their age, sex, group type, etc., will be drawn from the people with xy positions within the red ecology (group 2/bar area).
+  We apply this uniformally random distribution on the data since we do not have precise information regarding individual location
+  rather we only know the general location (i.e. subecology) of individuals.
+  
 	
 People were built by Matt Saponaro and Eileen Young. Placement within reported ecologies was done by Nihar Junagade.
 Reported ecologies and all additional details come from interview with survivors of the fire.
