@@ -27,10 +27,9 @@ __includes [ "tests.nls"]
 
 
 to set-f [destination-patch person-at-patch] ; sets the total f-score for relevant patches in order to look for the next patch
-  let neighbor-list [self] of neighbors ; list is still borked. why?
+  let neighbor-list [self] of neighbors
   foreach neighbor-list [set f ((distance destination-patch) + ([fh] of person-at-patch))]
 end
-
 
 to setup ; sets up the initial environment
  ca
@@ -393,7 +392,7 @@ end
 to-report fprivatespace ; reports preference to maintain personal space
   ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
  if (distance (min-one-of other people [distance myself])) < 3
-  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(.3333))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
+  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(1 / 3))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
 ;original equation included 'dodging behavior' but inclusion in a* negates the necessity
 end
 
