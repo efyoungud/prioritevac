@@ -12,8 +12,11 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-turtles-own [gender age visited? group-number group-type speed vision path]
-globals [max-wall-distance open closed current-path ]
+turtles-own [gender age visited? group-number group-type group-constant fh vision speed path leadership-quality leader
+  goal      ;; where am I currently headed
+speed-limit]
+globals [max-wall-distance open closed current-path acceleration  ;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+]
 
 patches-own [inside-building? smoke temp-smoke pid
 parent-patch ; patch's predecessor
@@ -40,17 +43,19 @@ to setup ; sets up the initial environment
  read-patch-labels-from-file "labels.csv"
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2
+  set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
+  see
+  set-speed-limit
  ask walls [set color hsb  216 50 100]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]]
  ;;agents should have size of .46meters
- ask people [set color white]
+ ask people [preferreddirection set color white]
  ;ask one-of patches with [inside-building?] [sprout-people 1]
  ;;there's initially no smoke
  ask patches [set smoke 0]
-  see
 set-pid
 end
 
@@ -64,7 +69,7 @@ to go
     ask patch-here [ set smoke 1]
     ask people-here [die-by-fire]
   ]
-  ask people [ move]
+  ask people [prioritize-group preferreddirection move]
 ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
@@ -94,7 +99,8 @@ end
 
 to see
   ask people [set vision
-   patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke))]; people can 'see' normally in no smoke, but with drastically reduced vision when smoke hits 1
+    patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) ; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
+    if empty? [self] of vision [set vision patch-ahead 1]] ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
   ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
 end
 
@@ -103,14 +109,17 @@ to testdirection ; demonstrates whether straight exit preference works
 end
 
 to-report preferredexit
-  ifelse visited? = false
+  ifelse (distance min-one-of exits [distance myself] < .2 )
+  [report patch-ahead 1]
+  [ifelse visited? = false
     [report closestvisible]
-    [report closest] ;the logic is that people with previous acquaintance with the bar will know where the exits are
+    [report closest]] ;the logic is that people with previous acquaintance with the bar will know where the exits are
 end
 
 to-report closestvisible ; selects closest visible exit
-  let seen (any? exits in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) = true) ; same parameters as 'see' - smoke reduces visual distance and peripheral vision, starts at 10m ahead and 210 degrees
-  ifelse seen
+  let visibility [self] of vision ; defines the field of vision
+  let seen patches with [visibility = true] ; only those patches in the field of vision are seen
+  ifelse seen = true
   [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
   [report exit 60];they would know the door they came in from
 end
@@ -119,8 +128,127 @@ to-report closest ; selects closest exit regardless of visibility
   report (min-one-of exits [distance myself])
 end
 
-to-report get-out
-  report patch-at (0)( 0 )
+to set-f1 [destination-patch person-at-patch] ; sets the total f-score for relevant patches in order to look for the next patch
+  let neighbor-list valid-next-locations self
+  foreach neighbor-list [set f1 ((distance destination-patch) + ([fh] of person-at-patch))]
+end
+
+to-report f1-rep ; sets the total f-score for relevant patches in order to look for the next patch
+  ;let neighbor-list valid-next-locations self
+ ; foreach neighbor-list [report f1 ((distance goal) + ([fh] of self))]
+end
+
+to move-2 ; governs where and how people move, triggers goal-setting
+ preferreddirection
+  set-f1 goal self
+  let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
+    face next-patch ;; person heads towards its goal
+    set-speed
+  ifelse next-patch != invalid-next-locations self
+    [fd speed ]
+  [setxy (first next-pos) (last next-pos)]
+   if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
+    [ exit-building]
+end
+
+to-report invalid-next-locations [a-person] ; reports locations that are walls or fire
+  let x1 [xcor] of a-person
+  let y1 [ycor] of a-person
+  let invalid-neighbors (list)
+  let n 5
+  let max-width 3
+  let max-height 2
+  let all-positions  get-grid n max-width max-height x1 y1
+  foreach all-positions
+  [[pos] ->
+    let x2 (first pos)
+    let y2 (last pos)
+      if any? ([((turtle-set walls windows) in-radius max-wall-distance
+        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
+      ] of patch x2 y2) [
+
+        set invalid-neighbors fput pos invalid-neighbors
+      ]
+  ]
+  report invalid-neighbors
+end
+
+to preferreddirection ; sets the goal for a person, either the person or exit
+  ; calls preferredexit, closest, closestvisible, and leader-follower functions
+  ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
+  [set goal preferredexit] ; selects either closest or closest visible exit depending on visit history
+  [ ifelse (distance min-one-of link-neighbors [distance myself] < 2 ) ; if they have loved ones they have not given up on, they go towards them
+    [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
+    [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
+  ]
+end
+
+to set-leadership ; designates a group leader within a small group
+   let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
+   ask close-group
+    [set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
+    foreach list (visited? = true) (gender = "male") ; needs something for less injured, also waiting to hear back about other factors
+      [set leadership-quality leadership-quality + 1] ; for every leadership factor that applies, people receive one point
+    if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled
+    ]
+    ask close-group with-max [leadership-quality] [set leader true]
+end
+
+to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
+ set-leadership
+  let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
+  let group-leader close-group with [leader = true] ; defines who the leader is
+ ; the person with the highest leadership quality is made the leader
+  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] or goal = 0; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
+    [set goal preferredexit]
+    [set goal min-one-of link-neighbors with [distance myself > 2] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
+  ask close-group with [leader = 0] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
+end
+
+to-report fprivatespace ; reports preference to maintain personal space
+  ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
+ if (distance (min-one-of other people [distance myself])) < 3
+  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(1 / 3))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
+;original equation included 'dodging behavior' but inclusion in a* negates the necessity
+end
+
+to-report fwall ; reports preference to stay away from walls
+  ; also applies only in sphere of influence, constant is 1
+  ifelse (distance (min-one-of walls [distance myself]) < 30)
+    [report  1 * (1 /(distance (min-one-of walls [distance myself]) - .46) - .3333)] ; original equation included 1/'influence distance' which has been replaced by .3333 because 3m is the comfortable distance : need to find citation
+      [report 0] ; reports number when the distance between the agent and the wall is less than 30, 0 when it's more than 30
+      ;radius of agent is .46
+end
+to-report crowd-at-exit ; counts how many people are between the agent and their closest door
+  ;this slightly discourages going to crowded exits
+  let door (distance (min-one-of exits [distance myself])) ;does not incorporate vision, not sure how to do that
+  report count people in-cone door 90
+end
+
+to-report fire-distance ; reports distance to closest fire
+  let door (distance (min-one-of exits [distance myself]))
+  report 500 * (distance (min-one-of fires [distance myself])) ; runs based on how close fires are: multiplier is arbitary
+end
+
+to-report smoke-distance
+; this needs to report smoke distance based on information from the CSV as soon as that's integrated
+end
+
+to set-fh ; reports total heuristic preference
+ask people [set fh (1 - (1 / (fprivatespace + fwall + fire-distance + crowd-at-exit))) ;needs distance to exit too
+    ]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
+end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
+
+to-report next-patch ; selects the next patch a person will move towards
+  ;; CHOICES is an agentset of the candidate patches that the car can move to
+  let choices neighbors with [(pcolor = red) = false] ; this makes it so the next patch cannot have fire
+; set choices remove invalid-next-locations self choices
+  set-f1 goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
+  ;; choose the patch with the lowest f-score (closest to the exit and most desirable according to the heuristic), this is the patch the person will move to
+ set choices sort-on [f1] choices
+  let choice first choices
+  ;; report the chosen patch
+  report choice
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -144,8 +272,8 @@ GRAPHICS-WINDOW
 33
 0
 21
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -156,7 +284,7 @@ BUTTON
 121
 55
 death test
-ask people with[ age > 23] [die]
+ask people with[ age > 23] [die]\nask people [preferreddirection]
 NIL
 1
 T
@@ -238,8 +366,8 @@ SLIDER
 189
 200
 222
-multiples-constant
-multiples-constant
+multiple-constant
+multiple-constant
 0
 100
 0.0
@@ -283,8 +411,8 @@ SLIDER
 317
 202
 350
-partners-constant
-partners-constant
+dating-constant
+dating-constant
 0
 100
 0.0
@@ -293,22 +421,20 @@ partners-constant
 NIL
 HORIZONTAL
 
-BUTTON
-105
-111
-206
-144
-NIL
-testdirection
-NIL
+SLIDER
+32
+362
+204
+395
+threshold
+threshold
+0
+100
+50.0
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
 1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

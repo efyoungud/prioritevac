@@ -47,15 +47,20 @@ to-report get-grid [n max-width max-height startx starty]
 end
 
 to move ;Sets the next location such that it is the minimum distance to the preferred exit
-  
-  let possible-positions valid-next-locations self
-  if not empty? possible-positions
+   preferreddirection
+  set-f1 goal self
+  face goal
+  let possible-positions valid-next-locations self 
+ ; set possible-positions sort-by [[f] -> f1]  possible-positions
+  if not empty? possible-positions 
   [
-    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)] ; bug: people get stuck behind walls
-  if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
+    let next-pos argmin possible-positions [[pos] -> ([distancexy (first pos) (last pos)] of  goal)] ; bug: people get stuck behind walls
+;item 0 possible-positions ; alternate attempt   
+    if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
     [
       exit-building]
   setxy (first next-pos) (last next-pos)]
+  if goal = nobody [preferreddirection]
 end
 
 to-report argmin [alist f] ;Reports the argument that makes the function return minimal
@@ -72,6 +77,42 @@ to-report argmin [alist f] ;Reports the argument that makes the function return 
   report min-element
 end
 
-to movetest
-  ask people [move]
+to set-speed-limit ; how fast people can go
+  ; units are m/s, from Isobe
+  ask people [set speed-limit 1.1 + random-float .2]
+end
+
+to set-speed  ; how fast people will go
+  ;; count the people on the patch in front of the person
+  let people-ahead people in-cone (1 - (1 * smoke)) (210 - (210 * smoke))
+  ;; if there are people in front of the person and visible, slow down
+  ;; otherwise, speed up
+  ifelse any? people-ahead
+    [ set speed [speed] of one-of people-ahead
+    ]
+  [speed-up ]
+end
+
+;; decrease the speed of the person
+to slow-down  ;; turtle procedure
+  ifelse speed <= 0
+    [ set speed 0 ]
+    [ set speed speed - acceleration ]
+end
+;; increase the speed of the person
+to speed-up  ;; turtle procedure
+  ifelse speed > speed-limit
+    [ set speed speed-limit ]
+    [ set speed speed + acceleration ]
+end
+to prioritize-group ; dictates when people will stop caring about still-living group members
+  ask links with [ [fh] of myself * [group-constant] of myself > threshold] [die] ; as the heuristic rises towards 1, it will eventually hit a threshold, which will be tested
+end
+
+to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
+  ask people [if group-type = 1 [set group-constant Coworkers-Constant]
+    if group-type = 2 [set group-constant Friends-Constant]
+    if group-type = 3 [set group-constant Dating-Constant]
+  if group-type = 4 [set group-constant Family-Constant]
+  if group-type = 5 [set group-constant Multiple-Constant]]
 end
