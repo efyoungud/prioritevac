@@ -12,22 +12,29 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-people-own [gender age visited? group-number group-type group-constant fh vision speed path current-path leadership-quality leader  ;; the speed of the turtle
-  goal      ;; where am I currently headed
+people-own [gender age visited? group-number group-type group-constant fh  vision speed current-path leadership-quality leader  ;; the speed of the turtle
+  goal     next-desired-patch ;; where am I currently headed
 speed-limit]
-globals [max-wall-distance open closed optimal-path acceleration  ;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [max-wall-distance open closed optimal-path acceleration path p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
   ]
 
-patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection?   ;; true if the patch is at the intersection of two roads
+patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection?  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 
   ]
 ;;------------------
 extensions [csv]
-__includes [ "tests.nls"]
+__includes [ "tests.nls" "intersections.nls"]
 
+
+to set-path
+ set path A* patch-here goal
+   ifelse path != false and length path > 1
+    [set next-desired-patch item 1 path]
+    [set next-desired-patch patch-ahead 1]
+end
 
 to set-f [destination-patch person-at-patch] ; sets the total f-score for relevant patches in order to look for the next patch
-  let neighbor-list [self] of neighbors
+  let neighbor-list [self] of neighbors with [(pcolor = red) = false]
   foreach neighbor-list [set f ((distance destination-patch) + ([fh] of person-at-patch))]
 end
 
@@ -52,7 +59,115 @@ soclink
   see
   ask people [preferreddirection set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0]
  ;;there's initially no smoke
- ask patches [set smoke 0]
+ ask patches [set smoke 0
+    set father nobody
+    set Cost-path 0
+    set visited-patch? false
+    set active? false]
+end
+
+to-report Total-expected-cost [#goal]
+   report Cost-path  + heuristic #goal
+  ;+ ([fh] of myself)
+end
+
+to-report Heuristic [#goal]
+  report distance #Goal
+end
+
+to-report A* [#Start #goal]
+  let intersect-free-patches not [patch-here] of intersects-here walls
+  let #valid-map patches with [(pcolor != red) = true and intersect-free-patches ]
+  ; clear all the information in the agents
+  ask #valid-map with [visited-patch?]
+  [
+    set father nobody
+    set Cost-path 0
+    set visited-patch? false
+    set active? false
+  ]
+  ; Active the staring point to begin the searching loop
+  ask #Start
+  [
+    set father self
+    set visited-patch? true
+    set active? true
+  ]
+  ; exists? indicates if in some instant of the search there are no options to
+  ; continue. In this case, there is no path connecting #Start and #Goal
+  let exists? true
+  ; The searching loop is executed while we don't reach the #Goal and we think
+  ; a path exists
+  while [not [visited-patch?] of #goal and exists?]
+  [
+    ; We only work on the valid pacthes that are active
+    let options #valid-map with [active?]
+    ; If any
+    ifelse any? options
+    [
+      ; Take one of the active patches with minimal expected cost
+      ask min-one-of options [Total-expected-cost #goal]
+      [
+        ; Store its real cost (to reach it) to compute the real cost
+        ; of its children
+        let Cost-path-father Cost-path
+        ; and deactivate it, because its children will be computed right now
+        set active? false
+        ; Compute its valid neighbors
+        let valid-neighbors neighbors with [member? self #valid-map]
+        ask valid-neighbors
+        [
+          ; There are 2 types of valid neighbors:
+          ;   - Those that have never been visited (therefore, the
+          ;       path we are building is the best for them right now)
+          ;   - Those that have been visited previously (therefore we
+          ;       must check if the path we are building is better or not,
+          ;       by comparing its expected length with the one stored in
+          ;       the patch)
+          ; One trick to work with both type uniformly is to give for the
+          ; first case an upper bound big enough to be sure that the new path
+          ; will always be smaller.
+          let t ifelse-value visited-patch? [ Total-expected-cost #goal] [2 ^ 20]
+          ; If this temporal cost is worse than the new one, we substitute the
+          ; information in the patch to store the new one (with the neighbors
+          ; of the first case, it will be always the case)
+          if t > (Cost-path-father + distance myself + Heuristic #goal)
+          [
+            ; The current patch becomes the father of its neighbor in the new path
+            set father myself
+            set visited-patch? true
+            set active? true
+            ; and store the real cost in the neighbor from the real cost of its father
+            set Cost-path Cost-path-father + distance father
+            set Final-Cost precision Cost-path 3
+          ]
+        ]
+      ]
+    ]
+    ; If there are no more options, there is no path between #Start and #Goal
+    [
+      set exists? false
+    ]
+  ]
+  ; After the searching loop, if there exists a path
+  ifelse exists?
+  [
+    ; We extract the list of patches in the path, form #Start to #Goal
+    ; by jumping back from #Goal to #Start by using the fathers of every patch
+    let current #goal
+    set Final-Cost (precision [Cost-path] of #Goal 3)
+    let rep (list current)
+    While [current != #Start]
+    [
+      set current [father] of current
+      set rep fput current rep
+    ]
+    report rep
+  ]
+  [
+    ; Otherwise, there is no path, and we return False
+    report false
+  ]
 end
 
 ;;whether the patch is in the building or outside of the building
@@ -141,7 +256,8 @@ to go ; master command to run simulation
   [  ask patch-here [ set smoke 1]
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [prioritize-group move
+  ask people [prioritize-group ; look-for-goal
+    move
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
@@ -154,99 +270,20 @@ end
 
 to move ; governs where and how people move, triggers goal-setting
  preferreddirection
+  if ticks < 1.1 [set-path]
   set-f goal self
-  let next-pos argmin valid-next-locations self [[pos] -> ([distancexy (first pos) (last pos)] of  preferredexit)]
-    face next-patch ;; person heads towards its goal
-    set-speed
-  ifelse next-patch != invalid-next-locations self
-    [fd speed ]
-  [setxy (first next-pos) (last next-pos)]
-   if any? exits with [intersection (first next-pos) (last next-pos) [xcor] of myself [ycor] of myself (first first-end) (last first-end) (first second-end) (last second-end)]
-    [ exit-building]
+  face next-desired-patch
+  set-speed
+  fd speed
+  if any? exits with [intersects-here exits] = true
+    [ exit-building] ;; person heads towards its goal
+  if goal = nobody [preferreddirection set-path]
+  if patch-here = next-desired-patch [set-path]
 end
 
-to-report valid-next-locations [a-person] ; reports locations that are not walls or fire
-  let x1 [xcor] of a-person
-  let y1 [ycor] of a-person
-  let valid-neighbors (list)
-  let n 5
-  let max-width 3
-  let max-height 2
-  let all-positions  get-grid n max-width max-height x1 y1
-  foreach all-positions
-  [[pos] ->
-    let x2 (first pos)
-    let y2 (last pos)
-
-    if patch x2 y2 != nobody and [not any? fires-here with [color = red]] of patch x2 y2 ;;can't have fire
-    [
-      if not any? ([((turtle-set walls windows) in-radius max-wall-distance
-        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
-      ] of patch x2 y2) [
-
-        set valid-neighbors fput pos valid-neighbors
-      ]
-    ]
-  ]
-  report valid-neighbors
-end
-
-to-report invalid-next-locations [a-person] ; reports locations that are walls or fire
-  let x1 [xcor] of a-person
-  let y1 [ycor] of a-person
-  let invalid-neighbors (list)
-  let n 5
-  let max-width 3
-  let max-height 2
-  let all-positions  get-grid n max-width max-height x1 y1
-  foreach all-positions
-  [[pos] ->
-    let x2 (first pos)
-    let y2 (last pos)
-      if any? ([((turtle-set walls windows) in-radius max-wall-distance
-        with [intersection x1 y1 x2 y2 (first first-end) (last first-end) (first second-end) (last second-end)])
-      ] of patch x2 y2) [
-
-        set invalid-neighbors fput pos invalid-neighbors
-      ]
-  ]
-  report invalid-neighbors
-end
-
-to-report get-grid [n max-width max-height startx starty]
-  let stepx max-width / (2 * n )
-  let stepy max-height / (2 * n)
-  let minx startx - n * stepx
-  let miny starty - n * stepy
-  let maxx startx + n * stepx
-  let maxy starty + n * stepy
-  let result (list)
-  let currx minx
-  while [currx <= maxx]
-  [
-    let curry miny
-    while [curry <= maxy]
-    [
-      set result fput (list (precision currx 2) (precision curry 2)) result
-      set curry curry + stepy
-    ]
-    set currx currx + stepx
- ]
-  report result
-end
-
-to-report argmin [alist f1]
-  let min-element (first alist)
-  let min-value (runresult f1 (first alist))
-  foreach alist
-   [ [element] ->
-     if (runresult f1 element) < min-value
-     [
-      set min-element element
-      set min-value (runresult f1 element)
-     ]
-   ]
-  report min-element
+to-report clear-for-movement
+  let empty-patches neighbors with [not any? walls-here]
+ ; report
 end
 
 to diffuse-smoke [diffusion-rate ]
@@ -283,14 +320,16 @@ end
 to see ; sets how far and how much people can see
   ask people [set vision
     patches in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) ; people can 'see' normally in no smoke, but with drastically reduced vision as smoke approaches 1
-    if empty? [self] of vision [set vision 0]] ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
+    if empty? [self] of vision [set vision patch-ahead 1]] ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
   ; cone of radius 10 ahead of itself, angle is based on wikipedia field of view
 end
 
 to-report preferredexit ; reports which exit should be the goal for a person
-  ifelse visited? = false
+  ifelse (distance min-one-of exits [distance myself] < .2 )
+  [report patch-ahead .2]
+  [ ifelse visited? = false
     [report closestvisible]
-    [report closest] ;the logic is that people with previous acquaintance with the bar will know where the exits are
+  [report closest] ];the logic is that people with previous acquaintance with the bar will know where the exits are
 end
 
 to-report closestvisible ; selects closest visible exit
@@ -303,58 +342,6 @@ end
 
 to-report closest ; selects closest exit regardless of visibility
   report (min-one-of exits [distance myself])
-end
-
-to-report within? [v v1 v2]  ;;
-  report (v <= v1 and v >= v2) or (v <= v2 and v >= v1)
-end
-
-to-report intersection [x1 y1 x2 y2 x3 y3 x4 y4 ]
-  ;show "--started--"
-  ;show (list x1 y1 x2 y2 x3 y3 x4 y4)
-  let m1 nobody
-  let m2 nobody
-  if x1 != x2 [set m1 (y2 - y1) / (x2 - x1)]
-  if x3 != x4 [set m2 (y4 - y3) / (x4 - x3)]
-
-  ;; is t1 vertical? if so, swap the two turtles
-  if m1 = nobody
-  [
-    ifelse m2 = nobody
-      [report false ]
-      [ report intersection x3 y3 x4 y4 x1 y1 x2 y2 ]
-  ]
-  ;; is t2 vertical? if so, handle specially
-  if m2 = nobody[
-     ;; represent t1 line in slope-intercept form (y=mx+c)
-      let c1 y1 - (x1 * m1)
-      ;; t2 is vertical so we know x already
-      let x x3
-      ;; solve for y
-      let y m1 * x + c1
-      ;; check if intersection point lies on both segments
-      if not within? x x1 x2 [ report false ]
-      if not within? y y3 y4 [ report false ]
-
-      report true
-  ]
-  ;; now handle the normal case where neither turtle is vertical;
-  ;; start by representing lines in slope-intercept form (y=mx+c)
-  let c1 y1 - (x1 * m1)
-  let c2 y3 - (x3 * m2)
-  ;treat collinear lines that are ontop of each other as intersecting
-  if m1  = m2 [report c1 = c2 and (within? x1 x3 x4 or within? x2 x3 x4)]
-  ;; now solve for x
-
-  let x (c2 - c1) / (m1 - m2)
-  ;; check if intersection point lies on both segments
-  if not within? x x1 x2 [
-
-   report false ]
-  if not within? x x3 x4 [
-   report false ]
-
-  report true
 end
 
 to preferreddirection ; sets the goal for a person, either the person or exit
@@ -465,10 +452,11 @@ to set-group-constant ; allows people to have different values for the degree to
 end
 
 to-report next-patch ; selects the next patch a person will move towards
-  ;; CHOICES is an agentset of the candidate patches that the car can move to
-  let choices neighbors with [(pcolor = red) = false] ; this makes it so the next patch cannot have fire
+  let empty-patches neighbors with [not any? walls-here]
+  ;; CHOICES is an agentset of the candidate patches that the person can move to
+  let choices empty-patches with [(pcolor = red) = false]  ; this makes it so the next patch cannot have fire
 ; set choices remove invalid-next-locations self choices
-  set-f goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
+ ; set-f goal self ; assigns f-scores for each neighbor based on the heuristic and the distance to the goal
   ;; choose the patch with the lowest f-score (closest to the exit and most desirable according to the heuristic), this is the patch the person will move to
  set choices sort-on [f] choices
   let choice first choices
@@ -497,8 +485,8 @@ GRAPHICS-WINDOW
 33
 0
 21
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -509,7 +497,7 @@ BUTTON
 121
 55
 death test
-ask people with[ age > 23] [die]
+ask people with[ age > 1] [die]\nask people [preferreddirection]
 NIL
 1
 T
@@ -580,7 +568,7 @@ threshold
 threshold
 0
 100
-10.0
+0.0
 1
 1
 NIL
@@ -595,7 +583,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -610,7 +598,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -625,7 +613,7 @@ Dating-constant
 Dating-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -640,7 +628,7 @@ Family-constant
 Family-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -655,7 +643,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-50.0
+0.0
 1
 1
 NIL
