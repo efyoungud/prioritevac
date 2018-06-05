@@ -12,10 +12,10 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-people-own [gender age visited? group-number group-type group-constant fh  vision speed current-path leadership-quality leader  ;; the speed of the turtle
+people-own [gender age visited? group-number group-type group-constant fh path vision speed current-path leadership-quality leader  ;; the speed of the turtle
   goal     next-desired-patch ;; where am I currently headed
 speed-limit]
-globals [max-wall-distance open closed optimal-path acceleration path p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [max-wall-distance open closed optimal-path acceleration  p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
   ]
 
 patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection?  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -23,11 +23,11 @@ patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection? 
   ]
 ;;------------------
 extensions [csv]
-__includes [ "tests.nls" "intersections.nls"]
+__includes [ "tests.nls" ]
 
 
 to set-path
- set path A* patch-here goal
+  set path A* patch-here goal
    ifelse path != false and length path > 1
     [set next-desired-patch item 1 path]
     [set next-desired-patch patch-ahead 1]
@@ -76,8 +76,7 @@ to-report Heuristic [#goal]
 end
 
 to-report A* [#Start #goal]
-  let intersect-free-patches not [patch-here] of intersects-here walls
-  let #valid-map patches with [(pcolor != red) = true and intersect-free-patches ]
+  let #valid-map patches with [(pcolor != red) = true and intersection? != true] ;and intersect-free-patches
   ; clear all the information in the agents
   ask #valid-map with [visited-patch?]
   [
@@ -214,12 +213,12 @@ to read-building-from-file [filename] ; reads in the building from a CSV
     if breed-name = "Window" [ create-windows 1 [set component self]]
     ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
     ask component [ facexy x1 y1]
-    ;ask component [ set label (word x1)]
     ask component [ set size distancexy x1 y1 + distancexy x2 y2]
     ask component [ set first-end (list x1 y1)]
     ask component [ set second-end (list x2 y2)]
   ]
 end
+
 to read-people-from-file [filename] ; information was encoded in a CSV based on interview data and organized by Database Codebook
   let rows bf csv:from-file filename
   foreach rows
@@ -256,8 +255,7 @@ to go ; master command to run simulation
   [  ask patch-here [ set smoke 1]
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [prioritize-group ; look-for-goal
-    move
+  ask people [prioritize-group   move
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
@@ -265,16 +263,87 @@ to go ; master command to run simulation
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
   diffuse-smoke 1 ; initiates smoke, should be replaced with smokeview csv when available
   recolor-patches
-  see
+end
+
+to-report intersects-here [ variety ]
+   ;; each pair of segments checks for intersections
+   let result intersection self myself
+  let intersect-here not empty? result
+  ask variety [
+    if not empty? result []
+      ]
+  report intersect-here
+end
+
+;; reports a two-item list of x and y coordinates, or an empty
+;; list if no intersection is found
+to-report intersection [t1 t2]
+  let m1 [tan (90 - heading)] of t1
+  let m2 [tan (90 - heading)] of t2
+  ;; treat parallel/collinear lines as non-intersecting
+  if m1 = m2 [ report [] ]
+  ;; is t1 vertical? if so, swap the two turtles
+  if abs m1 = tan 90
+  [
+    ifelse abs m2 = tan 90
+      [ report [] ]
+      [ report intersection t2 t1 ]
+  ]
+  ;; is t2 vertical? if so, handle specially
+  if abs m2 = tan 90 [
+     ;; represent t1 line in slope-intercept form (y=mx+c)
+      let c1 [ycor - xcor * m1] of t1
+      ;; t2 is vertical so we know x already
+      let x [xcor] of t2
+      ;; solve for y
+      let y m1 * x + c1
+      ;; check if intersection point lies on both segments
+      if not [x-within? x] of t1 [ report [] ]
+      if not [y-within? y] of t2 [ report [] ]
+      report list x y
+  ]
+  ;; now handle the normal case where neither turtle is vertical;
+  ;; start by representing lines in slope-intercept form (y=mx+c)
+  let c1 [ycor - xcor * m1] of t1
+  let c2 [ycor - xcor * m2] of t2
+  ;; now solve for x
+  let x (c2 - c1) / (m1 - m2)
+  ;; check if intersection point lies on both segments
+  if not [x-within? x] of t1 [ report [] ]
+  if not [x-within? x] of t2 [ report [] ]
+  report list x (m1 * x + c1)
+end
+
+to-report x-within? [x]  ;; turtle procedure
+  report abs (xcor - x) <= abs (size / 2 * dx)
+end
+
+to-report y-within? [y]  ;; turtle procedure
+  report abs (ycor - y) <= abs (size / 2 * dy)
+end
+
+to avoid-walls [personssss] ; the problem is that it needs a person there to intersect with
+  ;if any? walls with [intersects-here walls] = true
+
+  let result intersection self patch-set but-last [path] of personssss
+  let intersect-here not empty? result
+  ask walls [
+    if not empty? result [show precision 2 result]
+      ]
+ ; let too-close-wall (distance (min-one-of walls [distance myself])) < 1
+ ; let okay-direction [self] of patches with [too-close-wall = FALSE]
+;  show [self] of patches with [too-close-wall = true]
+  ;[show "don't go"] ; need to get this to show the location to precision and then put it in not valid locations
 end
 
 to move ; governs where and how people move, triggers goal-setting
  preferreddirection
   if ticks < 1.1 [set-path]
   set-f goal self
+  if next-desired-patch = nobody [set-path]
   face next-desired-patch
   set-speed
-  fd speed
+    fd speed
   if any? exits with [intersects-here exits] = true
     [ exit-building] ;; person heads towards its goal
   if goal = nobody [preferreddirection set-path]
