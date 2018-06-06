@@ -12,7 +12,7 @@ walls-own [first-end second-end]
 exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
-people-own [gender age visited? group-number group-type group-constant fh path vision speed current-path leadership-quality leader  ;; the speed of the turtle
+people-own [gender alarmed? age visited? group-number group-type group-constant fh path vision speed current-path leadership-quality leader  ;; the speed of the turtle
   goal     next-desired-patch ;; where am I currently headed
 speed-limit]
 globals [max-wall-distance open closed optimal-path acceleration  p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
@@ -25,6 +25,14 @@ patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection? 
 extensions [csv]
 __includes [ "tests.nls" ]
 
+to alert ; manages alert, but with issues: 395 people are activated at tick 72, and all of them at tick 73, which is bad both because it's a rapid cascading effect and because it happens too late: aim is for activation between 24 and 30 seconds in order to mimic actual events
+  ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
+  let seen people in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) with [alarmed? = true]
+  let proximal people in-radius 5 with [alarmed? = true]
+  let visible-fire fires with [color = red] in-cone (10 - (10 * smoke)) (210 - (210 * smoke))
+  if (count seen + count visible-fire + count proximal) > 2
+  [set alarmed? true]
+end
 
 to set-path
   set path A* patch-here goal
@@ -189,7 +197,7 @@ to read-fire-from-file [ filename] ; reads in the fire from a CSV
   let values bf csv:from-file filename
   foreach values
   [ [row] ->
-    create-fires 1
+    create-fires 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
     [
       setxy item 0 row item 1 row
       set arrival item 2 row
@@ -255,8 +263,9 @@ to go ; master command to run simulation
   [  ask patch-here [ set smoke 1]
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [prioritize-group   move
-  ]
+  ask people [prioritize-group
+    ifelse alarmed? = 0 [alert]
+    [move]]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
@@ -338,9 +347,9 @@ end
 
 to move ; governs where and how people move, triggers goal-setting
  preferreddirection
-  if ticks < 1.1 [set-path]
-  set-f goal self
+  if path = 0 [set-path]
   if next-desired-patch = nobody [set-path]
+   set-f goal self
   face next-desired-patch
   set-speed
     fd speed
@@ -436,10 +445,10 @@ end
 
 to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
  set-leadership
-  let close-group link-neighbors with [distance myself < 2] ; defines close groups as people with the same group number who are within 2 m
+  let close-group link-neighbors with [distance myself < 2.1] ; defines close groups as people with the same group number who are within 2 m
   let group-leader close-group with [leader = true] ; defines who the leader is
  ; the person with the highest leadership quality is made the leader
-  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2] or goal = 0; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
+  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2.1] or goal = 0; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
     [set goal min-one-of link-neighbors with [distance myself > 2] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
   ask close-group with [leader = 0] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
