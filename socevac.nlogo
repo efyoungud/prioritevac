@@ -60,10 +60,12 @@ to setup ; sets up the initial environment
  set max-wall-distance (max [size] of walls) / 2
   set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
- ask walls [set color hsb  216 50 100]
+ ask walls [set color hsb  216 50 100
+    set intersection? true]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
- ask fires [ set color [0 0 0 0 ]]
+ ask fires [ set color [0 0 0 0 ]
+  if any? walls with [intersects-here walls] = true [set intersection? true]]
   see
   ask people [preferreddirection set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0]
  ;;there's initially no smoke
@@ -264,8 +266,8 @@ to go ; master command to run simulation
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
   ask people [prioritize-group
-    ifelse alarmed? = 0 [alert]
-    [move]]
+    ;ifelse alarmed? = 0 [alert]
+    move]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
