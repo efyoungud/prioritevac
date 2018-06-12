@@ -30,7 +30,8 @@ to alert ; manages alert, but with issues: 395 people are activated at tick 72, 
   let seen people in-cone (10 - (10 * smoke)) (210 - (210 * smoke)) with [alarmed? = true]
   let proximal people in-radius 5 with [alarmed? = true]
   let visible-fire fires with [color = red] in-cone (10 - (10 * smoke)) (210 - (210 * smoke))
-  if (count seen + count visible-fire + count proximal) > 2
+  let visible-smoke patches with [smoke > .5 = true ] in-radius 5
+  if (count seen + count visible-fire + count proximal + count visible-smoke) > 10
   [set alarmed? true]
 end
 
@@ -60,8 +61,7 @@ to setup ; sets up the initial environment
  set max-wall-distance (max [size] of walls) / 2
   set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
- ask walls [set color hsb  216 50 100
-    set intersection? true]
+ ask walls [set color hsb  216 50 100  set intersection? true]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]
@@ -218,9 +218,9 @@ to read-building-from-file [filename] ; reads in the building from a CSV
     let x2 item 3 row
     let y2 item 4 row
     let component nobody
-    if breed-name = "Wall" [ create-walls 1 [set component self]] ; sets up the breed
     if breed-name = "Exit" [ create-exits 1 [set component self]]
     if breed-name = "Window" [ create-windows 1 [set component self]]
+     if breed-name = "Wall" [ create-walls 1 [setxy x1 y1 set color hsb  216 50 100 pd setxy x2 y2 pu set component self]] ; sets up the breed, putting set intersection? true after pd makes almost everything blocked off, but it does it to the whole patch and so nothing works
     ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
     ask component [ facexy x1 y1]
     ask component [ set size distancexy x1 y1 + distancexy x2 y2]
@@ -266,8 +266,8 @@ to go ; master command to run simulation
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
   ask people [prioritize-group
-    ;ifelse alarmed? = 0 [alert]
-    move]
+    ifelse alarmed? = 0 [alert]
+    [move]]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
@@ -333,20 +333,6 @@ to-report y-within? [y]  ;; turtle procedure
   report abs (ycor - y) <= abs (size / 2 * dy)
 end
 
-to avoid-walls [personssss] ; the problem is that it needs a person there to intersect with
-  ;if any? walls with [intersects-here walls] = true
-
-  let result intersection self patch-set but-last [path] of personssss
-  let intersect-here not empty? result
-  ask walls [
-    if not empty? result [show precision 2 result]
-      ]
- ; let too-close-wall (distance (min-one-of walls [distance myself])) < 1
- ; let okay-direction [self] of patches with [too-close-wall = FALSE]
-;  show [self] of patches with [too-close-wall = true]
-  ;[show "don't go"] ; need to get this to show the location to precision and then put it in not valid locations
-end
-
 to move ; governs where and how people move, triggers goal-setting
  preferreddirection
   if path = 0 [set-path]
@@ -359,11 +345,6 @@ to move ; governs where and how people move, triggers goal-setting
     [ exit-building] ;; person heads towards its goal
   if goal = nobody [preferreddirection set-path]
   if patch-here = next-desired-patch [set-path]
-end
-
-to-report clear-for-movement
-  let empty-patches neighbors with [not any? walls-here]
- ; report
 end
 
 to diffuse-smoke [diffusion-rate ]
@@ -525,8 +506,8 @@ end
 
 to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
   ask people [if group-type = 1 [set group-constant Coworkers-Constant]
-    if group-type = 2 [set group-constant Friends-Constant]
-    if group-type = 3 [set group-constant Dating-Constant]
+  if group-type = 2 [set group-constant Friends-Constant]
+  if group-type = 3 [set group-constant Dating-Constant]
   if group-type = 4 [set group-constant Family-Constant]
   if group-type = 5 [set group-constant Multiple-Constant]]
 end
