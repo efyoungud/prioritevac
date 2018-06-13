@@ -22,8 +22,15 @@ patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection? 
 
   ]
 ;;------------------
-extensions [csv]
+extensions [csv profiler]
 __includes [ "tests.nls" ]
+
+to profile
+  profiler:start         ;; start profiling
+repeat 12 [ go ]       ;; run something you want to measure
+profiler:stop          ;; stop profiling
+print profiler:report
+end
 
 to alert ; manages alert, but with issues: 395 people are activated at tick 72, and all of them at tick 73, which is bad both because it's a rapid cascading effect and because it happens too late: aim is for activation between 24 and 30 seconds in order to mimic actual events
   ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
@@ -61,13 +68,15 @@ to setup ; sets up the initial environment
  set max-wall-distance (max [size] of walls) / 2
   set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
+  see
  ask walls [set color hsb  216 50 100  set intersection? true stamp]
  ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
  ask fires [ set color [0 0 0 0 ]
   if any? walls with [intersects-here walls] = true [set intersection? true]]
-  see
-  ask people [preferreddirection set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0]
+  ask people [preferreddirection set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
+  if any? walls with [seen-walls] = true [set intersection? true]
+  ]
  ;;there's initially no smoke
  ask patches [set smoke 0
     set father nobody
@@ -86,7 +95,7 @@ to-report Heuristic [#goal]
 end
 
 to-report A* [#Start #goal]
-  let #valid-map patches with [(pcolor != red) = true and intersection? != true and (pcolor != hsb  216 50 100) = true] ;and intersect-free-patches
+  let #valid-map patches with [intersection? != true] ;and intersect-free-patches
   ; clear all the information in the agents
   ask #valid-map with [visited-patch?]
   [
@@ -266,15 +275,25 @@ to go ; master command to run simulation
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
   ask people [prioritize-group
-   ; ifelse alarmed? = 0 [alert]
-    move]
-;]
+    ifelse alarmed? = 0 [alert]
+   [ move]
+]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
   diffuse-smoke 1 ; initiates smoke, should be replaced with smokeview csv when available
   recolor-patches
+end
+
+to-report seen-walls
+   ;; each pair of segments checks for intersections
+   let result intersection vision myself
+  let intersect-here not empty? result
+  ask walls [
+    if not empty? result []
+      ]
+  report intersect-here
 end
 
 to-report intersects-here [ variety ]
@@ -345,7 +364,7 @@ to move ; governs where and how people move, triggers goal-setting
   if any? exits with [intersects-here exits] = true
     [ exit-building] ;; person heads towards its goal
   if goal = nobody [preferreddirection set-path]
-  if patch-here = next-desired-patch [set-path]
+  if patch-here = next-desired-patch [set next-desired-patch nobody]
 end
 
 to diffuse-smoke [diffusion-rate ]
@@ -375,7 +394,7 @@ end
 
 to recolor-patches ; recolors patches subject to the hazards present
  ;Recolors patches based on time fire has reached a location/patch
-   ask fires with [arrival < ticks][set color red]
+   ask fires with [arrival < ticks][set color red set intersection? true]
   ask patches [ set pcolor scale-color white smoke 0 1]
 end
 
@@ -630,7 +649,7 @@ threshold
 threshold
 0
 100
-0.0
+15.0
 1
 1
 NIL
@@ -645,7 +664,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-0.0
+32.0
 1
 1
 NIL
@@ -660,7 +679,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-0.0
+62.0
 1
 1
 NIL
@@ -675,7 +694,7 @@ Dating-constant
 Dating-constant
 0
 100
-0.0
+75.0
 1
 1
 NIL
@@ -690,7 +709,7 @@ Family-constant
 Family-constant
 0
 100
-0.0
+80.0
 1
 1
 NIL
@@ -705,7 +724,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-0.0
+100.0
 1
 1
 NIL
