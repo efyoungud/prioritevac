@@ -75,7 +75,7 @@ soclink
  ask fires [ set color [0 0 0 0 ]
   if any? walls with [intersects-here walls] = true [set intersection? true]]
   ask people [preferreddirection set color white set-speed-limit set speed .1 + random-float .4 set leadership-quality 0
-  if any? walls with [seen-walls] = true [set intersection? true]
+ ; if any? walls with [seen-walls] = true [set intersection? true]
   ]
  ;;there's initially no smoke
  ask patches [set smoke 0
@@ -173,7 +173,7 @@ to-report A* [#Start #goal]
     ; We extract the list of patches in the path, form #Start to #Goal
     ; by jumping back from #Goal to #Start by using the fathers of every patch
     let current #goal
-    set Final-Cost (precision [Cost-path] of #Goal 3)
+    set Final-Cost ([Cost-path] of #Goal)
     let rep (list current)
     While [current != #Start]
     [
@@ -274,7 +274,7 @@ to go ; master command to run simulation
   [  ask patch-here [ set smoke 1]
     ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [prioritize-group
+  ask people [set-fh prioritize-group
     ifelse alarmed? = 0 [alert]
    [ move]
 ]
@@ -454,13 +454,14 @@ to leader-follower ; designates a group leader within a small group and then set
   ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < 2.1] or goal = 0; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
     [set goal min-one-of link-neighbors with [distance myself > 2] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
-  ask close-group with [leader = 0] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
+  ask close-group with [leader = 0] [set goal one-of group-leader set next-desired-patch one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
 end
 
 to-report fprivatespace ; reports preference to maintain personal space
   ; applies only when distance between agent and other agent is less than the sphere of influence, which is 3m. citation forthcoming.
- if (distance (min-one-of other people [distance myself])) < 3
-  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(1 / 3))] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
+ ifelse (distance (min-one-of other people [distance myself])) < 3
+  [report 5 * ((1 / (distance (min-one-of other people [distance myself])))-(1 / 3))]
+  [report 0] ; original equation included 1/ influence distance, but proxemics indicates that 3m is the standard influence distance and a simplified version serves just as well
 ;original equation included 'dodging behavior' but inclusion in a* negates the necessity
 end
 
@@ -521,7 +522,7 @@ to speed-up  ;; turtle procedure
 end
 
 to prioritize-group ; dictates when people will stop caring about still-living group members
-  ask links with [ [fh] of myself * [group-constant] of myself > threshold] [die] ; as the heuristic rises towards 1, it will eventually hit a threshold, which will be tested
+  ask links with [ [fh] of myself * [group-constant] of myself > threshold] [print "link severed" die] ; as the heuristic rises towards 1, it will eventually hit a threshold, which will be tested
 end
 
 to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
@@ -649,7 +650,7 @@ threshold
 threshold
 0
 100
-15.0
+1.0
 1
 1
 NIL
