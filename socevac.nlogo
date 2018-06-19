@@ -579,11 +579,7 @@ BUTTON
 121
 55
 death test
-<<<<<<< HEAD
-ask people with[ age > 23] [die]\nask people [preferreddirection]
-=======
 ask people with[ age > 1] [die]\nask people [preferreddirection]
->>>>>>> streamlined
 NIL
 1
 T
@@ -664,15 +660,9 @@ SLIDER
 28
 193
 200
-<<<<<<< HEAD
-222
-multiple-constant
-multiple-constant
-=======
 226
 Coworkers-Constant
 Coworkers-Constant
->>>>>>> streamlined
 0
 100
 32.0
@@ -712,21 +702,12 @@ NIL
 HORIZONTAL
 
 SLIDER
-<<<<<<< HEAD
-30
-317
-202
-350
-dating-constant
-dating-constant
-=======
 28
 314
 200
 347
 Family-constant
 Family-constant
->>>>>>> streamlined
 0
 100
 80.0
@@ -736,17 +717,6 @@ NIL
 HORIZONTAL
 
 SLIDER
-<<<<<<< HEAD
-32
-362
-204
-395
-threshold
-threshold
-0
-100
-50.0
-=======
 27
 354
 199
@@ -756,7 +726,6 @@ Multiple-constant
 0
 100
 100.0
->>>>>>> streamlined
 1
 1
 NIL
