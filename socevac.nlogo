@@ -244,7 +244,7 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
   [[row] ->
     create-people 1
     [
-     set size .46 ; unsourced and arbitrary, needs revision
+     set size .5 ; based on crowding and evacuation from Oberhagen
      setxy (item 0 row) (item 1 row) ; initial position, randomized within an ecology that patrons had reported when interviewd
      set age (item 2 row)
      set gender (item 3 row)
@@ -468,9 +468,9 @@ end
 to-report fwall ; reports preference to stay away from walls
   ; also applies only in sphere of influence, constant is 1
   ifelse (distance (min-one-of walls [distance myself]) < 30)
-    [report  1 * (1 /(distance (min-one-of walls [distance myself]) - .46) - .3333)] ; original equation included 1/'influence distance' which has been replaced by .3333 because 3m is the comfortable distance : need to find citation
+    [report  1 * (1 /(distance (min-one-of walls [distance myself]) - .5) - .3333)] ; original equation included 1/'influence distance' which has been replaced by .3333 because 3m is the comfortable distance : need to find citation
       [report 0] ; reports number when the distance between the agent and the wall is less than 30, 0 when it's more than 30
-      ;radius of agent is .46
+      ;radius of agent is .5
 end
 to-report crowd-at-exit ; counts how many people are between the agent and their closest door
   ;this slightly discourages going to crowded exits
