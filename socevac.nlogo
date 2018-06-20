@@ -25,7 +25,7 @@ patches-own [inside-building? parent-patch smoke temp-smoke f g h intersection? 
 extensions [csv profiler]
 __includes [ "tests.nls" ]
 
-to profile
+to profile ;does diagnostics of speed and how frequently a procedure is called
   profiler:start         ;; start profiling
 repeat 12 [ go ]       ;; run something you want to measure
 profiler:stop          ;; stop profiling
@@ -42,11 +42,11 @@ to alert ; manages alert, but with issues: 395 people are activated at tick 72, 
   [set alarmed? true]
 end
 
-to set-path
+to set-path ; calls A* pathfinding algorithm and sets goal
   set path A* patch-here goal
-   ifelse path != false and length path > 1
-    [set next-desired-patch item 1 path]
-    [set next-desired-patch patch-ahead 1]
+   ifelse path != false and length path > 1 ;there has to be a path and it has to be longer than 1, because if the next desired patch is the same as the current path it's a non-starter
+    [set next-desired-patch item 1 path] ; sets the goal as the next patch in the path
+    [set next-desired-patch patch-ahead 1] ; if the goal is only one patch away, assumes people are already facing it and lets the patch ahead be the next desired patch
 end
 
 to set-f [destination-patch person-at-patch] ; sets the total f-score for relevant patches in order to look for the next patch
@@ -85,12 +85,12 @@ soclink
     set active? false]
 end
 
-to-report Total-expected-cost [#goal]
+to-report Total-expected-cost [#goal] ; the values used for A*, does not include social values
    report Cost-path  + heuristic #goal
   ;+ ([fh] of myself)
 end
 
-to-report Heuristic [#goal]
+to-report Heuristic [#goal] ; how far away the goal is
   report distance #Goal
 end
 
