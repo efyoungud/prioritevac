@@ -59,12 +59,12 @@ print profiler:report
 end
 
 to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
-  let visible-smoke count patches with [grey = true] ; currently binary, can add shades of grey for degree of smoke
+  let visible-smoke count smoky with [arrival < ticks] ; currently binary, can add shades of grey for degree of smoke
   ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
-  let seen people in-cone ((100 - (100 * visible-smoke )) * scale-modifier) (180 - (180 * visible-smoke)) with [alarmed? = true]
+  let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
   let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
-  let visible-fire fires with [color = red] in-cone ((100 - (100 * visible-smoke)) * scale-modifier) (180 - (180 * visible-smoke))
-  let smoky-patches patches with [grey = true] in-radius (50 * scale-modifier)
+  let visible-fire fires with [color = red] in-cone (100  * scale-modifier) 180
+  let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
   if (count seen + count visible-fire + count proximal + count smoky-patches ) > 2
   [set alarmed? true] ; aim is for an average of 29s per Ben's comment
 end

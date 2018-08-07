@@ -6,13 +6,6 @@ to test-fh ; in jh is the heuristic used in a*
   ; h is the typical abbreviation for 'heuristic' but this is based on Jieshi Fang's work, thus 'f'
 end
 
-to test-set-f
-  let this-person one-of people
-  let go-to ([goal] of this-person)
-  ask this-person [set-f go-to this-person ; sets the f value of a patch for a random person seeking their goal
-    ask neighbors [show f]] ; should be a positive number
-end
-
 to test-lists
    let neighbor-list [self] of neighbors
   show neighbor-list
