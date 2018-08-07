@@ -18,7 +18,14 @@ people-own [gender alarmed? age visited? group-number group-type group-constant 
   goal  energy  next-desired-patch ;; where am I currently headed
 speed-limit]
 globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
-  ]
+ count-dead
+count-at-main
+count-at-bar
+count-at-kitchen
+count-at-stage
+count-at-bar-window-near-door
+count-at-bar-window-2
+count-at-sunroom-window]
 
 patches-own [inside-building? parent-patch temp-smoke fh f g h  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 
@@ -65,7 +72,7 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
   let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
   let visible-fire fires with [color = red] in-cone (100  * scale-modifier) 180
   let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
-  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 2
+  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 8
   [set alarmed? true] ; aim is for an average of 29s per Ben's comment
 end
 
@@ -372,8 +379,12 @@ to move ; governs where and how people move, triggers goal-setting
   if path = 0 [set-path]
   face next-desired-patch ;; person heads towards its goal
   set-speed
-    repeat speed [fd 1
+  ifelse speed > 1 [repeat speed [fd 1
   if any? exits with [intersects-here exits] = true
+    [exit-building]
+  if goal = nobody [preferreddirection set-path]
+    if patch-here = next-desired-patch [set-next-desired-patch]]]
+    [fd 1 if any? exits with [intersects-here exits] = true
     [exit-building]
   if goal = nobody [preferreddirection set-path]
     if patch-here = next-desired-patch [set-next-desired-patch]]
@@ -383,6 +394,7 @@ to die-by-fire ; prints the time the agent is removed from the simulation and th
   output-type "Died by proximity to fire at location, time" ; this can be changed to output-print when the outputs are set up
   output-type patch-here ; shows the location
   output-print ticks ; shows the time
+  set count-dead count-dead + 1
   die ; removes from simulation
 end
 
@@ -390,6 +402,13 @@ to exit-building ; prints the time the agent is removed from simulation
   output-type "Exited building at exit, time"
   output-type closest ; shows the closest exit, which should map the exit they exited by: this needs tested
   output-print ticks ; show the time
+  if closest = exit 60 [set count-at-main count-at-main + 1]
+if closest = exit 15 [set count-at-main count-at-main + 1]
+if closest = exit 17 [set count-at-kitchen count-at-kitchen + 1]
+if closest = exit 21 [set count-at-stage count-at-stage + 1]
+if closest = exit 59 [set count-at-bar-window-near-door count-at-bar-window-near-door + 1]
+if closest = exit 57 [set count-at-bar-window-2 count-at-bar-window-2 + 1]
+if closest = exit 39 [set count-at-sunroom-window count-at-sunroom-window + 1]
   die ; removes from simulation
 end
 
