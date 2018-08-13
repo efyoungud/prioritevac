@@ -14,7 +14,7 @@ exits-own [first-end second-end]
 windows-own [first-end second-end]
 fires-own [arrival]
 smoky-own [arrival level]
-people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed current-path leadership-quality leader  ;; the speed of the turtle
+people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
 speed-limit]
 globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
@@ -34,12 +34,12 @@ patches-own [inside-building? parent-patch temp-smoke fh f g h  father cost-path
 extensions [csv profiler]
 __includes [ "tests.nls"  ]
 
-to master-run
+to master-run ; runs the whole simulation for 200 seconds and then exports results
   while [ticks < 200] [go]
   export-results
 end
 
-to run-environment-only
+to run-environment-only ; runs the simulation without people
   ask people [die]
   while [ticks < 200] [
   tick ; makes one second of time pass
@@ -66,7 +66,7 @@ print profiler:report
 end
 
 to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
-  let visible-smoke count smoky with [arrival < ticks] ; currently binary, can add shades of grey for degree of smoke
+  let visible-smoke count smoky with [arrival < ticks] ; smoke that has arrived. does not discriminate by amount of smoke. all smoke would be considered alarming
   ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
   let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
   let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
@@ -76,15 +76,15 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
   [set alarmed? true] ; aim is for an average of 29s per Ben's comment
 end
 
-to set-path
+to set-path ; sets the path using a*
   set path A* patch-here goal
   set-next-desired-patch
 end
 
 to set-next-desired-patch
-   ifelse path != false and length path > 1
+  ifelse path != false and length path > 1 and (distance goal > 2)
     [set next-desired-patch item 1 path]
-    [set next-desired-patch patch-ahead 1]
+    [set next-desired-patch goal]
 end
 
 to setup ; sets up the initial environment
@@ -96,6 +96,7 @@ to setup ; sets up the initial environment
  set-default-shape windows "line"
  set-default-shape fires "square"
   set-default-shape smoky "square"
+  set-default-shape people "circle"
  read-building-from-file "building_nightclub.csv"
  read-fire-from-file "fire_nightclub_merged.csv"
   read-smoke-from-file "smoke.csv"
@@ -375,19 +376,20 @@ end
 
 
 to move ; governs where and how people move, triggers goal-setting
- preferreddirection
+  ifelse social-rules [preferreddirection][set goal preferredexit]
   if path = 0 [set-path]
+  set-next-desired-patch
   face next-desired-patch ;; person heads towards its goal
   set-speed
   ifelse speed > 1 [repeat speed [fd 1
   if any? exits with [intersects-here exits] = true
     [exit-building]
   if goal = nobody [preferreddirection set-path]
-    if patch-here = next-desired-patch [set-next-desired-patch]]]
-    [fd 1 if any? exits with [intersects-here exits] = true
+    if patch-here = next-desired-patch and length path > 1 [set path remove-item 0 path set-next-desired-patch]]]
+    [fd speed if any? exits with [intersects-here exits] = true
     [exit-building]
   if goal = nobody [preferreddirection set-path]
-    if patch-here = next-desired-patch [set-next-desired-patch]]
+    if patch-here = next-desired-patch and length path > 1 [set path remove-item 0 path set-next-desired-patch]]
 end
 
 to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
@@ -399,6 +401,7 @@ to die-by-fire ; prints the time the agent is removed from the simulation and th
 end
 
 to exit-building ; prints the time the agent is removed from simulation
+  output-type who
   output-type "Exited building at exit, time"
   output-type closest ; shows the closest exit, which should map the exit they exited by: this needs tested
   output-print ticks ; show the time
@@ -406,9 +409,9 @@ to exit-building ; prints the time the agent is removed from simulation
 if closest = exit 15 [set count-at-main count-at-main + 1]
 if closest = exit 17 [set count-at-kitchen count-at-kitchen + 1]
 if closest = exit 21 [set count-at-stage count-at-stage + 1]
-if closest = exit 59 [set count-at-bar-window-near-door count-at-bar-window-near-door + 1]
-if closest = exit 57 [set count-at-bar-window-2 count-at-bar-window-2 + 1]
-if closest = exit 39 [set count-at-sunroom-window count-at-sunroom-window + 1]
+  if ticks > 105 [if closest = exit 59 [set count-at-bar-window-near-door count-at-bar-window-near-door + 1]]
+ if ticks > 94 [if closest = exit 57 [set count-at-bar-window-2 count-at-bar-window-2 + 1]
+    if closest = exit 34 [set count-at-sunroom-window count-at-sunroom-window + 1]]
   die ; removes from simulation
 end
 
@@ -471,10 +474,10 @@ to leader-follower ; designates a group leader within a small group and then set
   let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
   let group-leader close-group with [leader = true] ; defines who the leader is
  ; the person with the highest leadership quality is made the leader
-  ask group-leader [ifelse goal = nobody or all? link-neighbors [distance myself < (20 * scale-modifier)] or goal = 0; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
+  ask group-leader [ifelse (goal = nobody) or (all? link-neighbors [distance myself < (20 * scale-modifier)]); the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
-    [set goal min-one-of link-neighbors with [distance myself > (20 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
-  ask close-group with [leader = 0] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
+    [set goal min-one-of link-neighbors with [distance myself > (21 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
+  ask close-group with [leader != true] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
 end
 
 to-report crowd-at-exit ; counts how many people are between the agent and their closest door
@@ -586,10 +589,10 @@ ticks
 30.0
 
 BUTTON
-32
-22
-121
-55
+25
+151
+114
+184
 death test
 ask people with[ age > 1] [die]\nask people [preferreddirection]
 NIL
@@ -603,10 +606,10 @@ NIL
 1
 
 BUTTON
-28
-68
-94
-101
+26
+82
+92
+115
 setup
 setup\n
 NIL
@@ -620,10 +623,10 @@ NIL
 1
 
 BUTTON
-104
-68
-167
-101
+102
+82
+165
+115
 NIL
 go
 T
@@ -637,10 +640,10 @@ NIL
 1
 
 BUTTON
-28
-110
-91
-143
+26
+116
+89
+149
 step
 go
 NIL
@@ -654,10 +657,10 @@ NIL
 1
 
 SLIDER
-29
-154
-201
-187
+25
+189
+197
+222
 threshold
 threshold
 0
@@ -669,10 +672,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-28
-193
-200
-226
+24
+228
+196
+261
 Coworkers-Constant
 Coworkers-Constant
 0
@@ -684,10 +687,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-28
-235
-200
-268
+24
+270
+196
+303
 Friends-Constant
 Friends-Constant
 0
@@ -699,10 +702,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-28
-275
-200
-308
+24
+310
+196
+343
 Dating-constant
 Dating-constant
 0
@@ -714,10 +717,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-28
-314
-200
-347
+24
+349
+196
+382
 Family-constant
 Family-constant
 0
@@ -729,10 +732,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-27
-354
-199
-387
+23
+389
+195
+422
 Multiple-constant
 Multiple-constant
 0
@@ -744,17 +747,17 @@ NIL
 HORIZONTAL
 
 OUTPUT
-29
-397
-269
-451
+23
+429
+554
+535
 11
 
 PLOT
-31
-471
-562
-672
+23
+538
+554
+739
 Links
 time
 Links and turtles
@@ -768,17 +771,12 @@ true
 PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
 "Links" 1.0 0 -7500403 true "" "plot count links"
-"Distance - friends" 1.0 0 -2674135 true "" "plot mean [link-length] of friends"
-"Distance - Coworkers" 1.0 0 -955883 true "" "plot mean [link-length] of coworkers"
-"Distance - Dating" 1.0 0 -6459832 true "" "plot mean [link-length] of partners"
-"Distance - Family" 1.0 0 -12087248 true "" "plot mean [link-length] of families"
-"Distance - Multiple" 1.0 0 -1184463 true "" "plot mean [link-length] of multiples"
 
 BUTTON
-104
-111
-190
-144
+102
+117
+188
+150
 no people
 run-environment-only
 NIL
@@ -792,12 +790,23 @@ NIL
 1
 
 SWITCH
-125
-23
-233
-56
+26
+46
+134
+79
 Full-Scale
 Full-Scale
+1
+1
+-1000
+
+SWITCH
+26
+10
+144
+43
+Social-rules
+Social-rules
 1
 1
 -1000
@@ -1004,6 +1013,14 @@ line half
 true
 0
 Line -7500403 true 150 0 150 150
+
+molecule hydrogen
+true
+0
+Circle -1 true false 138 108 84
+Circle -16777216 false false 138 108 84
+Circle -1 true false 78 108 84
+Circle -16777216 false false 78 108 84
 
 pentagon
 false
