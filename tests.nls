@@ -1,11 +1,3 @@
-to test-fh ; in jh is the heuristic used in a*
-  ask one-of people [ set-fh ; tests set-fh function and overall admissability of heuristic
-    ifelse fh > 1 ; nothing should exceed 1
-  [show "Heuristic inadmissable"] ; if it does, it's not admissable in A*
-    [show fh]] 
-  ; h is the typical abbreviation for 'heuristic' but this is based on Jieshi Fang's work, thus 'f'
-end
-
 to test-lists
    let neighbor-list [self] of neighbors
   show neighbor-list
@@ -17,7 +9,8 @@ end ;visual test
 
 to test-direction
   ask one-of people [preferreddirection show goal]
-end
+  ; which exit they are heading to
+end 
 
 to test-closest-visible ; demonstrates whether exit preference works for visibility
   ask one-of people with [visited? = false] [show preferredexit] ; tests closestvisible, preferredexit
@@ -28,26 +21,20 @@ to test-soclink ; demonstrates whether soclink works
 end
 
 to tests-not-run
-  ; the fire, people, building, and patch labels are all read in from csvs
+  ; the fire, people, building, and smoke are all read in from csvs
   ; the fact that anything shows up on setup and when things start shows that they work
   ; go procedure is tested whenever the go button is hit
   ; recolor-patches is demonstrated on 'go' and can be assessed visually
   ; die-by-fire and exit-building both print messages, and so can be assessed visually
 end
 
-to test-crowd-at-exit ; tests the number of people between a person and the exit they're aiming for
-  ask one-of people [show crowd-at-exit] ; should always be a whole positive number
-end
-
 to test-fire-distance ; shows the results of fire-distance
   ask one-of people [show fire-distance] ; might be a bug? returns positive for some people even at 0 ticks
 end
 
-
 to test-speed-limit ; tests that individuals have been assigned a speed limit
   ask one-of people [show speed-limit] ; should return a positive number smaller than 1.3
 end ; making it an individual property rather than a global allows for later inclusion of information that would impact speed such as disability or age
-
 
 to test-see ; tests both the see command and the vision parameter
   ask one-of people [see show vision] ; should return an agentset that fluctuates with smoke
@@ -62,4 +49,145 @@ to assert-equal [actual expected test-description]
    ;show sentence "actual" actual
    ;show sentence "expected" expected
   ]
+  
+end
+
+
+to test-crowd-at-exit ; tests the number of people between a person and the exit they're aiming for
+  ask one-of people [show crowd-at-exit] ; should always be a whole positive number 
+end
+
+
+;__________________________________________________________________________________________________________________________
+
+;;WORKS AS INTENDED
+to test-move
+  ask one-of people [show "is this person moving?"
+    show speed > 0]
+  ; return true if they move
+end
+
+
+;;WORKS AS INTENDED
+to test-crowdedness
+  ask one-of patches [ show "people with group Type 0:"
+    show count people with [group-type = 0]
+    show "people with group type 1:"
+    show count people with [group-type = 1]
+    show "people with group type 2:"
+    show count people with [group-type = 2]
+    show "people with group type 3:"
+    show count people with [group-type = 3]
+    show "people with group type 4:"
+    show count people with [group-type = 4]
+     show "people with group type 5:"
+    show count people with [group-type = 5]
+  ] 
+  ;look over, patches 
+  ;shows the count of people in group
+end
+
+
+;;WORKS AS INTENDED
+to test-set-fh
+  ;should return integer > 0
+  ask one-of people [show fh
+    show "Is fh greater than 0?"
+  show fh > 0] 
+end
+
+
+;;WORKS AS INTENDED
+to test-set-speed
+  ask one-of people [show "what is the speed?"
+    show speed
+    show "Is the speed smaller then the speed limit?"
+  show speed < speed-limit]
+  ; should return a positive integer that is less than speed limit
+end
+
+
+;;WORKS AS INTENDED
+to test-group-heuristic
+  ; return positive integer
+  ask one-of people [show group-heuristic
+    show "Is the heuristic positve?"
+    show group-heuristic > 0]
+end
+
+
+;;WORKS AS INTENDED
+to test-prioritize-group
+  ; tests whether hureistic > threshold
+  ; should return true if hureistic > threshold
+  ask one-of people [show group-heuristic > threshold]  
+end
+
+
+;;WORKS AS INTENDED
+to test-alert
+  ask one-of people [ show "People are alarmed?"
+    show  alarmed? = True ]; 
+end
+
+
+;SHOWS NEXT PATCH 
+to test-set-path
+  ask one-of people [ show next-desired-patch] 
+end 
+
+
+;WORKS AS INTENDED BUT LEADERSHIP SCORE IS CONSISTENTLY 0
+to test-set-leadership 
+  ask one-of people [show gender 
+    show leadership-quality 
+   show "Has Visited?" 
+    show visited? ]
+  ; show leadership score
+  ;show gender
+  ;show whether they visited before  
+end
+
+;______________________________________________________________________________________________________________________________
+
+;;NEED HELP TO MAKE SURE THESE ARE CORRECT
+to test-total-expected-cost [#goal]
+  ask one-of people [ show "is the total cost greater than 0?"
+    show Cost-path  + heuristic #goal > 0]
+  ;testing 
+  ; want to show a positive integer  
+end
+
+
+to test-heuristic [#goal]
+  ask one-of people [show fh + distance #Goal > 0
+    show heuristic #goal != total-expected-cost #goal]
+; part of 
+  ; want to show a positive integer seperate from total expected  
+end
+
+;;____________________________________________________________________________________________________________________________
+
+;CAN'T TEST IT SINCE IT DEALS WITH TURTLES
+to test-leader-follower
+  let close-group link-neighbors with [distance myself < (20 * scale-modifier)]
+  show count people with [leader = true] in-radius close-group  
+  ;closegroup is local variable
+  ; should return only one leader in closegroup  
+end
+
+
+
+;;GAVE ME AN ERROR WITH MYSELF WHEN i RAN IT 
+to test-intersects-here [ variety]
+; return true if interesct with inatimate objects
+  ask one-of people [ show intersects-here variety ]
+end
+
+
+;STILL TRYING TO FIGURE OUT HOW TO DO THIS
+to test- [#Start #goal]
+  show (list 1 2 3 4 5)
+; generate a list for people
+  ; return a list of patches
 end
