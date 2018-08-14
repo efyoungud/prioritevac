@@ -82,9 +82,10 @@ to set-path ; sets the path using a*
 end
 
 to set-next-desired-patch
+  let local-goal goal ; this is an attempt at a workaround on a bug that made people lose their goal when it became the next desired patch
   ifelse path != false and length path > 1 and (distance goal > 2)
     [set next-desired-patch item 1 path]
-    [set next-desired-patch goal]
+    [set next-desired-patch local-goal]
 end
 
 to setup ; sets up the initial environment
@@ -308,7 +309,8 @@ to go ; master command to run simulation
   ]
   ask people [see prioritize-group
     ifelse alarmed? != true [alert]
-    [move]]
+    [move]
+  injure]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
@@ -374,7 +376,6 @@ to-report y-within? [y]  ;; turtle procedure
   report abs (ycor - y) <= abs (size / 2 * dy)
 end
 
-
 to move ; governs where and how people move, triggers goal-setting
   ifelse social-rules [preferreddirection][set goal preferredexit]
   if path = 0 [set-path]
@@ -413,6 +414,15 @@ if closest = exit 21 [set count-at-stage count-at-stage + 1]
  if ticks > 94 [if closest = exit 57 [set count-at-bar-window-2 count-at-bar-window-2 + 1]
     if closest = exit 34 [set count-at-sunroom-window count-at-sunroom-window + 1]]
   die ; removes from simulation
+end
+
+to injure ; injures a person based on proximity to fire and smoke
+  let smoky-patches smoky with [arrival < ticks and level > 0] in-radius (50 * scale-modifier) ; smoke that is close and greater than 0 is considered
+  let smoke-impact count smoky-patches * (sum [level] of smoky-patches / 100) ; the level of smoke indicates how damaging it will be. This turns it into a percentage averaged from the local smoke
+  let fire-impact count fires with [color = red] in-radius (20  * scale-modifier) ; fire closer than 2m is considered to be injurious
+  set energy energy - (smoke-impact + fire-impact)
+  if energy <= 0 [output-type who output-type "died of injury at" output-type xcor output-type ycor output-type ticks die] ;proximity to fire
+  ; smoke toxicity is also desirable but we don't have that yet
 end
 
 to recolor-patches ; recolors patches subject to the hazards present
