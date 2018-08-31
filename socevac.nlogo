@@ -376,18 +376,26 @@ to-report y-within? [y]  ;; turtle procedure
   report abs (ycor - y) <= abs (size / 2 * dy)
 end
 
+to-report indicated-speed
+  ifelse speed > 1 = true
+  [report speed]
+  [report 1]
+end
+
+to look-ahead
+  ; need to have people look ahead to add extra protection about running into walls or walking through people
+  ; matching speeds is a problem if they're starting out close or if people turn
+  ; if the patch ahead has an obstacle, needs to make it an invalid patch for path-setting and set a new path
+end
+
 to move ; governs where and how people move, triggers goal-setting
   ifelse social-rules [preferreddirection][set goal preferredexit]
   if path = 0 [set-path]
   set-next-desired-patch
   face next-desired-patch ;; person heads towards its goal
   set-speed
-  ifelse speed > 1 [repeat speed [fd 1
+  repeat indicated-speed [look-ahead fd 1
   if any? exits with [intersects-here exits] = true
-    [exit-building]
-  if goal = nobody [preferreddirection set-path]
-    if patch-here = next-desired-patch and length path > 1 [set path remove-item 0 path set-next-desired-patch]]]
-    [fd speed if any? exits with [intersects-here exits] = true
     [exit-building]
   if goal = nobody [preferreddirection set-path]
     if patch-here = next-desired-patch and length path > 1 [set path remove-item 0 path set-next-desired-patch]]
