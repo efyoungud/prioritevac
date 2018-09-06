@@ -10,7 +10,7 @@ undirected-link-breed [partners partner]
 undirected-link-breed [families family]
 undirected-link-breed [multiples multiple]
 walls-own [first-end second-end]
-exits-own [first-end second-end]
+exits-own [first-end second-end patch-past]
 windows-own [first-end second-end]
 fires-own [arrival]
 smoky-own [arrival level]
@@ -82,10 +82,10 @@ to set-path ; sets the path using a*
 end
 
 to set-next-desired-patch
-  let local-goal goal ; this is an attempt at a workaround on a bug that made people lose their goal when it became the next desired patch
-  ifelse path != false and length path > 1 and (distance goal > 2)
+  ;let local-goal [patch-past] of goal ; this is an attempt at a workaround on a bug that made people lose their goal when it became the next desired patch
+  ifelse path != false and length path > 1
     [set next-desired-patch item 1 path]
-    [set next-desired-patch local-goal]
+    [set next-desired-patch goal]
 end
 
 to setup ; sets up the initial environment
@@ -269,6 +269,10 @@ to read-building-from-file [filename] ; reads in the building from a CSV
     ask component [ set first-end (list x1 y1)]
     ask component [ set second-end (list x2 y2)]
   ]
+  ask exit 15 [set patch-past patch-at -1 0]
+  ask exit 17 [set patch-past patch-at -1 0]
+  ask exit 60 [set patch-past patch-at 0 -1]
+  ask exit 21 [set patch-past patch-at 0 0]
 end
 
 to read-people-from-file [filename] ; information was encoded in a CSV based on interview data and organized by Database Codebook
@@ -447,7 +451,7 @@ end
 
 to-report preferredexit ; reports which exit should be the goal for a person
   ifelse (distance min-one-of exits [distance myself] < 1 )
-  [report patch-ahead 1]
+  [report [patch-past] of min-one-of exits [distance myself]]
   [ ifelse visited? = false
     [report closestvisible]
   [report closest] ];the logic is that people with previous acquaintance with the bar will know where the exits are
@@ -509,7 +513,7 @@ to-report crowdedness
 end
 
 to-report fire-distance ; reports distance to closest fire
-  let lit-fires fires with [color = red]
+  let lit-fires fires with [color = red] ; only the firest that are actually active are counted
   ifelse count lit-fires = 0 [report 0] ; if there are no currently active fires, reports 0
   [ report distance (min-one-of lit-fires [distance myself])] ; reports the distance to the closest fire, since the closest would presumably be the most relevant
 end
@@ -532,7 +536,7 @@ end
 to set-speed  ; how fast people will go
   ;; count the people in a meter in front of a person
   let people-ahead people in-cone (10 * scale-modifier) 180
-  ;; if there are people in front of the person and within one meter, slow down
+  ;; if there are people in front of the person and within one meter, match their speed
   ;; otherwise, speed up
   ifelse any? people-ahead
     [ set speed [speed] of one-of people-ahead
@@ -540,14 +544,13 @@ to set-speed  ; how fast people will go
   [speed-up ]
 end
 
-;; decrease the speed of the person
-to slow-down  ;; turtle procedure
+to slow-down  ;; turtle procedure to decrease the speed of the person
   ifelse speed <= 0
     [ set speed 0 ]
     [ set speed speed - acceleration ]
 end
-;; increase the speed of the person
-to speed-up  ;; turtle procedure
+
+to speed-up  ;; turtle procedure to increase the speed of the person
   ifelse speed > speed-limit
     [ set speed speed-limit ]
     [ set speed speed + acceleration ]
@@ -575,7 +578,7 @@ to set-group-constant ; allows people to have different values for the degree to
   if group-type = 5 [set group-constant Multiple-Constant]
 end
 
-to export-results
+to export-results ; creates a csv with all of the parameters for the simulation as well as the results
   export-world (word "results" random-float 1.0".csv")
 end
 @#$#@#$#@
