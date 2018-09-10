@@ -1,0 +1,119 @@
+to setup ; sets up the initial environment
+ ca
+ reset-ticks
+  ifelse full-scale [resize-world 0 330 0 210 set-patch-size 2 set scale-modifier 1][resize-world 0 33 0 21 set-patch-size 13 set scale-modifier .1] ; the options for scale offer accuracy vs. speed
+ set-default-shape walls "line"
+ set-default-shape exits "line"
+ set-default-shape windows "line"
+ set-default-shape fires "square"
+  set-default-shape smoky "square"
+  set-default-shape people "circle"
+ read-building-from-file "building_nightclub.csv"
+ read-fire-from-file "fire_nightclub_merged.csv"
+  read-smoke-from-file "smoke.csv"
+ read-people-from-file "people.csv"
+ set max-wall-distance (max [size] of walls) / 2
+  set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
+soclink
+  ask walls [set color hsb  216 50 100 stamp]
+  ask exits [set color hsb  0  50 100]
+ ask windows [set color hsb 80 50 100]
+  ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
+  ask smoky [set color [0 0 0 0 ]]
+  ask people [see preferreddirection set color white set-speed-limit ifelse full-scale [set speed 5 + random-float 4][set speed .5 + random-float .4] set leadership-quality 0 set-group-constant]
+ ;;there's initially no smoke
+ ask patches [
+    set father nobody
+    set Cost-path 0
+    set visited-patch? false
+    set active? false]
+end
+
+to read-fire-from-file [ filename] ; reads in the fire from a CSV
+  ;;header: x y time x for large canvas y for large canvas
+  let values bf csv:from-file filename
+  foreach values
+  [ [row] ->
+    create-fires 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
+    [
+      ifelse full-scale [setxy item 3 row item 4 row][setxy item 0 row item 1 row]
+      set arrival item 2 row
+      set color blue
+    ]
+  ]
+end
+
+to read-building-from-file [filename] ; reads in the building from a CSV
+  let values bf csv:from-file filename
+  foreach values
+  [ [row] ->
+    let breed-name item 0 row ; defines items
+    let x1 (item 5 row * scale-modifier); these define start and end points for a linear stretch
+    let y1 (item 6 row * scale-modifier)
+    let x2 (item 7 row * scale-modifier)
+    let y2 (item 8 row * scale-modifier)
+    let component nobody
+    if breed-name = "Wall" [ create-walls 1 [set component self]] ; sets up the breed
+    if breed-name = "Exit" [ create-exits 1 [set component self]]
+    if breed-name = "Window" [ create-windows 1 [set component self]]
+    ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
+    ask component [ facexy x1 y1]
+    ask component [ set size distancexy x1 y1 + distancexy x2 y2]
+    ask component [ set first-end (list x1 y1)]
+    ask component [ set second-end (list x2 y2)]
+  ]
+  ask exit 15 [set patch-past patch-at -1 0]
+  ask exit 17 [set patch-past patch-at -1 0]
+  ask exit 60 [set patch-past patch-at 0 -1]
+  ask exit 21 [set patch-past patch-at 0 0]
+end
+
+to read-smoke-from-file [ filename] ; reads in the fire from a CSV
+  ;;header: x y time smokelevel
+  let values bf csv:from-file filename
+  foreach values
+  [ [row] ->
+    create-smoky 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
+    [
+      ifelse full-scale [setxy item 0 row item 1 row][setxy item 4 row item 5 row]
+      set arrival item 2 row
+      set level item 3 row
+    set color white
+    ]
+  ]
+end
+
+to read-people-from-file [filename] ; information was encoded in a CSV based on interview data and organized by Database Codebook
+  let rows bf csv:from-file filename
+  foreach rows
+  [[row] ->
+    create-people 1
+    [
+      set size 5 * scale-modifier ; from Oberhagemann
+      ifelse full-scale [setxy item 10 row item 11 row][setxy item 0 row item 1 row] ; initial position, randomized within an ecology that patrons had reported when interviewd
+     set age (item 2 row)
+     set gender (item 3 row)
+     set visited? (item 4 row) ;true or false
+     set group-number (item 6 row) ; people were assigned group numbers based on the people they came with
+     set group-type (item 7 row) ; based on composition of group
+     set energy (item 9 row) ;from Jieshi and Eric's work
+  ]]
+end
+
+to soclink ;groups that came together have links based type of relationship
+ask people [if group-type != 0 ;type 0 is 'alone'
+ [
+if group-type = 1 [ask other people with [group-number = [group-number] of myself] [create-coworker-with myself]]
+if group-type = 2 [ask other people with [group-number = [group-number] of myself] [create-friend-with myself]]
+if group-type = 3 [ask other people with [group-number = [group-number] of myself] [create-partner-with myself]]
+if group-type = 4 [ask other people with [group-number = [group-number] of myself] [create-family-with myself]]
+if group-type = 5 [ask other people with [group-number = [group-number] of myself] [create-multiple-with myself]]
+ ]]
+  ask links [hide-link]
+end
+
+to set-speed-limit ; how fast people can go
+  ; units are m/s, from Isobe
+  ask people [set speed-limit (11 * scale-modifier) + random-float (2 * scale-modifier)]
+end
+

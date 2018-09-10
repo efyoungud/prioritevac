@@ -1,0 +1,31 @@
+to exit-building ; prints the time the agent is removed from simulation
+  output-type who
+  output-type "Exited building at exit, time"
+  output-type closest ; shows the closest exit, which should map the exit they exited by: this needs tested
+  output-print ticks ; show the time
+  if closest = exit 60 [set count-at-main count-at-main + 1]
+if closest = exit 15 [set count-at-main count-at-main + 1]
+if closest = exit 17 [set count-at-kitchen count-at-kitchen + 1]
+if closest = exit 21 [set count-at-stage count-at-stage + 1]
+  if ticks > 105 [if closest = exit 59 [set count-at-bar-window-near-door count-at-bar-window-near-door + 1]]
+ if ticks > 94 [if closest = exit 57 [set count-at-bar-window-2 count-at-bar-window-2 + 1]
+    if closest = exit 34 [set count-at-sunroom-window count-at-sunroom-window + 1]]
+  die ; removes from simulation
+end
+
+to injure ; injures a person based on proximity to fire and smoke
+  let smoky-patches smoky with [arrival < ticks and level > 0] in-radius (40 * scale-modifier) ; smoke that is close and greater than 0 is considered
+  let smoke-impact count smoky-patches * (sum [level] of smoky-patches / 100) ; the level of smoke indicates how damaging it will be. This turns it into a percentage averaged from the local smoke
+  let fire-impact count fires with [color = red] in-radius (10  * scale-modifier) ; fire closer than 2m is considered to be injurious
+  set energy energy - (smoke-impact + fire-impact)
+  if energy <= 0 [set count-dead count-dead + 1 output-type who output-type "died of injury at" output-type xcor output-type ycor output-type ticks die] ;proximity to fire
+  ; smoke toxicity is also desirable but we don't have that yet
+end
+
+to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
+  output-type "Died by proximity to fire at location, time" ; this can be changed to output-print when the outputs are set up
+  output-type patch-here ; shows the location
+  output-print ticks ; shows the time
+  set count-dead count-dead + 1
+  die ; removes from simulation
+end

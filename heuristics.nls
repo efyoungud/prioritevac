@@ -1,0 +1,59 @@
+
+to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
+  let visible-smoke count smoky with [arrival < ticks] ; smoke that has arrived. does not discriminate by amount of smoke. all smoke would be considered alarming
+  ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
+  let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
+  let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
+  let visible-fire fires with [color = red] in-cone (100  * scale-modifier) 180
+  let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
+  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 8
+  [set alarmed? true] ; aim is for an average of 29s per Ben's comment
+end
+
+to-report crowd-at-exit ; counts how many people are between the agent and their closest door
+  ;this slightly discourages going to crowded exits
+  let door (distance (min-one-of exits [distance myself])) ;does not incorporate vision, not sure how to do that
+  report count people in-cone door 90
+end
+
+to-report crowdedness
+  report count people in-radius (50 * scale-modifier)
+end
+
+to-report fire-distance ; reports distance to closest fire
+  let lit-fires fires with [color = red] ; only the firest that are actually active are counted
+  ifelse count lit-fires = 0 [report 0] ; if there are no currently active fires, reports 0
+  [ report distance (min-one-of lit-fires [distance myself])] ; reports the distance to the closest fire, since the closest would presumably be the most relevant
+end
+
+to-report smoke-distance
+; this needs to report smoke distance based on information from the CSV as soon as that's integrated
+end
+
+to set-fh ; reports total heuristic preference
+  ask patches [carefully ; carefully means that if fire-distance and crowdedness are 0 there's no error from dividing by 0 but also the two things only need to be called once instead of twice
+    [set fh (1 - (1 /  (fire-distance + crowdedness)))] ;fprivatespace not included. crowdedness does the same thing
+    [set fh 0]]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
+end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
+
+to-report group-heuristic
+  ifelse fire-distance > 0
+  [ report 1 - (1 / (fire-distance))]; fire distance is going to be a large number that gets smaller as the fire gets closer
+  ; that means that when the fire is far away, the heuristic-here is closer to 1
+  ; as the fire gets closer, it will get smaller
+  [ report 1] ; if the distance is 0, the multiplier should just be 1
+end
+
+to prioritize-group ; dictates when people will stop caring about still-living group members
+  ;smoke will be added as available
+  let people-with-links people with [links = true]
+  ask people-with-links with [(group-heuristic * group-constant) < threshold] [print "link severed" ask my-links [die]] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
+end
+
+to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
+  if group-type = 1 [set group-constant Coworkers-Constant]
+    if group-type = 2 [set group-constant Friends-Constant]
+    if group-type = 3 [set group-constant Dating-Constant]
+  if group-type = 4 [set group-constant Family-Constant]
+  if group-type = 5 [set group-constant Multiple-Constant]
+end

@@ -1,0 +1,28 @@
+to set-speed  ; how fast people will go
+  ;; count the people in a meter in front of a person
+  let people-ahead people in-cone (10 * scale-modifier) 180
+  ;; if there are people in front of the person and within one meter, match their speed
+  ;; otherwise, speed up
+  ifelse any? people-ahead
+    [ set speed [speed] of one-of people-ahead
+    ]
+  [speed-up ]
+end
+
+to slow-down  ;; turtle procedure to decrease the speed of the person
+  ifelse speed <= 0
+    [ set speed 0 ]
+    [ set speed speed - acceleration ]
+end
+
+to speed-up  ;; turtle procedure to increase the speed of the person
+  ifelse speed > speed-limit
+    [ set speed speed-limit ]
+    [ set speed speed + acceleration ]
+end
+
+to-report indicated-speed
+  ifelse speed > 1 = true
+  [report speed]
+  [report 1]
+end

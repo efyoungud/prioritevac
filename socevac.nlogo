@@ -18,291 +18,14 @@ people-own [gender alarmed? age visited? group-number group-type group-constant 
   goal  energy  next-desired-patch ;; where am I currently headed
 speed-limit]
 globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
- count-dead
-count-at-main
-count-at-bar
-count-at-kitchen
-count-at-stage
-count-at-bar-window-near-door
-count-at-bar-window-2
-count-at-sunroom-window]
+ count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
 patches-own [inside-building? parent-patch temp-smoke fh f g h  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 
   ]
 ;;------------------
 extensions [csv profiler]
-__includes [ "tests.nls"  ]
-
-to master-run ; runs the whole simulation for 200 seconds and then exports results
-  while [ticks < 200] [go]
-  export-results
-end
-
-to run-environment-only ; runs the simulation without people
-  ask people [die]
-  while [ticks < 200] [
-  tick ; makes one second of time pass
-  ;Windows are turned into exits based on timings provided by NIST Documentation
-  ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
-    recolor-patches]
-end
-
-to profile-setup
-  clear-all
-  profiler:start
-  setup
-  profiler:stop
-  print profiler:report
-end
-
-to profile
-  profiler:start         ;; start profiling
-repeat 1 [ go ]       ;; run something you want to measure
-profiler:stop          ;; stop profiling
-print profiler:report
-end
-
-to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
-  let visible-smoke count smoky with [arrival < ticks] ; smoke that has arrived. does not discriminate by amount of smoke. all smoke would be considered alarming
-  ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
-  let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
-  let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
-  let visible-fire fires with [color = red] in-cone (100  * scale-modifier) 180
-  let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
-  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 8
-  [set alarmed? true] ; aim is for an average of 29s per Ben's comment
-end
-
-to set-path ; sets the path using a*
-  set path A* patch-here goal
-  set-next-desired-patch
-end
-
-to set-next-desired-patch
-  ;let local-goal [patch-past] of goal ; this is an attempt at a workaround on a bug that made people lose their goal when it became the next desired patch
-  ifelse path != false and length path > 1
-    [set next-desired-patch item 1 path]
-    [set next-desired-patch goal]
-end
-
-to setup ; sets up the initial environment
- ca
- reset-ticks
-  ifelse full-scale [resize-world 0 330 0 210 set-patch-size 2 set scale-modifier 1][resize-world 0 33 0 21 set-patch-size 13 set scale-modifier .1] ; the options for scale offer accuracy vs. speed
- set-default-shape walls "line"
- set-default-shape exits "line"
- set-default-shape windows "line"
- set-default-shape fires "square"
-  set-default-shape smoky "square"
-  set-default-shape people "circle"
- read-building-from-file "building_nightclub.csv"
- read-fire-from-file "fire_nightclub_merged.csv"
-  read-smoke-from-file "smoke.csv"
- read-people-from-file "people.csv"
- set max-wall-distance (max [size] of walls) / 2
-  set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
-soclink
-  ask walls [set color hsb  216 50 100 stamp]
-  ask exits [set color hsb  0  50 100]
- ask windows [set color hsb 80 50 100]
-  ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
-  ask smoky [set color [0 0 0 0 ]]
-  ask people [see preferreddirection set color white set-speed-limit ifelse full-scale [set speed 5 + random-float 4][set speed .5 + random-float .4] set leadership-quality 0 set-group-constant]
- ;;there's initially no smoke
- ask patches [
-    set father nobody
-    set Cost-path 0
-    set visited-patch? false
-    set active? false]
-end
-
-to-report Total-expected-cost [#goal]
-   report Cost-path  + heuristic #goal
-end
-
-to-report Heuristic [#goal]
-  report (fh + distance #Goal)
-end
-
-to-report A* [#Start #goal]
-  let #valid-map patches with [(pcolor != red) = true and (pcolor != hsb  216 50 100) = true] ;and intersect-free-patches
-  ; clear all the information in the agents
-  ask #valid-map with [visited-patch?]
-  [
-    set father nobody
-    set Cost-path 0
-    set visited-patch? false
-    set active? false
-  ]
-  ; Active the staring point to begin the searching loop
-  ask #Start
-  [
-    set father self
-    set visited-patch? true
-    set active? true
-  ]
-  ; exists? indicates if in some instant of the search there are no options to
-  ; continue. In this case, there is no path connecting #Start and #Goal
-  let exists? true
-  ; The searching loop is executed while we don't reach the #Goal and we think
-  ; a path exists
-  while [not [visited-patch?] of #goal and exists?]
-  [
-    ; We only work on the valid pacthes that are active
-    let options #valid-map with [active?]
-    ; If any
-    ifelse any? options
-    [
-      ; Take one of the active patches with minimal expected cost
-      ask min-one-of options [Total-expected-cost #goal]
-      [
-        ; Store its real cost (to reach it) to compute the real cost
-        ; of its children
-        let Cost-path-father Cost-path
-        ; and deactivate it, because its children will be computed right now
-        set active? false
-        ; Compute its valid neighbors
-        let valid-neighbors neighbors with [member? self #valid-map]
-        ask valid-neighbors
-        [
-          ; There are 2 types of valid neighbors:
-          ;   - Those that have never been visited (therefore, the
-          ;       path we are building is the best for them right now)
-          ;   - Those that have been visited previously (therefore we
-          ;       must check if the path we are building is better or not,
-          ;       by comparing its expected length with the one stored in
-          ;       the patch)
-          ; One trick to work with both type uniformly is to give for the
-          ; first case an upper bound big enough to be sure that the new path
-          ; will always be smaller.
-          let t ifelse-value visited-patch? [ Total-expected-cost #goal] [2 ^ 20]
-          ; If this temporal cost is worse than the new one, we substitute the
-          ; information in the patch to store the new one (with the neighbors
-          ; of the first case, it will be always the case)
-          if t > (Cost-path-father + distance myself + Heuristic #goal)
-          [
-            ; The current patch becomes the father of its neighbor in the new path
-            set father myself
-            set visited-patch? true
-            set active? true
-            ; and store the real cost in the neighbor from the real cost of its father
-            set Cost-path Cost-path-father + distance father
-            set Final-Cost Cost-path
-          ]
-        ]
-      ]
-    ]
-    ; If there are no more options, there is no path between #Start and #Goal
-    [
-      set exists? false
-    ]
-  ]
-  ; After the searching loop, if there exists a path
-  ifelse exists?
-  [
-    ; We extract the list of patches in the path, form #Start to #Goal
-    ; by jumping back from #Goal to #Start by using the fathers of every patch
-    let current #goal
-    set Final-Cost (precision [Cost-path] of #Goal 3)
-    let rep (list current)
-    While [current != #Start]
-    [
-      set current [father] of current
-      set rep fput current rep
-    ]
-    report rep
-  ]
-  [
-    ; Otherwise, there is no path, and we return False
-    report false
-  ]
-end
-
-to read-smoke-from-file [ filename] ; reads in the fire from a CSV
-  ;;header: x y time smokelevel
-  let values bf csv:from-file filename
-  foreach values
-  [ [row] ->
-    create-smoky 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
-    [
-      ifelse full-scale [setxy item 0 row item 1 row][setxy item 4 row item 5 row]
-      set arrival item 2 row
-      set level item 3 row
-    set color white
-    ]
-  ]
-end
-
-to read-fire-from-file [ filename] ; reads in the fire from a CSV
-  ;;header: x y time x for large canvas y for large canvas
-  let values bf csv:from-file filename
-  foreach values
-  [ [row] ->
-    create-fires 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
-    [
-      ifelse full-scale [setxy item 3 row item 4 row][setxy item 0 row item 1 row]
-      set arrival item 2 row
-      set color blue
-    ]
-  ]
-end
-
-to read-building-from-file [filename] ; reads in the building from a CSV
-  let values bf csv:from-file filename
-  foreach values
-  [ [row] ->
-    let breed-name item 0 row ; defines items
-    let x1 (item 5 row * scale-modifier); these define start and end points for a linear stretch
-    let y1 (item 6 row * scale-modifier)
-    let x2 (item 7 row * scale-modifier)
-    let y2 (item 8 row * scale-modifier)
-    let component nobody
-    if breed-name = "Wall" [ create-walls 1 [set component self]] ; sets up the breed
-    if breed-name = "Exit" [ create-exits 1 [set component self]]
-    if breed-name = "Window" [ create-windows 1 [set component self]]
-    ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
-    ask component [ facexy x1 y1]
-    ask component [ set size distancexy x1 y1 + distancexy x2 y2]
-    ask component [ set first-end (list x1 y1)]
-    ask component [ set second-end (list x2 y2)]
-  ]
-  ask exit 15 [set patch-past patch-at -1 0]
-  ask exit 17 [set patch-past patch-at -1 0]
-  ask exit 60 [set patch-past patch-at 0 -1]
-  ask exit 21 [set patch-past patch-at 0 0]
-end
-
-to read-people-from-file [filename] ; information was encoded in a CSV based on interview data and organized by Database Codebook
-  let rows bf csv:from-file filename
-  foreach rows
-  [[row] ->
-    create-people 1
-    [
-      set size 5 * scale-modifier ; from Oberhagemann
-      ifelse full-scale [setxy item 10 row item 11 row][setxy item 0 row item 1 row] ; initial position, randomized within an ecology that patrons had reported when interviewd
-     set age (item 2 row)
-     set gender (item 3 row)
-     set visited? (item 4 row) ;true or false
-     set group-number (item 6 row) ; people were assigned group numbers based on the people they came with
-     set group-type (item 7 row) ; based on composition of group
-     set energy (item 9 row) ;from Jieshi and Eric's work
-  ]]
-end
-
-to soclink ;groups that came together have links based type of relationship
-ask people [if group-type != 0 ;type 0 is 'alone'
- [
-if group-type = 1 [ask other people with [group-number = [group-number] of myself] [create-coworker-with myself]]
-if group-type = 2 [ask other people with [group-number = [group-number] of myself] [create-friend-with myself]]
-if group-type = 3 [ask other people with [group-number = [group-number] of myself] [create-partner-with myself]]
-if group-type = 4 [ask other people with [group-number = [group-number] of myself] [create-family-with myself]]
-if group-type = 5 [ask other people with [group-number = [group-number] of myself] [create-multiple-with myself]]
- ]]
-  ask links [hide-link]
-end
+__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "speed.nls" "paths.nls" "heuristics.nls" "utilities.nls" "leave-simulation.nls"]
 
 to go ; master command to run simulation
  tick ; makes one second of time pass
@@ -321,69 +44,6 @@ to go ; master command to run simulation
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
   recolor-patches
   set-fh
-end
-
-to-report intersects-here [ variety ]
-   ;; each pair of segments checks for intersections
-   let result intersection self myself
-  let intersect-here not empty? result
-  ask variety [
-    if not empty? result []
-      ]
-  report intersect-here
-end
-
-;; reports a two-item list of x and y coordinates, or an empty
-;; list if no intersection is found
-to-report intersection [t1 t2]
-  let m1 [tan (90 - heading)] of t1
-  let m2 [tan (90 - heading)] of t2
-  ;; treat parallel/collinear lines as non-intersecting
-  if m1 = m2 [ report [] ]
-  ;; is t1 vertical? if so, swap the two turtles
-  if abs m1 = tan 90
-  [
-    ifelse abs m2 = tan 90
-      [ report [] ]
-      [ report intersection t2 t1 ]
-  ]
-  ;; is t2 vertical? if so, handle specially
-  if abs m2 = tan 90 [
-     ;; represent t1 line in slope-intercept form (y=mx+c)
-      let c1 [ycor - xcor * m1] of t1
-      ;; t2 is vertical so we know x already
-      let x [xcor] of t2
-      ;; solve for y
-      let y m1 * x + c1
-      ;; check if intersection point lies on both segments
-      if not [x-within? x] of t1 [ report [] ]
-      if not [y-within? y] of t2 [ report [] ]
-      report list x y
-  ]
-  ;; now handle the normal case where neither turtle is vertical;
-  ;; start by representing lines in slope-intercept form (y=mx+c)
-  let c1 [ycor - xcor * m1] of t1
-  let c2 [ycor - xcor * m2] of t2
-  ;; now solve for x
-  let x (c2 - c1) / (m1 - m2)
-  ;; check if intersection point lies on both segments
-  if not [x-within? x] of t1 [ report [] ]
-  if not [x-within? x] of t2 [ report [] ]
-  report list x (m1 * x + c1)
-end
-
-to-report x-within? [x]  ;; turtle procedure
-  report abs (xcor - x) <= abs (size / 2 * dx)
-end
-
-to-report y-within? [y]  ;; turtle procedure
-  report abs (ycor - y) <= abs (size / 2 * dy)
-end
-
-to-report indicated-speed
-  ifelse speed > 1 = true
-  [report speed]
-  [report 1]
 end
 
 to look-ahead
@@ -405,38 +65,6 @@ to move ; governs where and how people move, triggers goal-setting
     if patch-here = next-desired-patch and length path > 1 [set path remove-item 0 path set-next-desired-patch]]
 end
 
-to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
-  output-type "Died by proximity to fire at location, time" ; this can be changed to output-print when the outputs are set up
-  output-type patch-here ; shows the location
-  output-print ticks ; shows the time
-  set count-dead count-dead + 1
-  die ; removes from simulation
-end
-
-to exit-building ; prints the time the agent is removed from simulation
-  output-type who
-  output-type "Exited building at exit, time"
-  output-type closest ; shows the closest exit, which should map the exit they exited by: this needs tested
-  output-print ticks ; show the time
-  if closest = exit 60 [set count-at-main count-at-main + 1]
-if closest = exit 15 [set count-at-main count-at-main + 1]
-if closest = exit 17 [set count-at-kitchen count-at-kitchen + 1]
-if closest = exit 21 [set count-at-stage count-at-stage + 1]
-  if ticks > 105 [if closest = exit 59 [set count-at-bar-window-near-door count-at-bar-window-near-door + 1]]
- if ticks > 94 [if closest = exit 57 [set count-at-bar-window-2 count-at-bar-window-2 + 1]
-    if closest = exit 34 [set count-at-sunroom-window count-at-sunroom-window + 1]]
-  die ; removes from simulation
-end
-
-to injure ; injures a person based on proximity to fire and smoke
-  let smoky-patches smoky with [arrival < ticks and level > 0] in-radius (50 * scale-modifier) ; smoke that is close and greater than 0 is considered
-  let smoke-impact count smoky-patches * (sum [level] of smoky-patches / 100) ; the level of smoke indicates how damaging it will be. This turns it into a percentage averaged from the local smoke
-  let fire-impact count fires with [color = red] in-radius (20  * scale-modifier) ; fire closer than 2m is considered to be injurious
-  set energy energy - (smoke-impact + fire-impact)
-  if energy <= 0 [output-type who output-type "died of injury at" output-type xcor output-type ycor output-type ticks die] ;proximity to fire
-  ; smoke toxicity is also desirable but we don't have that yet
-end
-
 to recolor-patches ; recolors patches subject to the hazards present
  ;Recolors patches based on time fire has reached a location/patch
    ask fires with [arrival < ticks][set color red]
@@ -449,135 +77,6 @@ to see ; sets how far and how much people can see
     if vision = 0 [set vision patch-ahead 1]   ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
 end
 
-to-report preferredexit ; reports which exit should be the goal for a person
-  ifelse (distance min-one-of exits [distance myself] < 1 )
-  [report [patch-past] of min-one-of exits [distance myself]]
-  [ ifelse visited? = false
-    [report closestvisible]
-  [report closest] ];the logic is that people with previous acquaintance with the bar will know where the exits are
-end
-
-to-report closestvisible ; selects closest visible exit
-  let visibility [self] of vision ; defines the field of vision
-  let seen patches with [visibility = true] ; only those patches in the field of vision are seen
-  ifelse seen = true
-  [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
-  [report exit 60];they would know the door they came in from
-end
-
-to-report closest ; selects closest exit regardless of visibility
-  report (min-one-of exits [distance myself])
-end
-
-to preferreddirection ; sets the goal for a person, either the person or exit
-  ; calls preferredexit, closest, closestvisible, and leader-follower functions
-  ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
-  [set goal preferredexit] ; selects either closest or closest visible exit depending on visit history
-  [ ifelse (distance min-one-of link-neighbors [distance myself] < (20 * scale-modifier) ) ; if they have loved ones they have not given up on, they go towards them
-    [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
-    [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
-  ]
-end
-
-to set-leadership ; designates a group leader within a small group
- ; let employee people with [group-number = 300] = true
-   let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
-   ask close-group
-    [set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
-    foreach list (visited? = true) (gender = "male") ;( employee ); needs something for less injured, also waiting to hear back about other factors
-      [set leadership-quality leadership-quality + 1] ; for every leadership factor that applies, people receive one point
-    if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled
-    ]
-    ask close-group with-max [leadership-quality] [set leader true]
-end
-
-to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
- set-leadership
-  let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
-  let group-leader close-group with [leader = true] ; defines who the leader is
- ; the person with the highest leadership quality is made the leader
-  ask group-leader [ifelse (goal = nobody) or (all? link-neighbors [distance myself < (20 * scale-modifier)]); the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
-    [set goal preferredexit]
-    [set goal min-one-of link-neighbors with [distance myself > (21 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
-  ask close-group with [leader != true] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
-end
-
-to-report crowd-at-exit ; counts how many people are between the agent and their closest door
-  ;this slightly discourages going to crowded exits
-  let door (distance (min-one-of exits [distance myself])) ;does not incorporate vision, not sure how to do that
-  report count people in-cone door 90
-end
-
-to-report crowdedness
-  report count people in-radius (50 * scale-modifier)
-end
-
-to-report fire-distance ; reports distance to closest fire
-  let lit-fires fires with [color = red] ; only the firest that are actually active are counted
-  ifelse count lit-fires = 0 [report 0] ; if there are no currently active fires, reports 0
-  [ report distance (min-one-of lit-fires [distance myself])] ; reports the distance to the closest fire, since the closest would presumably be the most relevant
-end
-
-to-report smoke-distance
-; this needs to report smoke distance based on information from the CSV as soon as that's integrated
-end
-
-to set-fh ; reports total heuristic preference
-  ask patches [carefully ; carefully means that if fire-distance and crowdedness are 0 there's no error from dividing by 0 but also the two things only need to be called once instead of twice
-    [set fh (1 - (1 /  (fire-distance + crowdedness)))] ;fprivatespace not included. crowdedness does the same thing
-    [set fh 0]]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
-end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
-
-to set-speed-limit ; how fast people can go
-  ; units are m/s, from Isobe
-  ask people [set speed-limit (11 * scale-modifier) + random-float (2 * scale-modifier)]
-end
-
-to set-speed  ; how fast people will go
-  ;; count the people in a meter in front of a person
-  let people-ahead people in-cone (10 * scale-modifier) 180
-  ;; if there are people in front of the person and within one meter, match their speed
-  ;; otherwise, speed up
-  ifelse any? people-ahead
-    [ set speed [speed] of one-of people-ahead
-    ]
-  [speed-up ]
-end
-
-to slow-down  ;; turtle procedure to decrease the speed of the person
-  ifelse speed <= 0
-    [ set speed 0 ]
-    [ set speed speed - acceleration ]
-end
-
-to speed-up  ;; turtle procedure to increase the speed of the person
-  ifelse speed > speed-limit
-    [ set speed speed-limit ]
-    [ set speed speed + acceleration ]
-end
-
-to-report group-heuristic
-  ifelse fire-distance > 0
-  [ report 1 - (1 / (fire-distance))]; fire distance is going to be a large number that gets smaller as the fire gets closer
-  ; that means that when the fire is far away, the heuristic-here is closer to 1
-  ; as the fire gets closer, it will get smaller
-  [ report 1] ; if the distance is 0, the multiplier should just be 1
-end
-
-to prioritize-group ; dictates when people will stop caring about still-living group members
-  ;smoke will be added as available
-  let people-with-links people with [links = true]
-  ask people-with-links with [(group-heuristic * group-constant) < threshold] [print "link severed" ask my-links [die]] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
-end
-
-to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
-  if group-type = 1 [set group-constant Coworkers-Constant]
-    if group-type = 2 [set group-constant Friends-Constant]
-    if group-type = 3 [set group-constant Dating-Constant]
-  if group-type = 4 [set group-constant Family-Constant]
-  if group-type = 5 [set group-constant Multiple-Constant]
-end
-
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
   export-world (word "results" random-float 1.0".csv")
 end
@@ -585,11 +84,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-660
-305
+880
+441
 -1
 -1
-13.0
+2.0
 1
 10
 1
@@ -600,9 +99,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-33
+330
 0
-21
+210
 0
 0
 1
@@ -686,7 +185,7 @@ threshold
 threshold
 0
 100
-0.0
+2.0
 1
 1
 NIL
@@ -817,7 +316,7 @@ SWITCH
 79
 Full-Scale
 Full-Scale
-1
+0
 1
 -1000
 
