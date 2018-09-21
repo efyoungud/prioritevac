@@ -16,8 +16,8 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
-speed-limit]
-globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+bereaved speed-limit]
+globals [max-wall-distance most-recent-dead acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
 patches-own [inside-building? parent-patch temp-smoke fh f g h  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -40,8 +40,8 @@ to go ; master command to run simulation
   injure]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100]]
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
   recolor-patches
   set-fh
 end
@@ -53,16 +53,13 @@ to look-ahead
 end
 
 to move ; governs where and how people move, triggers goal-setting
-  ifelse social-rules [preferreddirection][set goal preferredexit]
-  if path = 0 [set-path]
-  set-next-desired-patch
+  if goal = nobody [preferreddirection] ; if nothing has changed, people don't need to change goals
+  set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
   repeat indicated-speed [look-ahead fd 1
   if any? exits with [intersects-here exits] = true
-    [exit-building]
-  if goal = nobody [preferreddirection set-path]
-    if patch-here = next-desired-patch and length path > 1 [set path remove-item 0 path set-next-desired-patch]]
+    [exit-building]]
 end
 
 to recolor-patches ; recolors patches subject to the hazards present
@@ -84,11 +81,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-880
-441
+660
+305
 -1
 -1
-2.0
+13.0
 1
 10
 1
@@ -99,9 +96,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-330
+33
 0
-210
+21
 0
 0
 1
@@ -200,7 +197,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-0.0
+6.0
 1
 1
 NIL
@@ -215,7 +212,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-0.0
+10.0
 1
 1
 NIL
@@ -230,7 +227,7 @@ Dating-constant
 Dating-constant
 0
 100
-0.0
+20.0
 1
 1
 NIL
@@ -245,7 +242,7 @@ Family-constant
 Family-constant
 0
 100
-0.0
+30.0
 1
 1
 NIL
@@ -260,7 +257,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-0.0
+35.0
 1
 1
 NIL
@@ -316,17 +313,6 @@ SWITCH
 79
 Full-Scale
 Full-Scale
-0
-1
--1000
-
-SWITCH
-26
-10
-144
-43
-Social-rules
-Social-rules
 1
 1
 -1000
