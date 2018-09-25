@@ -20,7 +20,7 @@ to-report Heuristic [#goal]
 end
 
 to-report A* [#Start #goal]
-  let #valid-map patches with [(pcolor != hsb  216 50 100) = true] ;and intersect-free-patches
+  let #valid-map patches with [(pcolor <= 50) = true] ;none of the blue patches
   ; clear all the information in the agents
   ask #valid-map with [visited-patch?]
   [

@@ -8,7 +8,7 @@ to setup ; sets up the initial environment
  set-default-shape fires "square"
   set-default-shape smoky "square"
   set-default-shape people "circle"
- read-building-from-file "building_nightclub.csv"
+ read-building-from-file "building_nightclub.csv" "nightclub_layout.png"
  read-fire-from-file "fire_nightclub_merged.csv"
   read-smoke-from-file "smoke.csv"
  read-people-from-file "people.csv"
@@ -20,7 +20,7 @@ soclink
  ask windows [set color hsb 80 50 100]
   ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
   ask smoky [set color [0 0 0 0 ]]
-  ask people [see preferreddirection set color white set-speed-limit ifelse full-scale [set speed 5 + random-float 4][set speed .5 + random-float .4] set leadership-quality 0 set-group-constant]
+  ask people [see preferreddirection set color white set-speed-limit set speed (5 * scale-modifier) + random-float (4 * scale-modifier) set leadership-quality 0 set-group-constant]
  ;;there's initially no smoke
  ask patches [
     set father nobody
@@ -43,7 +43,7 @@ to read-fire-from-file [ filename] ; reads in the fire from a CSV
   ]
 end
 
-to read-building-from-file [filename] ; reads in the building from a CSV
+to read-building-from-file [filename imagefile] ; reads in the building from a CSV
   let values bf csv:from-file filename
   foreach values
   [ [row] ->
@@ -66,6 +66,7 @@ to read-building-from-file [filename] ; reads in the building from a CSV
   ask exit 17 [set patch-past patch-at -1 0]
   ask exit 60 [set patch-past patch-at 0 -1]
   ask exit 21 [set patch-past patch-at 0 0]
+  import-pcolors imagefile
 end
 
 to read-smoke-from-file [ filename] ; reads in the fire from a CSV
