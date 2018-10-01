@@ -68,9 +68,9 @@ to recolor-patches ; recolors patches subject to the hazards present
   ask smoky with [arrival < ticks][set color scale-color white level 0 100]
 end
 
-to see ; sets how far and how much people can see
- let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (3 * scale-modifier) 180
-    ask people [set vision patches in-cone ((30 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
+to see ; sets how far and how much people can see, distance from Killer Show
+ let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (20 * scale-modifier) 180
+    ask people [set vision patches in-cone ((20 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
     if vision = 0 [set vision patch-ahead 1]   ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
 end
 
@@ -81,11 +81,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-660
-305
+880
+441
 -1
 -1
-13.0
+2.0
 1
 10
 1
@@ -96,9 +96,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-33
+330
 0
-21
+210
 0
 0
 1
@@ -313,7 +313,7 @@ SWITCH
 79
 Full-Scale
 Full-Scale
-1
+0
 1
 -1000
 

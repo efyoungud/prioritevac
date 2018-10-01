@@ -15,7 +15,7 @@ to setup ; sets up the initial environment
  set max-wall-distance (max [size] of walls) / 2
   set acceleration 0.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
-  ask walls [set color hsb  216 50 100 stamp]
+  ask walls [set color hsb  216 50 100]
   ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
   ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
