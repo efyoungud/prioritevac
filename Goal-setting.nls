@@ -28,13 +28,20 @@ to preferreddirection ; sets the goal for a person, either the person or exit
   ]
 end
 
+to set-leadership-quality
+set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
+  if visited? = true [set leadership-quality leadership-quality + 1]
+  if gender = "male" [set leadership-quality leadership-quality + 1]
+  if group-number = 300 [set leadership-quality leadership-quality + 1] ; the 300 group is for employees 
+  ; needs something for less injured, also waiting to hear back about other factors
+   
+end
+
 to set-leadership ; designates a group leader within a small group
  ; let employee people with [group-number = 300] = true
    let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
    ask close-group
-    [set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
-    foreach list (visited? = true) (gender = "male") ;( employee ); needs something for less injured, also waiting to hear back about other factors
-      [set leadership-quality leadership-quality + 1] ; for every leadership factor that applies, people receive one point
+    [set-leadership-quality  ; for every leadership factor that applies, people receive one point
     if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled
     ]
     ask close-group with-max [leadership-quality] [set leader true]
