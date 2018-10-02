@@ -46,19 +46,13 @@ to go ; master command to run simulation
   set-fh
 end
 
-to look-ahead
-  ; need to have people look ahead to add extra protection about running into walls or walking through people
-  ; matching speeds is a problem if they're starting out close or if people turn
-  ; if the patch ahead has an obstacle, needs to make it an invalid patch for path-setting and set a new path
-end
-
 to move ; governs where and how people move, triggers goal-setting
   if goal = nobody [preferreddirection] ; if nothing has changed, people don't need to change goals
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
-  repeat indicated-speed [look-ahead fd 1
-  if any? exits with [intersects-here exits] = true
+ repeat 10 * speed [set-next-desired-patch fd .1 ;allows for speeds under 1.0 to still be executed
+  if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
 

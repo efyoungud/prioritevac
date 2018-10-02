@@ -20,9 +20,3 @@ to speed-up  ;; turtle procedure to increase the speed of the person
     [ set speed speed-limit ]
     [ set speed speed + acceleration ]
 end
-
-to-report indicated-speed
-  ifelse speed > 1 = true
-  [report speed]
-  [report 1]
-end
