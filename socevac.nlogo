@@ -31,6 +31,7 @@ to go ; master command to run simulation
  tick ; makes one second of time pass
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
+  set-fh
   ask fires with [arrival < ticks]
   [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
@@ -43,7 +44,27 @@ to go ; master command to run simulation
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
   recolor-patches
+end
+
+to srti-go ; go command for SRTI integration
+ tick ; makes one second of time pass
+ read-building-from-file "building_nightclub.csv" "nightclub_layout.png"
+ read-fire-from-file "fire_nightclub_merged.csv"
+  read-smoke-from-file "smoke.csv"
   set-fh
+  ask fires with [arrival < ticks]
+  [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
+  ]
+  ask people [see prioritize-group
+    ifelse alarmed? != true [alert]
+    [move]
+  injure]
+  ;Windows are turned into exits based on timings provided by NIST Documentation
+  ;Windows are then recolored to represent exits
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
+  recolor-patches
+  export-world "srti-results.csv"
 end
 
 to move ; governs where and how people move, triggers goal-setting
@@ -51,7 +72,7 @@ to move ; governs where and how people move, triggers goal-setting
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
- repeat 10 * speed [set-next-desired-patch fd .1 ;allows for speeds under 1.0 to still be executed
+ repeat 5 * speed [set-next-desired-patch fd .2 ;allows for speeds under 1.0 to still be executed
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
