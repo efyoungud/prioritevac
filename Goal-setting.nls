@@ -28,13 +28,14 @@ to preferreddirection ; sets the goal for a person, either the person or exit
   ]
 end
 
-to set-leadership-quality
+to set-leadership-quality ; the traits the determine who the most likely leader is
 set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
   if visited? = true [set leadership-quality leadership-quality + 1]
   if gender = "male" [set leadership-quality leadership-quality + 1]
   if group-number = 300 [set leadership-quality leadership-quality + 1] ; the 300 group is for employees 
-  ; needs something for less injured, also waiting to hear back about other factors
-   
+  if energy < 50 [set leadership-quality leadership-quality - 1]; people with substantial injury are less likely to be leaders 
+  ;waiting to hear back about other factors
+ 
 end
 
 to set-leadership ; designates a group leader within a small group
@@ -52,7 +53,7 @@ to leader-follower ; designates a group leader within a small group and then set
   let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
   let group-leader close-group with [leader = true] ; defines who the leader is
  ; the person with the highest leadership quality is made the leader
-  ask group-leader [ifelse (goal = nobody) or (all? link-neighbors [distance myself < (20 * scale-modifier)]); the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
+  ask group-leader [ifelse ((goal = nobody) or (all? link-neighbors [distance myself <= (20 * scale-modifier)])) = true; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
     [set goal min-one-of link-neighbors with [distance myself > (21 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
   ask close-group with [leader != true] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
