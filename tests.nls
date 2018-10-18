@@ -148,6 +148,11 @@ to test-set-leadership
   ;show whether they visited before  
 end
 
+to test-leader-goals
+  if ((goal = nobody) or (all? link-neighbors [distance myself < (21 * scale-modifier)])) = true
+    [show true]
+end
+
 ;______________________________________________________________________________________________________________________________
 
 ;;NEED HELP TO MAKE SURE THESE ARE CORRECT
