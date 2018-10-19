@@ -155,7 +155,7 @@ end
 
 ;______________________________________________________________________________________________________________________________
 
-;;NEED HELP TO MAKE SURE THESE ARE CORRECT
+
 to test-total-expected-cost [#goal]
   ask one-of people [ show "is the total cost greater than 0?"
     show Cost-path  + heuristic #goal > 0
@@ -174,7 +174,6 @@ end
 
 ;;____________________________________________________________________________________________________________________________
 
-;CAN'T TEST IT SINCE IT DEALS WITH TURTLES
 to test-leader-follower ; you need to activate it - probably run preferreddirection first, then do ask one-of people
   let close-group link-neighbors with [distance myself < (20 * scale-modifier)]
   show count people with [leader = true] in-radius close-group  
@@ -184,16 +183,9 @@ end
 
 
 
-;;GAVE ME AN ERROR WITH MYSELF WHEN i RAN IT 
 to test-intersects-here [ variety]
 ; return true if interesct with inatimate objects
   ask one-of people [ show variety with [intersects-here variety ]] 
 end
 
 
-;STILL TRYING TO FIGURE OUT HOW TO DO THIS
-to test-a* [#Start #goal] ; again you want to ask one-of people, and assign a goal before you run this
-  show (list 1 2 3 4 5)
-; generate a list for people
-  ; return a list of patches
-end
