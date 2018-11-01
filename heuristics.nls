@@ -4,9 +4,9 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
   ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
   let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
   let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
-  let visible-fire fires with [color = red] in-cone (100  * scale-modifier) 180
+  let visible-fire fires with [arrival < ticks] in-cone (100  * scale-modifier) 180
   let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
-  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 5
+  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 10
   [set alarmed? true preferreddirection] ; aim is for an average of 29s per Ben's comment
 end
 

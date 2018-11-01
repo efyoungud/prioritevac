@@ -35,7 +35,7 @@ to go ; master command to run simulation
   ask fires with [arrival < ticks]
   [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [see prioritize-group
+  ask people [prioritize-group
     ifelse alarmed? != true [alert]
     [move]
   injure]
@@ -55,7 +55,7 @@ to srti-go ; go command for SRTI integration
   ask fires with [arrival < ticks]
   [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [see prioritize-group
+  ask people [prioritize-group
     ifelse alarmed? != true [alert]
     [move]
   injure]
@@ -331,6 +331,23 @@ Full-Scale
 0
 1
 -1000
+
+BUTTON
+28
+13
+91
+46
+goals
+ask people with [goal = nobody] [show goal]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
