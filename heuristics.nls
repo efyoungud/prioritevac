@@ -39,15 +39,15 @@ to set-fh ; reports total heuristic preference
 end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
 
 to-report group-heuristic
-  ifelse (fire-distance + smoke-distance) > 0
-  [ report 1 /(1 - (fire-distance + smoke-distance))]; fire distance is going to be a large number that gets smaller as the fire gets closer
+  ifelse (fire-distance + smoke-distance) != 0
+  [ report 1 - (1 / (fire-distance + smoke-distance))]; fire distance is going to be a large number that gets smaller as the fire gets closer
   ; that means that when the fire is far away, the heuristic here is closer to 1
   ; as the fire gets closer, it will get smaller
   [ report 1] ; if the distance is 0, the multiplier should just be 1
 end
 
 to prioritize-group ; dictates when people will stop caring about still-living group members
-  let people-with-links people with [links = true]
+  let people-with-links people with [count links > 0]
   ask people-with-links with [(group-constant * group-heuristic) < threshold] [print "link severed" ask my-links [die]] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
 end
 
