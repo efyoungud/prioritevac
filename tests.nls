@@ -175,7 +175,7 @@ end
 ;;____________________________________________________________________________________________________________________________
 
 to test-leader-follower ; you need to activate it - probably run preferreddirection first, then do ask one-of people
-  let close-group link-neighbors with [distance myself < (20 * scale-modifier)]
+ ; let close-group link-neighbors with [distance myself < (20 * scale-modifier)]
   show count people with [leader = true] in-radius close-group  
   ;closegroup is local variable
   ; should return only one leader in closegroup  

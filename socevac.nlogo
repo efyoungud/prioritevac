@@ -16,7 +16,7 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
- speed-limit]
+ speed-limit time-group-left]
 globals [max-wall-distance most-recent-dead acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 

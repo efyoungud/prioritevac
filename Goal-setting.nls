@@ -22,7 +22,7 @@ to preferreddirection ; sets the goal for a person, either the person or exit
   ; calls preferredexit, closest, closestvisible, and leader-follower functions
   ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
   [set goal preferredexit] ; selects either closest or closest visible exit depending on visit history
-  [ ifelse (distance min-one-of link-neighbors [distance myself] < (20 * scale-modifier) ) ; if they have loved ones they have not given up on, they go towards them
+  [ ifelse (distance min-one-of link-neighbors [distance myself] <= (20 * scale-modifier) ) ; if they have loved ones they have not given up on, they go towards them
     [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
     [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
   ]
@@ -35,13 +35,15 @@ set leadership-quality 0  + random-float 1 ; every time leadership has to be re-
   if group-number = 300 [set leadership-quality leadership-quality + 1] ; the 300 group is for employees 
   if energy < 50 [set leadership-quality leadership-quality - 1]; people with substantial injury are less likely to be leaders 
   ;waiting to hear back about other factors
- 
+end
+
+to-report close-group
+  report list (link-neighbors with [distance myself <= (20 * scale-modifier)]) (myself) 
+; defines close groups as people with the same group number who are within 2 m
 end
 
 to set-leadership ; designates a group leader within a small group
- ; let employee people with [group-number = 300] = true
-   let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
-   ask close-group
+    ask close-group
     [set-leadership-quality  ; for every leadership factor that applies, people receive one point
     if leader = true [set leadership-quality (leadership-quality * 2) ] ; if someone is already the leader, their score is doubled
     ]
@@ -50,11 +52,10 @@ end
 
 to leader-follower ; designates a group leader within a small group and then sets subsequent behavior
  set-leadership
-  let close-group link-neighbors with [distance myself < (20 * scale-modifier)] ; defines close groups as people with the same group number who are within 2 m
   let group-leader close-group with [leader = true] ; defines who the leader is
  ; the person with the highest leadership quality is made the leader
   ask group-leader [ifelse ((goal = nobody) or (all? link-neighbors [distance myself <= (20 * scale-modifier)])) = true; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
-    [set goal min-one-of link-neighbors with [distance myself > (21 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
+    [set goal min-one-of link-neighbors with [distance myself > (20 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
   ask close-group with [leader != true] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
 end

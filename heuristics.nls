@@ -47,14 +47,14 @@ to-report group-heuristic
 end
 
 to prioritize-group ; dictates when people will stop caring about still-living group members
-  let people-with-links people with [count links > 0]
-  ask people-with-links with [(group-constant * group-heuristic) < threshold] [print "link severed" ask my-links [die]] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
+  let people-with-links people with [count my-links > 0]
+  ask people-with-links with [(group-constant * group-heuristic) < threshold] [print "link severed" ask my-links [die] preferreddirection set time-group-left ticks] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
 end
 
 to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
   if group-type = 1 [set group-constant Coworkers-Constant]
-    if group-type = 2 [set group-constant Friends-Constant]
-    if group-type = 3 [set group-constant Dating-Constant]
+  if group-type = 2 [set group-constant Friends-Constant]
+  if group-type = 3 [set group-constant Dating-Constant]
   if group-type = 4 [set group-constant Family-Constant]
   if group-type = 5 [set group-constant Multiple-Constant]
 end
