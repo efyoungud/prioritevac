@@ -38,7 +38,7 @@ set leadership-quality 0  + random-float 1 ; every time leadership has to be re-
 end
 
 to-report close-group
-  report list (link-neighbors with [distance myself <= (20 * scale-modifier)]) (myself) 
+  report turtle-set list (link-neighbors with [distance myself <= (20 * scale-modifier)]) (self) 
 ; defines close groups as people with the same group number who are within 2 m
 end
 
