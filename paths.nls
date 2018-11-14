@@ -39,8 +39,7 @@ to-report A* [#Start #goal]
   ; exists? indicates if in some instant of the search there are no options to
   ; continue. In this case, there is no path connecting #Start and #Goal
   let exists? true
-  ; The searching loop is executed while we don't reach the #Goal and we think
-  ; a path exists
+  ; The searching loop is executed while we don't reach the #Goal and we think a path exists
   while [not [visited-patch?] of #goal and exists?]
   [
     ; We only work on the valid pacthes that are active
@@ -104,6 +103,7 @@ to-report A* [#Start #goal]
     [
       set current [father] of current
       set rep fput current rep
+      if length rep > 1000 [ error (word "The path seems way too big: " rep) ]
     ]
     report rep
   ]

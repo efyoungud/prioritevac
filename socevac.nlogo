@@ -35,10 +35,11 @@ to go ; master command to run simulation
   ask fires with [arrival < ticks]
   [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [prioritize-group
+  ask people [see prioritize-group
     ifelse alarmed? != true [alert]
-    [move]
-  injure]
+    [ move]
+  injure
+  ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]

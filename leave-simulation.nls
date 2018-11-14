@@ -26,6 +26,7 @@ to injure ; injures a person based on proximity to fire and smoke
 end
 
 to die-by-fire ; prints the time the agent is removed from the simulation and that they died by fire
+  set count-dead count-dead + 1
   output-type "Died by proximity to fire at location, time" ; this can be changed to output-print when the outputs are set up
   output-type patch-here ; shows the location
   output-print ticks ; shows the time
