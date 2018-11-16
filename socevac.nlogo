@@ -69,7 +69,7 @@ to srti-go ; go command for SRTI integration
 end
 
 to move ; governs where and how people move, triggers goal-setting
-  if goal = nobody [preferreddirection] ; if nothing has changed, people don't need to change goals
+  if goal = nobody or goal = one-of people and (distance goal <= (20 * scale-modifier) ) [preferreddirection] ; if nothing has changed, people don't need to change goals
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
