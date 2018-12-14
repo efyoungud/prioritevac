@@ -188,8 +188,8 @@ x,y,age,sex,prior_visit, behavior_type, group_number, group_type, group_leader,i
 16,9,22,male,FALSE,5,64,1,1,113,160,90
 7,1.5,28,male,TRUE,6,64,1,0,140,70,15
 22,14,40,male,FALSE,7,64,1,0,100,220,140
-7,3,0,female,FALSE,2,64,1,0,114,70,30
-7,2,0,male,TRUE,5,64,1,0,118,70,20
+7,3,17,female,FALSE,2,64,1,0,114,70,30
+7,2,17,male,TRUE,5,64,1,0,118,70,20
 7,2.5,24,male,TRUE,5,64,1,0,131,70,25
 26.5,7,41,female,TRUE,3,65,4,0,128,265,70
 26,9,33,female,TRUE,1,65,4,1,126,260,90
