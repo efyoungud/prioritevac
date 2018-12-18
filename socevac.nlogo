@@ -73,7 +73,8 @@ to move ; governs where and how people move, triggers goal-setting
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
- repeat 5 * speed [set-next-desired-patch fd .2 ;allows for speeds under 1.0 to still be executed
+  repeat speed [move-to next-desired-patch set-next-desired-patch
+; repeat 5 * speed [set-next-desired-patch fd .2 ;allows for speeds under 1.0 to still be executed
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
