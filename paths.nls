@@ -4,10 +4,10 @@ to set-path ; sets the path using a*
 end
 
 to set-next-desired-patch
-  ;let local-goal [patch-past] of goal ; this is an attempt at a workaround on a bug that made people lose their goal when it became the next desired patch
   ifelse path != false and length path > 1
     [set next-desired-patch item 1 path]
     [set next-desired-patch goal]
+  if next-desired-patch = (pcolor <= 50) [set-path]
 end
 
 
@@ -20,7 +20,7 @@ to-report Heuristic [#goal]
 end
 
 to-report A* [#Start #goal]
-  let #valid-map patches with [(pcolor <= 50) = true] ;none of the blue patches
+  let #valid-map patches with [pcolor <= 50] ;none of the blue patches
   ; clear all the information in the agents
   ask #valid-map with [visited-patch?]
   [
@@ -59,16 +59,6 @@ to-report A* [#Start #goal]
         let valid-neighbors neighbors with [member? self #valid-map]
         ask valid-neighbors
         [
-          ; There are 2 types of valid neighbors:
-          ;   - Those that have never been visited (therefore, the
-          ;       path we are building is the best for them right now)
-          ;   - Those that have been visited previously (therefore we
-          ;       must check if the path we are building is better or not,
-          ;       by comparing its expected length with the one stored in
-          ;       the patch)
-          ; One trick to work with both type uniformly is to give for the
-          ; first case an upper bound big enough to be sure that the new path
-          ; will always be smaller.
           let t ifelse-value visited-patch? [ Total-expected-cost #goal] [2 ^ 20]
           ; If this temporal cost is worse than the new one, we substitute the
           ; information in the patch to store the new one (with the neighbors
@@ -101,7 +91,7 @@ to-report A* [#Start #goal]
     let rep (list current)
     While [current != #Start]
     [
-      set current [father] of current
+      set current ([father] of current)
       set rep fput current rep
       if length rep > 1000 [ error (word "The path seems way too big: " rep) ]
     ]
