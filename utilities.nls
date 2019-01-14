@@ -1,4 +1,5 @@
 to master-run ; runs the whole simulation for 200 seconds and then exports results
+  setup
   while [ticks < 200]
  [ tick ; makes one second of time pass
   set-fh
