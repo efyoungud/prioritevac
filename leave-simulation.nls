@@ -19,7 +19,6 @@ to injure ; injures a person based on proximity to fire and smoke
   let smoke-impact count smoky-patches * (sum [level] of smoky-patches / 100) ; the level of smoke indicates how damaging it will be. This turns it into a percentage averaged from the local smoke
   let fire-impact count fires with [color = red] in-radius (10  * scale-modifier) ; fire closer than 2m is considered to be injurious
   set energy energy - (smoke-impact + fire-impact)
-  set most-recent-dead who
   if energy <= 0 [set count-dead count-dead + 1 output-type who output-type "died of injury at" output-type xcor output-type ycor output-print ticks die] ;proximity to fire
   ; smoke toxicity is also desirable but we don't have that yet
   ask people [preferreddirection]
@@ -31,7 +30,6 @@ to die-by-fire ; prints the time the agent is removed from the simulation and th
   output-type patch-here ; shows the location
   output-print ticks ; shows the time
   set count-dead count-dead + 1
-  set most-recent-dead who
   die ; removes from simulation
   ask people [preferreddirection]
 end
