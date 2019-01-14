@@ -13,7 +13,7 @@ to setup ; sets up the initial environment
   read-smoke-from-file "smoke.csv"
  read-people-from-file "people.csv"
  set max-wall-distance (max [size] of walls) / 2
-  set acceleration 1.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
+  set acceleration 2.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
   ask walls [set color hsb  216 50 100]
   ask exits [set color hsb  0  50 100]
