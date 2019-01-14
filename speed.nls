@@ -9,12 +9,6 @@ to set-speed  ; how fast people will go
   [speed-up ]
 end
 
-to slow-down  ;; turtle procedure to decrease the speed of the person
-  ifelse speed <= 0
-    [ set speed 0 ]
-    [ set speed speed - acceleration ]
-end
-
 to speed-up  ;; turtle procedure to increase the speed of the person
   ifelse speed > speed-limit
     [ set speed speed-limit ]
