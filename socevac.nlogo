@@ -17,7 +17,7 @@ smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left]
-globals [max-wall-distance most-recent-dead acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
 patches-own [inside-building? parent-patch temp-smoke fh f g h  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -49,10 +49,10 @@ end
 
 to srti-go ; go command for SRTI integration
  tick ; makes one second of time pass
- read-building-from-file "building_nightclub.csv" "nightclub_layout.png"
- read-fire-from-file "fire_nightclub_merged.csv"
-  read-smoke-from-file "smoke.csv"
-  set-fh
+ read-building-from-file "building_nightclub.csv" "nightclub_layout.png" ; reads in building, can be easily altered to rely only on one. good for buildings whith damaged or changing structure
+ read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
+  read-smoke-from-file "smoke.csv" ; if smoke is coming from an outside simulation
+  set-fh ; lets people perceive the danger in their area
   ask fires with [arrival < ticks]
   [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
@@ -69,7 +69,7 @@ to srti-go ; go command for SRTI integration
 end
 
 to move ; governs where and how people move, triggers goal-setting
-  if goal = nobody or goal = one-of people and (distance goal <= (20 * scale-modifier) ) or goal = most-recent-dead [preferreddirection] ; if nothing has changed, people don't need to change goals
+  if goal = nobody or goal = one-of people and (distance goal <= (20 * scale-modifier) ) [preferreddirection] ; if nothing has changed, people don't need to change goals
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
@@ -86,8 +86,8 @@ to recolor-patches ; recolors patches subject to the hazards present
 end
 
 to see ; sets how far and how much people can see, distance from Killer Show
- let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (20 * scale-modifier) 180
-    ask people [set vision patches in-cone ((20 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
+ let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180
+    ask people [set vision patches in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
     if vision = 0 [set vision patch-ahead 1]   ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
 end
 
