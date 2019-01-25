@@ -53,9 +53,9 @@ to srti-go ; go command for SRTI integration
  read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
   read-smoke-from-file "smoke.csv" ; if smoke is coming from an outside simulation
   set-fh ; lets people perceive the danger in their area
-  ask fires with [arrival < ticks]
-  [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
-  ]
+ ; ask fires with [arrival < ticks]
+ ; [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
+ ; ]
   ask people [prioritize-group
     ifelse alarmed? != true [alert]
     [move]
@@ -74,7 +74,6 @@ to move ; governs where and how people move, triggers goal-setting
   face next-desired-patch ;; person heads towards its goal
   set-speed
   repeat speed [move-to next-desired-patch set-next-desired-patch
-; repeat 5 * speed [set-next-desired-patch fd .2 ;allows for speeds under 1.0 to still be executed
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
@@ -125,10 +124,10 @@ ticks
 BUTTON
 25
 151
-114
+117
 184
-death test
-ask people with[ age > 1] [die]\nask people [preferreddirection]
+master run
+master-run
 NIL
 1
 T
