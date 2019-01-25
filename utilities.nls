@@ -1,20 +1,8 @@
 to master-run ; runs the whole simulation for 200 seconds and then exports results
   setup
   while [ticks < 200]
- [ tick ; makes one second of time pass
-  set-fh
-  ask fires with [arrival < ticks]
-  [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
-  ]
-  ask people [ prioritize-group ; can also include sight
-    ifelse alarmed? != true [alert]
-    [move]
-  injure]
-  ;Windows are turned into exits based on timings provided by NIST Documentation
-  ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
-    ]
+  [carefully [go]
+    [ask people [preferreddirection] go]]
   export-results
 end
 
