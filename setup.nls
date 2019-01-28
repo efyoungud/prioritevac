@@ -20,7 +20,7 @@ soclink
  ask windows [set color hsb 80 50 100]
   ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
   ask smoky [set color [0 0 0 0 ]]
-  ask people [see preferreddirection set color white set-speed-limit set speed (5 * scale-modifier) + random-float (4 * scale-modifier) set leadership-quality 0 set-group-constant]
+  ask people [preferreddirection set color white set-speed-limit set speed (5 * scale-modifier) + random-float (4 * scale-modifier) set leadership-quality 0 set-group-constant]
  ;;there's initially no smoke
  ask patches [
     set father nobody
