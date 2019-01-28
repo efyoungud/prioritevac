@@ -12,7 +12,7 @@ end
 
 to-report crowd-at-exit ; counts how many people are between the agent and their closest door
   ;this slightly discourages going to crowded exits
-  let door (distance (min-one-of exits [distance myself])) ;does not incorporate vision, not sure how to do that
+  let door (distance (min-one-of exits [distance myself])) 
   report count people in-cone door 90
 end
 
