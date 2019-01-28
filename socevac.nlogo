@@ -35,7 +35,7 @@ to go ; master command to run simulation
   ask fires with [arrival < ticks]
   [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
   ]
-  ask people [see prioritize-group
+  ask people [ prioritize-group
     ifelse alarmed? != true [alert]
     [ move]
   injure
@@ -84,10 +84,15 @@ to recolor-patches ; recolors patches subject to the hazards present
   ask smoky with [arrival < ticks][set color scale-color white level 0 100]
 end
 
-to see ; sets how far and how much people can see, distance from Killer Show
- let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180
-    ask people [set vision patches in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
-    if vision = 0 [set vision patch-ahead 1]   ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
+;to see ; sets how far and how much people can see, distance from Killer Show
+; let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180
+;    ask people [set vision patches in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
+;    if vision = 0 [set vision patch-ahead 1]   ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
+;end
+
+to-report see [agentset]
+  let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180
+  report agentset in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))
 end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
