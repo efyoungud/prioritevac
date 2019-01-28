@@ -36,9 +36,9 @@ to test-speed-limit ; tests that individuals have been assigned a speed limit
   ask one-of people [show speed-limit] ; should return a positive number smaller than 1.3
 end ; making it an individual property rather than a global allows for later inclusion of information that would impact speed such as disability or age
 
-to test-see ; tests both the see command and the vision parameter
-  ask one-of people [see show vision] ; should return an agentset that fluctuates with smoke
-end
+;to test-see ; tests both the see command and the vision parameter
+;  ask one-of people [see show vision] ; should return an agentset that fluctuates with smoke
+;end
 
 
 to assert-equal [actual expected test-description]
