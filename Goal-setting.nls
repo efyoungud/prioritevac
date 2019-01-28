@@ -6,10 +6,18 @@ to-report preferredexit ; reports which exit should be the goal for a person
   [report closest] ];the logic is that people with previous acquaintance with the bar will know where the exits are
 end
 
+to-report listed-exits
+  report sort-on [distance myself] exits
+end
+
+to-report listed-visible-exits
+  let seen see exits
+  report sort-on [distance myself] seen
+end
+
 to-report closestvisible ; selects closest visible exit
-  let visibility [self] of vision ; defines the field of vision
-  let seen patches with [visibility = true] ; only those patches in the field of vision are seen
-  ifelse seen = true
+  let seen see exits
+  ifelse count seen > 0
   [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
   [report exit 60];they would know the door they came in from
 end
