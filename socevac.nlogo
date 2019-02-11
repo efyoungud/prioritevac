@@ -16,7 +16,7 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
- speed-limit time-group-left]
+ speed-limit time-group-left noted-exits]
 globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
@@ -32,9 +32,9 @@ to go ; master command to run simulation
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
   set-fh
-  ask fires with [arrival < ticks]
-  [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
-  ]
+ ; ask fires with [arrival < ticks]
+ ; [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
+ ; ]
   ask people [ prioritize-group
     ifelse alarmed? != true [alert]
     [ move]
@@ -58,7 +58,8 @@ to srti-go ; go command for SRTI integration
  ; ]
   ask people [prioritize-group
     ifelse alarmed? != true [alert]
-    [move]
+    [note-exits ; people assess the area around them
+      move]
   injure]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
@@ -69,7 +70,7 @@ to srti-go ; go command for SRTI integration
 end
 
 to move ; governs where and how people move, triggers goal-setting
-  if goal = nobody or goal = one-of people and (distance goal <= (20 * scale-modifier) ) [preferreddirection] ; if nothing has changed, people don't need to change goals
+  preferreddirection ;assess goals
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
