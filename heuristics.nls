@@ -7,13 +7,19 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
   let visible-fire fires with [arrival < ticks] in-cone (100  * scale-modifier) 180
   let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
   if (count seen + count visible-fire + count proximal + count smoky-patches ) > 10
-  [set alarmed? true preferreddirection] ; aim is for an average of 29s per Ben's comment
+  [set alarmed? true preferreddirection set speed speed-limit] ; aim is for an average of 29s per Ben's comment
 end
 
-to-report crowd-at-exit ; counts how many people are between the agent and their closest door
+to note-exits
+  set noted-exits fput [self] of see exits noted-exits ; will note exits they can see
+  set noted-exits exits with [distance myself < 5] ; if less than half a meter away, will notice an exit
+  set noted-exits remove-duplicates noted-exits
+end
+
+to-report crowd-at-exit [door]; counts how many people are between the agent and their closest door
   ;this slightly discourages going to crowded exits
-  let door (distance (min-one-of exits [distance myself])) 
-  report count people in-cone door 90
+  let ranged  distance door
+  report count people in-cone ranged 90
 end
 
 to-report crowdedness ; measures how crowded an area is

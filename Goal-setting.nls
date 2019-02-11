@@ -1,25 +1,35 @@
 to-report preferredexit ; reports which exit should be the goal for a person
   ifelse (distance min-one-of exits [distance myself] < 1 )
-  [report [patch-past] of min-one-of exits [distance myself]]
+  [report [patch-past] of closest]
   [ ifelse visited? = false
-    [report closestvisible]
-  [report closest] ];the logic is that people with previous acquaintance with the bar will know where the exits are
+    [report listed-visible-exits]
+  [report listed-exits] ];the logic is that people with previous acquaintance with the bar will know where the exits are
 end
 
 to-report listed-exits
-  report sort-on [distance myself] exits
+  let prioritized-exits sort-on [distance myself] exits
+  ifelse crowd-at-exit item 0 prioritized-exits < 50
+  [report item 0 prioritized-exits]
+ [report discard-crowded prioritized-exits closest]
 end
 
 to-report listed-visible-exits
-  let seen see exits
-  report sort-on [distance myself] seen
+ set noted-exits (list (exit 60))
+  let prioritized-exits sort-on [distance myself] turtle-set noted-exits 
+  ifelse crowd-at-exit item 0 prioritized-exits < 50
+  [report item 0 prioritized-exits]
+  [report discard-crowded prioritized-exits closestvisible]
+end
+
+to-report discard-crowded [list-used default]
+  while [length list-used > 0 and crowd-at-exit item 0 list-used > 50] [set list-used remove-item 0 list-used] 
+  ifelse empty? list-used [report default]
+  [report item 0 list-used]
 end
 
 to-report closestvisible ; selects closest visible exit
-  let seen see exits
-  ifelse count seen > 0
-  [report closest] ;if they can see an exit (including the main exit) they will head towards the closest
-  [report exit 60];they would know the door they came in from
+  let seen sort-by [distance myself] noted-exits 
+  report item 0 seen ;if they can see an exit (including the main exit) they will head towards the closest, otherwise they will go towards the main exit, which everyone noted
 end
 
 to-report closest ; selects closest exit regardless of visibility
