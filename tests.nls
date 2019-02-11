@@ -53,9 +53,9 @@ to assert-equal [actual expected test-description]
 end
 
 
-to test-crowd-at-exit ; tests the number of people between a person and the exit they're aiming for
-  ask one-of people [show crowd-at-exit] ; should always be a whole positive number 
-end
+;to test-crowd-at-exit ; tests the number of people between a person and the exit they're aiming for
+;  ask one-of people [show crowd-at-exit] ; should always be a whole positive number 
+;end
 
 
 ;__________________________________________________________________________________________________________________________
