@@ -12,7 +12,12 @@ to setup ; sets up the initial environment
  read-fire-from-file "fire_nightclub_merged.csv"
   read-smoke-from-file "smoke.csv"
  read-people-from-file "people.csv"
- set max-wall-distance (max [size] of walls) / 2
+ ask people [ set noted-exits (list (exit 60)) 
+    set color white set-speed-limit
+    set leadership-quality 0 
+    set-group-constant
+  preferreddirection]
+  set max-wall-distance (max [size] of walls) / 2
   set acceleration 5.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
   ask walls [set color hsb  216 50 100]
@@ -20,11 +25,7 @@ soclink
  ask windows [set color hsb 80 50 100]
   ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
   ask smoky [set color [0 0 0 0 ]]
-  ask people [ set color white set-speed-limit
-  set noted-exits (list (exit 60))  
-    set leadership-quality 0 
-    set-group-constant
-  preferreddirection]
+  
  ;;there's initially no smoke
  ask patches [
     set father nobody
