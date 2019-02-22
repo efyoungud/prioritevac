@@ -16,7 +16,7 @@ to-report Total-expected-cost [#goal]
 end
 
 to-report Heuristic [#goal]
-  report ([fh] of #Goal)
+  report (fh + distance #Goal)
 end
 
 to-report A* [#Start #goal]
