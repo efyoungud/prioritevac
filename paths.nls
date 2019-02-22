@@ -7,7 +7,7 @@ to set-next-desired-patch
   ifelse path != false and length path > 1
     [set next-desired-patch item 1 path]
     [set next-desired-patch goal]
-  if next-desired-patch = (pcolor <= 50) [set-path]
+  if next-desired-patch = (pcolor <= 50) [set-path] ; don't set the path if you're going to be walking straight into a wall
 end
 
 
@@ -16,7 +16,7 @@ to-report Total-expected-cost [#goal]
 end
 
 to-report Heuristic [#goal]
-  report (fh + distance #Goal)
+  report ([fh] of #Goal)
 end
 
 to-report A* [#Start #goal]
