@@ -12,18 +12,12 @@ end
 
 to note-exits
   set noted-exits fput [self] of see exits noted-exits ; will note exits they can see
-  set noted-exits exits with [distance myself < 10] ; if less than half a meter away, will notice an exit
+  set noted-exits fput exits with [distance myself < 5] noted-exits; if less than half a meter away, will notice an exit
   set noted-exits remove-duplicates noted-exits
 end
 
-to-report crowd-at-exit [door]; counts how many people are between the agent and their closest door
-  ;this slightly discourages going to crowded exits
-  let ranged  distance door
-  report count people in-cone ranged 90
-end
-
 to-report crowdedness ; measures how crowded an area is
-  report count people in-radius (50 * scale-modifier)
+  report count people in-radius (2 * scale-modifier)
 end
 
 to-report fire-distance ; reports distance to closest fire
