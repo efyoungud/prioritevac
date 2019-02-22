@@ -7,24 +7,18 @@ to-report preferredexit ; reports which exit should be the goal for a person
 end
 
 to-report listed-exits
-  let prioritized-exits sort-on [distance myself] exits
-  ifelse crowd-at-exit item 0 prioritized-exits < 50
-  [report item 0 prioritized-exits]
- [report discard-crowded prioritized-exits closest]
+  let prioritized-exits sort-on [exit-heuristic] exits
+  report item 0 prioritized-exits
 end
 
 to-report listed-visible-exits
- set noted-exits (list (exit 60))
-  let prioritized-exits sort-on [distance myself] turtle-set noted-exits 
-  ifelse crowd-at-exit item 0 prioritized-exits < 50
-  [report item 0 prioritized-exits]
-  [report discard-crowded prioritized-exits closestvisible]
+  let prioritized-exits sort-on [exit-heuristic] turtle-set noted-exits 
+  report item 0 prioritized-exits
 end
 
-to-report discard-crowded [list-used default]
-  while [length list-used > 0 and crowd-at-exit item 0 list-used > 50] [set list-used remove-item 0 list-used] 
-  ifelse empty? list-used [report default]
-  [report item 0 list-used]
+to-report exit-heuristic
+  let local-fh sum [fh] of patches in-radius 1
+  report distance myself + local-fh
 end
 
 to-report closestvisible ; selects closest visible exit
@@ -48,8 +42,9 @@ end
 
 to set-leadership-quality ; the traits the determine who the most likely leader is
 set leadership-quality 0  + random-float 1 ; every time leadership has to be re-run they start fresh, with a small randomized element to ensure different scores when there would otherwise be ties
-  if visited? = true [set leadership-quality leadership-quality + 1]
-  if gender = "male" [set leadership-quality leadership-quality + 1]
+  if visited? = true [set leadership-quality leadership-quality + 1] ; people who have visited before will be not only more knowledgeable but known to be so
+ if gender = "male" [set leadership-quality leadership-quality + 1] ;male gender, based on Enarson
+  ; if (visited? = false) and (length noted-exits > 1) [set leadership-quality leadership-quality + 1] ; people who have noticed more exits than the crowded main exit will be more confident and able to lead in other directions
   if group-number = 300 [set leadership-quality leadership-quality + 1] ; the 300 group is for employees 
   if energy < 50 [set leadership-quality leadership-quality - 1]; people with substantial injury are less likely to be leaders 
   ;waiting to hear back about other factors
