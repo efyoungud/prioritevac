@@ -73,6 +73,7 @@ to move ; governs where and how people move, triggers goal-setting
   preferreddirection ;assess goals
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
+  note-exits
   set-speed
   repeat speed [move-to next-desired-patch set-next-desired-patch
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
@@ -85,15 +86,9 @@ to recolor-patches ; recolors patches subject to the hazards present
   ask smoky with [arrival < ticks][set color scale-color white level 0 100]
 end
 
-;to see ; sets how far and how much people can see, distance from Killer Show
-; let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180
-;    ask people [set vision patches in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))]
-;    if vision = 0 [set vision patch-ahead 1]   ; if everything is dense smoke such that negative numbers are produced, sets vision to 0
-;end
-
-to-report see [agentset]
-  let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180
-  report agentset in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches))
+to-report see [agentset] ; makes it dynamic rather than static and frequently updated, also restricts by kind of thing people are looking at
+  let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180 ; can't see through walls or thick smoke
+  report agentset in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches)) ; 10m distance except when there's stuff
 end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
@@ -204,7 +199,7 @@ threshold
 threshold
 0
 100
-2.0
+4.0
 1
 1
 NIL
@@ -219,7 +214,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-6.0
+3.0
 1
 1
 NIL
@@ -234,7 +229,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-10.0
+8.0
 1
 1
 NIL
