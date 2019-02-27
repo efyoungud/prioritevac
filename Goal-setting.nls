@@ -17,7 +17,7 @@ to-report listed-visible-exits
 end
 
 to-report exit-heuristic
-  let local-fh sum [fh] of patches in-radius 2
+  let local-fh sum [fh] of patches in-radius 3
   report distance myself + local-fh
 end
 
