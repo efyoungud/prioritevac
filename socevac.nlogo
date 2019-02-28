@@ -10,7 +10,7 @@ undirected-link-breed [partners partner]
 undirected-link-breed [families family]
 undirected-link-breed [multiples multiple]
 walls-own [first-end second-end]
-exits-own [first-end second-end patch-past]
+exits-own [first-end second-end patch-past appeal]
 windows-own [first-end second-end]
 fires-own [arrival]
 smoky-own [arrival level]
@@ -42,8 +42,8 @@ to go ; master command to run simulation
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal 10] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 10] ask people [preferreddirection]]
   recolor-patches
 end
 

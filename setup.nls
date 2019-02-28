@@ -25,7 +25,7 @@ soclink
  ask windows [set color hsb 80 50 100]
   ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
   ask smoky [set color [0 0 0 0 ]]
-  
+  set-exit-appeal
  ;;there's initially no smoke
  ask patches [
     set father nobody
@@ -123,3 +123,7 @@ to set-speed-limit ; how fast people can go
   ask people [set speed-limit (11 * scale-modifier) + random-float (2 * scale-modifier)]
 end
 
+to set-exit-appeal
+  ask exit 15 [set appeal -50]
+  ask exit 21 [set appeal 50]
+end

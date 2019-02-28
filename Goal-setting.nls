@@ -18,7 +18,7 @@ end
 
 to-report exit-heuristic
   let local-fh sum [fh] of patches in-radius 3
-  report distance myself + local-fh
+  report distance myself + local-fh + appeal
 end
 
 to-report closestvisible ; selects closest visible exit
