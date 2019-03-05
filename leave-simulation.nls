@@ -4,7 +4,7 @@ to exit-building ; prints the time the agent is removed from simulation
   output-type closest ; shows the closest exit, which should map the exit they exited by: this needs tested
   output-print ticks ; show the time
   if closest = exit 60 [set count-at-main count-at-main + 1]
-if closest = exit 15 [set count-at-main count-at-main + 1]
+if closest = exit 15 [set count-at-bar count-at-bar + 1]
 if closest = exit 17 [set count-at-kitchen count-at-kitchen + 1]
 if closest = exit 21 [set count-at-stage count-at-stage + 1]
   if ticks > 105 [if closest = exit 59 [set count-at-bar-window-near-door count-at-bar-window-near-door + 1]]
