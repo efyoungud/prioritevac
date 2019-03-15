@@ -20,7 +20,7 @@ people-own [gender alarmed? age visited? group-number group-type group-constant 
 globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
-patches-own [inside-building? parent-patch temp-smoke fh f g h  father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
+patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 
   ]
 ;;------------------
@@ -43,7 +43,7 @@ to go ; master command to run simulation
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal 20] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 20] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 100] ask people [preferreddirection]]
   recolor-patches
 end
 
@@ -53,9 +53,9 @@ to srti-go ; go command for SRTI integration
  read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
   read-smoke-from-file "smoke.csv" ; if smoke is coming from an outside simulation
   set-fh ; lets people perceive the danger in their area
- ; ask fires with [arrival < ticks]
- ; [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
- ; ]
+  ask fires with [arrival < ticks]
+  [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
+  ]
   ask people [prioritize-group
     ifelse alarmed? != true [alert]
     [note-exits ; people assess the area around them
@@ -73,9 +73,8 @@ to move ; governs where and how people move, triggers goal-setting
   preferreddirection ;assess goals
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
-  note-exits
   set-speed
-  repeat speed [move-to next-desired-patch set-next-desired-patch
+  repeat speed [move-to next-desired-patch set-path set-next-desired-patch
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
@@ -214,7 +213,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-3.0
+10.0
 1
 1
 NIL
@@ -229,7 +228,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-8.0
+15.0
 1
 1
 NIL
@@ -259,7 +258,7 @@ Family-constant
 Family-constant
 0
 100
-30.0
+40.0
 1
 1
 NIL
@@ -274,7 +273,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-35.0
+40.0
 1
 1
 NIL
