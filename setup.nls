@@ -18,7 +18,7 @@ to setup ; sets up the initial environment
     set-group-constant
   preferreddirection]
   set max-wall-distance (max [size] of walls) / 2
-  set acceleration 5.099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
+  set acceleration .099 ; taken from goal-oriented traffic simulation in model library, must be less than .1 to avoid rounding errors
 soclink
   ask walls [set color hsb  216 50 100]
   ask exits [set color hsb  0  50 100]
