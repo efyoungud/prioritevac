@@ -13,6 +13,7 @@ end
 to note-exits
   set noted-exits fput [self] of see exits noted-exits ; will note exits they can see
   set noted-exits fput exits with [distance myself < 5] noted-exits; if less than half a meter away, will notice an exit
+  set noted-exits fput exits with [appeal > 10] noted-exits; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room
   set noted-exits remove-duplicates noted-exits
 end
 
