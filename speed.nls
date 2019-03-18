@@ -7,7 +7,7 @@ to set-speed  ; how fast people will go
     [ set speed [speed] of one-of people-ahead
     ]
   [speed-up ]
-  if speed = 0 [set speed speed-limit]
+  if speed = 0 [set speed 1]
 end
 
 to speed-up  ;; turtle procedure to increase the speed of the person
