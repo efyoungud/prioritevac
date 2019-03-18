@@ -37,13 +37,14 @@ to go ; master command to run simulation
  ; ]
   ask people [ prioritize-group
     ifelse alarmed? != true [alert]
-    [ move]
+    [note-exits ; people assess the area around them
+      move]
   injure
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal 20] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 100] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 50] ask people [preferreddirection]]
   recolor-patches
 end
 
