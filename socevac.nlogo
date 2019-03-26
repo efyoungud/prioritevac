@@ -43,8 +43,8 @@ to go ; master command to run simulation
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal 20] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 50] ask people [preferreddirection]]
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal 50] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 100] ask people [preferreddirection]]
   recolor-patches
 end
 
@@ -75,7 +75,7 @@ to move ; governs where and how people move, triggers goal-setting
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
-  repeat speed [move-to next-desired-patch set-path set-next-desired-patch
+  repeat speed [move-to next-desired-patch if length path > 1 [set path remove-item 0 path] set-next-desired-patch
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
