@@ -7,7 +7,7 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
   let visible-fire fires with [arrival < ticks] in-cone (100  * scale-modifier) 180
   let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
   if (count seen + count visible-fire + count proximal + count smoky-patches ) > 10
-  [set alarmed? true preferreddirection set-speed] ; aim is for an average of 29s per Ben's comment
+  [set alarmed? true preferreddirection set speed 1] ; aim is for an average of 29s per Ben's comment
 end
 
 to note-exits
