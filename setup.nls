@@ -125,5 +125,5 @@ end
 
 to set-exit-appeal
   ;ask exit 15 [set appeal 50]
-  ask exit 21 [set appeal -50]
+  ask exit 21 [set appeal 50]
 end
