@@ -70,6 +70,14 @@ to srti-go ; go command for SRTI integration
   export-world "srti-results.csv"
 end
 
+to master-run ; runs the whole simulation for 200 seconds and then exports results
+  setup
+  while [ticks < 180]
+  [carefully [go]
+    [ask people [preferreddirection] go]]
+  export-results
+end
+
 to move ; governs where and how people move, triggers goal-setting
   preferreddirection ;assess goals
   set-path ; circumstances are dynamic, so paths also need to be
@@ -173,6 +181,7 @@ to set-group-constant ; allows people to have different values for the degree to
   if group-type = 4 [set group-constant Family-Constant]
   if group-type = 5 [set group-constant Multiple-Constant]
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -384,23 +393,6 @@ true
 PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
 "Links" 1.0 0 -7500403 true "" "plot count links"
-
-BUTTON
-102
-117
-188
-150
-no people
-run-environment-only
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 BUTTON
 28
