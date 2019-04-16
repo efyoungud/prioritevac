@@ -25,7 +25,7 @@ patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if t
   ]
 ;;------------------
 extensions [csv profiler]
-__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "speed.nls" "paths.nls" "heuristics.nls" "utilities.nls" "leave-simulation.nls"]
+__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls"]
 
 to go ; master command to run simulation
  tick ; makes one second of time pass
@@ -43,8 +43,8 @@ to go ; master command to run simulation
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal 100] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal 100] ask people [preferreddirection]]
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal -100] ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal -100] ask people [preferreddirection]]
   recolor-patches
 end
 
@@ -93,6 +93,85 @@ end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
   export-world (word "results" random-float 1.0".csv")
+end
+
+to set-speed  ; how fast people will go
+  ;; count the people in a meter in front of a person
+  let people-ahead other people in-cone (10 * scale-modifier) 180
+  ;; if there are people in front of the person and within one meter, match their speed
+  ;; otherwise, speed up
+  ifelse any? people-ahead
+    [ set speed [speed] of one-of people-ahead ]
+  [speed-up ]
+  if speed = 0 [speed-up]
+end
+
+to speed-up  ;; turtle procedure to increase the speed of the person
+  ifelse speed > speed-limit
+    [ set speed speed-limit ]
+    [ set speed speed + acceleration ]
+end
+
+
+to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
+  let visible-smoke count smoky with [arrival < ticks] ; smoke that has arrived. does not discriminate by amount of smoke. all smoke would be considered alarming
+  ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
+  let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
+  let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
+  let visible-fire fires with [arrival < ticks] in-cone (100  * scale-modifier) 180
+  let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
+  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 10
+  [set alarmed? true preferreddirection set speed 1] ; aim is for an average of 29s per Ben's comment
+end
+
+to note-exits
+  set noted-exits fput [self] of see exits noted-exits ; will note exits they can see
+  set noted-exits fput exits with [distance myself < 5] noted-exits; if less than half a meter away, will notice an exit
+  set noted-exits fput exits with [appeal < 0] noted-exits; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room
+  set noted-exits remove-duplicates noted-exits
+end
+
+to-report crowdedness ; measures how crowded an area is
+  report count people in-radius (2 * scale-modifier)
+end
+
+to-report fire-distance ; reports distance to closest fire
+  let lit-fires fires with [arrival < ticks] ; only the firest that are actually active are counted
+  ifelse count lit-fires = 0 [report 0] ; if there are no currently active fires, reports 0
+  [ report distance (min-one-of lit-fires [distance myself])] ; reports the distance to the closest fire, since the closest would presumably be the most relevant
+end
+
+to-report smoke-distance ; reports distance to the closest smoke
+ let active-smoke smoky with [arrival < ticks] ; only the firest that are actually active are counted
+  ifelse count active-smoke = 0 [report 0] ; if there are no currently active fires, reports 0
+  [ report distance (min-one-of active-smoke [distance myself])]
+end
+
+to set-fh ; reports total heuristic preference
+   ask patches [carefully ; carefully means that if fire-distance and crowdedness are 0 there's no error from dividing by 0 but also the two things only need to be called once instead of twice
+    [set fh (1 - (1 /  (fire-distance + crowdedness + smoke-distance)))]
+    [set fh 0]]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
+end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
+
+to-report group-heuristic
+  ifelse (fire-distance + smoke-distance) != 0
+  [ report 1 - (1 / (fire-distance + smoke-distance))]; fire distance is going to be a large number that gets smaller as the fire gets closer
+  ; that means that when the fire is far away, the heuristic here is closer to 1
+  ; as the fire gets closer, it will get smaller
+  [ report 1] ; if the distance is 0, the multiplier should just be 1
+end
+
+to prioritize-group ; dictates when people will stop caring about still-living group members
+  let people-with-links people with [count my-links > 0]
+  ask people-with-links with [(group-constant * group-heuristic) < threshold] [ask my-links [die] preferreddirection set time-group-left ticks] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
+end
+
+to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
+  if group-type = 1 [set group-constant Coworkers-Constant]
+  if group-type = 2 [set group-constant Friends-Constant]
+  if group-type = 3 [set group-constant Dating-Constant]
+  if group-type = 4 [set group-constant Family-Constant]
+  if group-type = 5 [set group-constant Multiple-Constant]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -199,7 +278,7 @@ threshold
 threshold
 0
 100
-4.0
+0.0
 1
 1
 NIL
@@ -214,7 +293,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-10.0
+0.0
 1
 1
 NIL
@@ -229,7 +308,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-15.0
+0.0
 1
 1
 NIL
@@ -244,7 +323,7 @@ Dating-constant
 Dating-constant
 0
 100
-20.0
+0.0
 1
 1
 NIL
@@ -259,7 +338,7 @@ Family-constant
 Family-constant
 0
 100
-40.0
+0.0
 1
 1
 NIL
@@ -274,7 +353,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-40.0
+0.0
 1
 1
 NIL
@@ -323,17 +402,6 @@ NIL
 NIL
 1
 
-SWITCH
-26
-46
-134
-79
-Full-Scale
-Full-Scale
-0
-1
--1000
-
 BUTTON
 28
 13
@@ -351,10 +419,21 @@ NIL
 NIL
 1
 
+SWITCH
+26
+46
+134
+79
+Full-Scale
+Full-Scale
+0
+1
+-1000
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-This is a model of the evacuation from the Station Nightclub Fire in Rhode Island in 2003. It uses agent-based modeling and information from interviews and documentation of technical aspects of the fire.
+This is a social science-centered behavioral model of evacuation from a building fire. It incorporates group loyalty and leadership factors.
 
 ## HOW IT WORKS
 
@@ -364,9 +443,8 @@ The building layout, fire, smoke, and details about the people who were there is
 
 (how to use the model, including a description of each of the items in the Interface tab)
 
-## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+
 
 ## THINGS TO TRY
 
@@ -374,7 +452,9 @@ The building layout, fire, smoke, and details about the people who were there is
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+Additional factors in group leadership could be included.
+Stairs are not accounted for at all.
+Mobility and accessibility issues could be addressed.
 
 ## NETLOGO FEATURES
 
@@ -382,7 +462,7 @@ The building layout, fire, smoke, and details about the people who were there is
 
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+Speed is from the traffic model in the model library.
 
 ## CREDITS AND REFERENCES
 
