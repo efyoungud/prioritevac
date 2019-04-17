@@ -211,10 +211,10 @@ ticks
 30.0
 
 BUTTON
-25
-151
-117
-184
+99
+88
+191
+121
 master run
 master-run
 NIL
@@ -228,10 +228,10 @@ NIL
 1
 
 BUTTON
-26
-82
-92
-115
+23
+50
+89
+83
 setup
 setup\n
 NIL
@@ -245,10 +245,10 @@ NIL
 1
 
 BUTTON
-102
-82
-165
-115
+99
+50
+162
+83
 NIL
 go
 T
@@ -262,10 +262,10 @@ NIL
 1
 
 BUTTON
-26
-116
-89
-149
+23
+87
+90
+120
 step
 go
 NIL
@@ -287,7 +287,7 @@ threshold
 threshold
 0
 100
-0.0
+3.0
 1
 1
 NIL
@@ -302,7 +302,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-0.0
+22.0
 1
 1
 NIL
@@ -317,7 +317,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-0.0
+28.0
 1
 1
 NIL
@@ -332,7 +332,7 @@ Dating-constant
 Dating-constant
 0
 100
-0.0
+29.0
 1
 1
 NIL
@@ -347,7 +347,7 @@ Family-constant
 Family-constant
 0
 100
-0.0
+40.0
 1
 1
 NIL
@@ -362,7 +362,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-0.0
+35.0
 1
 1
 NIL
@@ -394,33 +394,26 @@ PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
 "Links" 1.0 0 -7500403 true "" "plot count links"
 
-BUTTON
-28
-13
-91
-46
-goals
-ask people with [goal = nobody] [show goal]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SWITCH
-26
-46
-134
-79
+23
+10
+131
+43
 Full-Scale
 Full-Scale
 0
 1
 -1000
+
+TEXTBOX
+31
+158
+181
+176
+Group Loyalty
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -433,7 +426,7 @@ The building layout, fire, smoke, and details about the people who were there is
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+The full-scale toggle on the interface determines whether you're running the model at full scale (complete, operational) or at 1/100th scale, which is quick and can quickly determine if there is an obvious point of failure but (how to use the model, including a description of each of the items in the Interface tab)
 
 
 
