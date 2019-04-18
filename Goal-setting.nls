@@ -1,9 +1,7 @@
 to-report preferredexit ; reports which exit should be the goal for a person
-  ifelse (distance min-one-of exits [distance myself] < 1 )
-  [report [patch-past] of closest]
-  [ ifelse visited? = false
+   ifelse visited? = false
     [report listed-visible-exits]
-  [report listed-exits] ];the logic is that people with previous acquaintance with the bar will know where the exits are
+  [report listed-exits] ;the logic is that people with previous acquaintance with the bar will know where the exits are
 end
 
 to-report listed-exits
@@ -31,13 +29,16 @@ to-report closest ; selects closest exit regardless of visibility
 end
 
 to preferreddirection ; sets the goal for a person, either the person or exit
+  ifelse (distance min-one-of exits [distance myself] < 1 )
+  [exit-building]
   ; calls preferredexit, closest, closestvisible, and leader-follower functions
-  ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
+[  ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
   [set goal preferredexit] ; selects either closest or closest visible exit depending on visit history
   [ ifelse (distance min-one-of link-neighbors [distance myself] <= (20 * scale-modifier) ) ; if they have loved ones they have not given up on, they go towards them
     [leader-follower] ; but if they are within two meters of their loved ones they switch to leader-follower behavior to work as a group
     [set goal min-one-of link-neighbors [distance myself]] ; people move towards their closest loved one
-  ]
+  ]]
+  ;set goals-over-time lput goal goals-over-time
 end
 
 to set-leadership-quality ; the traits the determine who the most likely leader is
