@@ -49,24 +49,10 @@ to go ; master command to run simulation
 end
 
 to srti-go ; go command for SRTI integration
- tick ; makes one second of time pass
- read-building-from-file "building_nightclub.csv" "nightclub_layout.png" ; reads in building, can be easily altered to rely only on one. good for buildings whith damaged or changing structure
- read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
+  read-building-from-file "building_nightclub.csv" "nightclub_layout.png" ; reads in building, can be easily altered to rely only on one. good for buildings whith damaged or changing structure
+  read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
   read-smoke-from-file "smoke.csv" ; if smoke is coming from an outside simulation
-  set-fh ; lets people perceive the danger in their area
-  ask fires with [arrival < ticks]
-  [  ask people-here [die-by-fire] ; people who are colocal with fire - not just close but in the fire - are presumed to die from it
-  ]
-  ask people [prioritize-group
-    ifelse alarmed? != true [alert]
-    [note-exits ; people assess the area around them
-      move]
-  injure]
-  ;Windows are turned into exits based on timings provided by NIST Documentation
-  ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100] ask people [preferreddirection]]
-  recolor-patches
+  go
   export-world "srti-results.csv"
 end
 
@@ -393,11 +379,6 @@ true
 PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
 "Links" 1.0 0 -7500403 true "" "plot count links"
-"Main exit" 1.0 0 -2674135 true "" "plot count-at-main"
-"Stage" 1.0 0 -955883 true "" "plot count-at-stage"
-"Bar" 1.0 0 -6459832 true "" "plot count-at-bar"
-"Kitchen" 1.0 0 -1184463 true "" "plot count-at-kitchen"
-"Windows" 1.0 0 -10899396 true "" "plot count-at-bar-window-near-door + count-at-bar-window-2 + count-at-sunroom-window"
 
 SWITCH
 23
@@ -419,6 +400,29 @@ Group Loyalty
 11
 0.0
 1
+
+PLOT
+575
+541
+775
+691
+Exit Counts
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Bar" 1.0 0 -16777216 true "" "plot count-at-bar"
+"Main" 1.0 0 -7500403 true "" "plot count-at-main"
+"Kitchen" 1.0 0 -2674135 true "" "plot count-at-kitchen"
+"Stage" 1.0 0 -955883 true "" "plot count-at-stage"
+"Dead" 1.0 0 -6459832 true "" "plot count-dead"
+"Windows" 1.0 0 -1184463 true "" "plot count-at-bar-window-near-door + count-at-bar-window-2 + count-at-sunroom-window"
 
 @#$#@#$#@
 ## WHAT IS IT?
