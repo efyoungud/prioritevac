@@ -16,7 +16,7 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
- speed-limit time-group-left noted-exits]
+ speed-limit time-group-left noted-exits goals-over-time]
 globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
@@ -287,7 +287,7 @@ threshold
 threshold
 0
 100
-3.0
+10.0
 1
 1
 NIL
@@ -393,6 +393,11 @@ true
 PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
 "Links" 1.0 0 -7500403 true "" "plot count links"
+"Main exit" 1.0 0 -2674135 true "" "plot count-at-main"
+"Stage" 1.0 0 -955883 true "" "plot count-at-stage"
+"Bar" 1.0 0 -6459832 true "" "plot count-at-bar"
+"Kitchen" 1.0 0 -1184463 true "" "plot count-at-kitchen"
+"Windows" 1.0 0 -10899396 true "" "plot count-at-bar-window-near-door + count-at-bar-window-2 + count-at-sunroom-window"
 
 SWITCH
 23
