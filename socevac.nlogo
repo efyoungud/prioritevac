@@ -435,14 +435,15 @@ The building layout, fire, smoke, and details about the people who were there is
 
 ## HOW TO USE IT
 
-The full-scale toggle on the interface determines whether you're running the model at full scale (complete, operational) or at 1/100th scale, which is quick and can quickly determine if there is an obvious point of failure but (how to use the model, including a description of each of the items in the Interface tab)
+The full-scale toggle on the interface determines whether you're running the model at full scale (complete, operational) or at 1/100th scale, which is quick and can quickly determine if there is an obvious point of failure but lacks full functionality.
 
+The group loyalty sliders determine what level of loyalty group members have to each other. For each of them, when environmental stressors drop the group loyalty heuristic below the threshold, people will abandon their groups for self-preservation. The threshold means that it is easy for people to abandon their groups with higher threshold numbers and harder as the threshold numbers decrease.
 
-
+It can then be run in two different ways. Setup followed by 'go' will run the simulation indefinitely. Setup followed by 'step' will advance the simulation one tick. 'Step' can be used to run the model as many times as desired. Master-run will set up the model, run it for 180 ticks, and export the results as a .csv.
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Try moving the sliders to see how group loyalty impacts evacuation and survival.
 
 ## EXTENDING THE MODEL
 
@@ -450,17 +451,14 @@ Additional factors in group leadership could be included.
 Stairs are not accounted for at all.
 Mobility and accessibility issues could be addressed.
 
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
 
 ## RELATED MODELS
 
-Speed is from the traffic model in the model library.
+Speed is from the traffic model in the model library. Best (2013) and Fang (2015) also informed the model.
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Website: https://icor.engin.umich.edu/fire-evacuation/
 @#$#@#$#@
 default
 true
