@@ -414,7 +414,7 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
 "Bar" 1.0 0 -16777216 true "" "plot count-at-bar"
