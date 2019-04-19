@@ -17,7 +17,7 @@ smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time]
-globals [max-wall-distance acceleration scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [max-wall-distance scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -423,6 +423,21 @@ PENS
 "Stage" 1.0 0 -955883 true "" "plot count-at-stage"
 "Dead" 1.0 0 -6459832 true "" "plot count-dead"
 "Windows" 1.0 0 -1184463 true "" "plot count-at-bar-window-near-door + count-at-bar-window-2 + count-at-sunroom-window"
+
+SLIDER
+24
+124
+196
+157
+Acceleration
+Acceleration
+0
+2
+0.9
+.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
