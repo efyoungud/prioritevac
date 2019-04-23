@@ -5,18 +5,18 @@ to-report preferredexit ; reports which exit should be the goal for a person
 end
 
 to-report listed-exits
-  let prioritized-exits sort-on [exit-heuristic] exits
+  let prioritized-exits sort-on [exit-heuristic] exits ; the exits with the lowest score  - closest, least on fire - will be first
   report item 0 prioritized-exits
 end
 
-to-report listed-visible-exits
+to-report listed-visible-exits ; same as listed-exits but only with noted exits
   let prioritized-exits sort-on [exit-heuristic] turtle-set noted-exits 
   report item 0 prioritized-exits
 end
 
 to-report exit-heuristic
-  let local-fh sum [fh] of patches in-radius 2
-  report distance myself + local-fh + appeal
+  let local-fh sum [fh] of patches in-radius danger-sensitivity ; adjustable variable to determine how sensitive people are to danger and crowdedness at exits
+  report distance myself + local-fh + appeal ; measures distance, manual appeal, and relative danger of the exit
 end
 
 to-report closestvisible ; selects closest visible exit
@@ -29,7 +29,7 @@ to-report closest ; selects closest exit regardless of visibility
 end
 
 to preferreddirection ; sets the goal for a person, either the person or exit
-  ifelse (distance min-one-of exits [distance myself] < 1 )
+  ifelse (distance min-one-of exits [distance myself] < 1 ) ; if someone is within a tenth of a meter of an exit they leave via that exit
   [exit-building]
   ; calls preferredexit, closest, closestvisible, and leader-follower functions
 [  ifelse any? link-neighbors = false ; sets the condition that if they came alone, ended up alone through losing their loved ones or deciding to no longer prioritize them then they go towards their preferred exit
