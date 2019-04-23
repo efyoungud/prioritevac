@@ -288,7 +288,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-22.0
+29.0
 1
 1
 NIL
