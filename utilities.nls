@@ -6,6 +6,7 @@ to profile-setup ; profiles the setup
   setup
   profiler:stop
   print profiler:report
+  profiler:stop
 end
 
 to profile
@@ -13,6 +14,7 @@ to profile
 repeat 1 [ go ]       ;; run something you want to measure
 profiler:stop          ;; stop profiling
 print profiler:report
+  profiler:stop
 end
 
 to-report intersects-here [ variety ]
