@@ -18,7 +18,7 @@ to setup ; sets up the initial environment
     set-group-constant
   preferreddirection]
   set max-wall-distance (max [size] of walls) / 2
- ; set acceleration 1 ; taken from goal-oriented traffic simulation in model library
+ set acceleration .09 ; taken from goal-oriented traffic simulation in model library
 soclink
   ask walls [set color hsb  216 50 100]
   ask exits [set color hsb  0  50 100]
@@ -32,6 +32,7 @@ soclink
     set Cost-path 0
     set visited-patch? false
     set active? false]
+  ;ask people [set distance-to-exits distance-to exits ]
 end
 
 to read-fire-from-file [ filename] ; reads in the fire from a CSV
@@ -47,6 +48,11 @@ to read-fire-from-file [ filename] ; reads in the fire from a CSV
     ]
   ]
 end
+
+;to distance-to [items] ; attempt to record distance to exits/other group members at the start
+;; ask person 610 [ask exits [show distance myself]] is operational code, just need to generalize
+ ; ask items (distance myself)
+;end
 
 to read-building-from-file [filename imagefile] ; reads in the building from a CSV
   let values bf csv:from-file filename
@@ -125,5 +131,5 @@ end
 
 to set-exit-appeal
   ask exit 15 [set appeal -50]
-  ask exit 21 [set appeal 50]
+  ask exit 21 [set appeal 70]
 end
