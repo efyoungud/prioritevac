@@ -17,7 +17,7 @@ smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits]
-globals [max-wall-distance scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [acceleration max-wall-distance scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-window-near-door count-at-bar-window-2 count-at-sunroom-window]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -42,8 +42,8 @@ to go ; master command to run simulation
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100 set appeal -10]  ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal -10] ask people [preferreddirection]]
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask exit 57 [set appeal -15] ask exit 34 [set appeal -5]  ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal -12] ask people [preferreddirection]]
   recolor-patches
 end
 
@@ -95,7 +95,7 @@ to set-speed  ; how fast people will go
   ;; if there are people in front of the person and within one meter
   ;; otherwise, speed up
   ifelse any? people-ahead
-    [ set speed [speed] of one-of people-ahead] ; people slow down when there's someone within a meter in front of them to avoid collision
+    [ set speed [speed] of one-of people-ahead slow-down] ; people slow down when there's someone within a meter in front of them to avoid collision
   [speed-up ]
   if speed <= 1 [speed-up]
 end
@@ -104,6 +104,11 @@ to speed-up  ;; turtle procedure to increase the speed of the person
   ifelse speed > speed-limit
     [ set speed speed-limit ] ; cannot go faster than speed limit
     [ set speed speed + acceleration ]
+end
+
+to slow-down
+  if speed > 1
+  [set speed speed - (acceleration / 4)]
 end
 
 to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
@@ -271,7 +276,7 @@ threshold
 threshold
 0
 100
-10.0
+2.0
 1
 1
 NIL
@@ -423,21 +428,6 @@ PENS
 "Windows" 1.0 0 -1184463 true "" "plot count-at-bar-window-near-door + count-at-bar-window-2 + count-at-sunroom-window"
 
 SLIDER
-24
-124
-196
-157
-Acceleration
-Acceleration
-0
-2
-0.1
-.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 586
 459
 758
@@ -446,7 +436,7 @@ Danger-sensitivity
 Danger-sensitivity
 0
 10
-3.0
+2.0
 1
 1
 NIL
