@@ -42,7 +42,7 @@ to go ; master command to run simulation
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask exit 57 [set appeal -15] ask exit 34 [set appeal -5]  ask people [preferreddirection]]
+  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask exit 57 [set appeal -10] ask exit 34 [set appeal -1]  ask people [preferreddirection]]
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal -12] ask people [preferreddirection]]
   recolor-patches
 end
@@ -95,7 +95,7 @@ to set-speed  ; how fast people will go
   ;; if there are people in front of the person and within one meter
   ;; otherwise, speed up
   ifelse any? people-ahead
-    [ set speed [speed] of one-of people-ahead slow-down] ; people slow down when there's someone within a meter in front of them to avoid collision
+    [ set speed [speed] of one-of people-ahead] ; people slow down when there's someone within a meter in front of them to avoid collision
   [speed-up ]
   if speed <= 1 [speed-up]
 end
@@ -108,7 +108,7 @@ end
 
 to slow-down
   if speed > 1
-  [set speed speed - (acceleration / 4)]
+  [set speed speed - (acceleration / 10)]
 end
 
 to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
@@ -291,7 +291,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-25.0
+10.0
 1
 1
 NIL
@@ -306,7 +306,7 @@ Friends-Constant
 Friends-Constant
 0
 100
-30.0
+20.0
 1
 1
 NIL
@@ -321,7 +321,7 @@ Dating-constant
 Dating-constant
 0
 100
-35.0
+30.0
 1
 1
 NIL
