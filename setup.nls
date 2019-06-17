@@ -18,7 +18,7 @@ to setup ; sets up the initial environment
     set-group-constant
   preferreddirection]
   set max-wall-distance (max [size] of walls) / 2
- set acceleration .085 ; taken from goal-oriented traffic simulation in model library
+ set acceleration .08 ; taken from goal-oriented traffic simulation in model library
 soclink
   ask walls [set color hsb  216 50 100]
   ask exits [set color hsb  0  50 100]
@@ -115,11 +115,11 @@ end
 to soclink ;groups that came together have links based type of relationship
 ask people [if group-type != 0 ;type 0 is 'alone'
  [
-if group-type = 1 [ask other people with [group-number = [group-number] of myself] [create-coworker-with myself]]
-if group-type = 2 [ask other people with [group-number = [group-number] of myself] [create-friend-with myself]]
-if group-type = 3 [ask other people with [group-number = [group-number] of myself] [create-partner-with myself]]
-if group-type = 4 [ask other people with [group-number = [group-number] of myself] [create-family-with myself]]
-if group-type = 5 [ask other people with [group-number = [group-number] of myself] [create-multiple-with myself]]
+if group-type = 1 [ask other people with [group-number = [group-number] of myself] [create-coworker-with myself] set color 47]
+if group-type = 2 [ask other people with [group-number = [group-number] of myself] [create-friend-with myself] set color 77]
+if group-type = 3 [ask other people with [group-number = [group-number] of myself] [create-partner-with myself] set color 107]
+if group-type = 4 [ask other people with [group-number = [group-number] of myself] [create-family-with myself] set color 137]
+if group-type = 5 [ask other people with [group-number = [group-number] of myself] [create-multiple-with myself] set color 5]
  ]]
   ask links [hide-link]
 end
@@ -130,6 +130,6 @@ to set-speed-limit ; how fast people can go
 end
 
 to set-exit-appeal
-  ask exit 15 [set appeal -50]
+  ask exit 15 [set appeal -30]
   ask exit 21 [set appeal 70]
 end
