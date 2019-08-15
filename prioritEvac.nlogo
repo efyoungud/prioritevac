@@ -4,6 +4,7 @@ breed [ windows window]
 breed [ fires fire]
 breed [ smoky smoke]
 breed [ people person]
+breed [ body bodies]
 undirected-link-breed [friends friend]
 undirected-link-breed [coworkers coworker]
 undirected-link-breed [partners partner]
@@ -457,11 +458,11 @@ SLIDER
 459
 758
 492
-Danger-sensitivity
-Danger-sensitivity
+Injury-divisor
+Injury-divisor
 0
-10
-2.0
+100
+71.0
 1
 1
 NIL

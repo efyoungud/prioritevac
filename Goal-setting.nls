@@ -15,7 +15,7 @@ to-report listed-visible-exits ; same as listed-exits but only with noted exits
 end
 
 to-report exit-heuristic
-  let local-fh sum [fh] of patches in-radius danger-sensitivity ; adjustable variable to determine how sensitive people are to danger and crowdedness at exits
+  let local-fh sum [fh] of patches in-radius 2 ; adjustable variable to determine how sensitive people are to danger and crowdedness at exits
   report distance myself + local-fh + appeal ; measures distance, manual appeal, and relative danger of the exit
 end
 
