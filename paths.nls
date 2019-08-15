@@ -9,6 +9,7 @@ to set-next-desired-patch
     [set next-desired-patch goal]
   if next-desired-patch = (pcolor <= 50) [set-path] ; don't set the path if you're going to be walking straight into a wall
   if count people-here > 0 [stop]
+  if count people in-radius 2 > 2 [stop]
 end
 
 
