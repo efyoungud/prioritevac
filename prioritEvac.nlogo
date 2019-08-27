@@ -4,7 +4,6 @@ breed [ windows window]
 breed [ fires fire]
 breed [ smoky smoke]
 breed [ people person]
-breed [ bodies body]
 undirected-link-breed [friends friend]
 undirected-link-breed [coworkers coworker]
 undirected-link-breed [partners partner]
@@ -17,9 +16,9 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
- speed-limit time-group-left noted-exits goals-over-time distance-to-exits]
+ speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list]
 globals [acceleration max-wall-distance scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
- count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window]
+ count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 
@@ -69,6 +68,13 @@ to create-vid-view
   vid:save-recording "prioritevac_view_defense.mp4"
 end
 
+to srti-lists
+ ask people [ foreach [self] of people [
+  set traits-list (list (who) (color) (heading)(xcor)(ycor)(shape)(breed)(hidden?)(size) (alarmed?) (age)(visited?)(group-number) (group-type) (group-constant)(speed) (leadership-quality) (leader) (goal) (energy)(speed-limit)
+  )]] ; doesn't include next-desired-patch or path so that as the environment changes people will have to respond to the environment
+  set master-list [traits-list] of people
+end
+
 to srti-go ; go command for SRTI integration
   read-building-from-file "building_nightclub.csv" "nightclub_layout.png" ; reads in building, can be easily altered to rely only on one. good for buildings whith damaged or changing structure
   read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
@@ -108,7 +114,7 @@ to-report see [agentset] ; makes it dynamic rather than static and frequently up
 end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
-  export-world (word "results/results" random-float 1.0".csv")
+  export-world (word "results-bodies" random-float 1.0".csv")
 end
 
 to set-speed  ; how fast people will go
@@ -467,6 +473,23 @@ Injury-divisor
 1
 NIL
 HORIZONTAL
+
+BUTTON
+23
+124
+97
+157
+NIL
+srti-lists
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
