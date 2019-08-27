@@ -31,7 +31,7 @@ to-report A* [#Start #goal]
     set visited-patch? false
     set active? false
   ]
-  ; Active the staring point to begin the searching loop
+  ; Activate the starting point to begin the searching loop
   ask #Start
   [
     set father self
