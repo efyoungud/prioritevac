@@ -8,7 +8,6 @@ to setup ; sets up the initial environment
  set-default-shape fires "square"
   set-default-shape smoky "square"
   set-default-shape people "circle"
-  set-default-shape bodies "circle"
  read-building-from-file "building_nightclub.csv" "nightclub_layout.png"
  read-fire-from-file "fire_nightclub_merged.csv"
   read-smoke-from-file "smoke.csv"
