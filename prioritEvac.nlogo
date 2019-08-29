@@ -71,7 +71,7 @@ end
 to srti-lists
  ask people [ foreach [self] of people [
   set traits-list (list (who) (color) (heading)(xcor)(ycor)(shape)(breed)(hidden?)(size) (alarmed?) (age)(visited?)(group-number) (group-type) (group-constant)(speed) (leadership-quality) (leader) (goal) (energy)(speed-limit)
-  )]] ; doesn't include next-desired-patch or path so that as the environment changes people will have to respond to the environment
+  )]] ; doesn't include next-desired-patch or path because that's calculated each step
   set master-list [traits-list] of people
 end
 
@@ -97,7 +97,7 @@ to move ; governs where and how people move, triggers goal-setting
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
-  repeat speed [move-to next-desired-patch if length path > 1 [set path remove-item 0 path] set-next-desired-patch
+  repeat speed [move-to next-desired-patch if path != false and length path > 1 [set path remove-item 0 path] set-next-desired-patch
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
 end
@@ -123,7 +123,7 @@ to set-speed  ; how fast people will go
   ;; if there are people in front of the person and within one meter
   ;; otherwise, speed up
   ifelse any? people-ahead
-    [ set speed [speed] of one-of people-ahead] ; people slow down when there's someone within a meter in front of them to avoid collision
+    [ set speed [speed] of one-of people-ahead slow-down] ; people match speeds and slow down when there's someone within a meter in front of them to avoid collision
   [speed-up ]
   if speed <= 1 [speed-up]
 end
@@ -151,10 +151,9 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
 end
 
 to note-exits
-  set noted-exits fput [self] of see exits noted-exits; will note exits they can see
-  set noted-exits fput exits with [distance myself < 5] noted-exits ; if less than half a meter away, will notice an exit
-  set noted-exits fput exits with [appeal < 0] noted-exits; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room
-  set noted-exits remove-duplicates noted-exits
+  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 5]) ([self] of exits with [appeal < 0]))
+  ; will note exits they can see, exits less than half a meter away
+; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room, meaning they would have 'appeal'
 end
 
 to-report crowdedness ; measures how crowded an area is
