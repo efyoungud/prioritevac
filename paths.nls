@@ -9,7 +9,7 @@ to set-next-desired-patch
     [set next-desired-patch goal]
   if next-desired-patch = (pcolor <= 50) [set-path] ; don't set the path if you're going to be walking straight into a wall
   if count people-here > 0 [stop]
-  if count people in-radius 2 > 2 [stop]
+  if count people in-radius 3 > 2 [stop] ; if it's too crowded, stop
 end
 
 
@@ -22,7 +22,7 @@ to-report Heuristic [#goal]
 end
 
 to-report A* [#Start #goal]
-  let #valid-map patches with [pcolor <= 50] ;none of the blue patches
+  let #valid-map patches with [available != false ] ;none of the blue patches
   ; clear all the information in the agents
   ask #valid-map with [visited-patch?]
   [
@@ -88,14 +88,15 @@ to-report A* [#Start #goal]
   [
     ; We extract the list of patches in the path, form #Start to #Goal
     ; by jumping back from #Goal to #Start by using the fathers of every patch
+    if #goal = nobody [preferreddirection]
     let current #goal
     set Final-Cost (precision [Cost-path] of #Goal 3)
     let rep (list current)
     While [current != #Start]
     [
-      set current ([father] of current)
+      set current [father] of current
       set rep fput current rep
-      if length rep > 1000 [ error (word "The path seems way too big: " rep) ]
+      if length rep > 1000 [error (word "The path seems way too big: " rep) ] ; if there's nowhere to go, reports that there's no path
     ]
     report rep
   ]

@@ -29,6 +29,7 @@ to-report closest ; selects closest exit regardless of visibility
 end
 
 to preferreddirection ; sets the goal for a person, either the person or exit
+ note-exits ; people notice the exits around them in the process of deciding where to go
   ifelse (distance min-one-of exits [distance myself] < 1 ) ; if someone is within a tenth of a meter of an exit they leave via that exit
   [exit-building]
   ; calls preferredexit, closest, closestvisible, and leader-follower functions
