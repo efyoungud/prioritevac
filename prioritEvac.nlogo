@@ -21,7 +21,7 @@ globals [acceleration max-wall-distance scale-modifier p-valids start final-cost
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
-
+available
   ]
 ;;------------------
 extensions [csv profiler vid]
@@ -34,8 +34,7 @@ to go ; master command to run simulation
   set-fh
   ask people [ prioritize-group
     ifelse alarmed? != true [alert]
-    [note-exits ; people assess the area around them
-      move
+    [     move
     ; set goals-over-time lput goal goals-over-time
     ]
     injure
@@ -45,6 +44,7 @@ to go ; master command to run simulation
   if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask exit 57 [set appeal -10] ask exit 34 [set appeal -1]  ask people [preferreddirection]]
   if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal -12] ask people [preferreddirection]]
   recolor-patches
+  ask patches with [pcolor > 50] [set available false]
 end
 
 to create-vid-interface
@@ -76,11 +76,8 @@ to srti-lists
 end
 
 to srti-go ; go command for SRTI integration
-  read-building-from-file "building_nightclub.csv" "nightclub_layout.png" ; reads in building, can be easily altered to rely only on one. good for buildings whith damaged or changing structure
-  read-fire-from-file "fire_nightclub_merged.csv" ; if fire is coming from an outside simulation
-  read-smoke-from-file "smoke.csv" ; if smoke is coming from an outside simulation
   go
-  export-world "srti-results.csv"
+  srti-lists
 end
 
 to master-run ; runs the whole simulation for 200 seconds and then exports results
@@ -89,6 +86,7 @@ to master-run ; runs the whole simulation for 200 seconds and then exports resul
   [carefully [go]
     [ask people [preferreddirection] go]] ; if an error is encountered it is expected to be in priorities
   ; so people are asked to reassess their priorities and then go
+  ask people [set count-dead count-dead + 1 die]
   export-results
 end
 
@@ -100,6 +98,7 @@ to move ; governs where and how people move, triggers goal-setting
   repeat speed [move-to next-desired-patch if path != false and length path > 1 [set path remove-item 0 path] set-next-desired-patch
   if any? exits with [intersects-here exits] = true ; if the person passes through an exit, they leave
     [exit-building]]
+   ask patches with [available = false] [ask people-here [move-to min-one-of patches with [available != false] [distance myself]]]
 end
 
 to recolor-patches ; recolors patches subject to the hazards present
@@ -147,11 +146,11 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
   let visible-fire fires with [arrival < ticks] in-cone (100  * scale-modifier) 180
   let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
   if (count seen + count visible-fire + count proximal + count smoky-patches ) > 10
-  [set alarmed? true preferreddirection set speed 1] ; aim is for an average of 29s per Ben's comment
+  [set alarmed? true set speed 1] ; aim is for an average of 29s per Ben's comment
 end
 
 to note-exits
-  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 5]) ([self] of exits with [appeal < 0]))
+  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 5]) ([self] of exits with [appeal < 0]) (exit 60))
   ; will note exits they can see, exits less than half a meter away
 ; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room, meaning they would have 'appeal'
 end
@@ -467,7 +466,7 @@ Injury-divisor
 Injury-divisor
 0
 100
-71.0
+70.0
 1
 1
 NIL
@@ -846,7 +845,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.4
+NetLogo 6.1.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
