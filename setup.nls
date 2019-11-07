@@ -129,5 +129,6 @@ to set-speed-limit ; how fast people can go
 end
 
 to set-exit-appeal
+  ask exit 15 [set appeal -30]
   ask exit 21 [set appeal 70]
 end
