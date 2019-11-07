@@ -113,7 +113,7 @@ to-report see [agentset] ; makes it dynamic rather than static and frequently up
 end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
-  export-world (word "results-bodies" random-float 1.0".csv")
+  export-world (word "results" random-float 1.0".csv")
 end
 
 to set-speed  ; how fast people will go
