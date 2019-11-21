@@ -187,9 +187,7 @@ end
 
 to prioritize-group ; dictates when people will stop caring about still-living group members
   let people-with-links people with [count my-links > 0]
-  ask people-with-links with [(group-constant * group-heuristic) < threshold] [output-type who
-  output-type "group ties broke down"
-   output-type ticks
+  ask people-with-links with [(group-constant * group-heuristic) < threshold] [
     ask my-links [die] preferreddirection
     set time-group-left ticks] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
 end
