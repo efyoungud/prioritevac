@@ -10,6 +10,7 @@ to set-next-desired-patch
   if next-desired-patch = (pcolor <= 50) [set-path] ; don't set the path if you're going to be walking straight into a wall
   if count people-here > 0 [stop]
   if count people in-radius 3 > 2 [stop] ; if it's too crowded, stop
+  if next-desired-patch = (population > 1) [stop] 
 end
 
 

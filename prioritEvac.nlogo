@@ -10,19 +10,19 @@ undirected-link-breed [partners partner]
 undirected-link-breed [families family]
 undirected-link-breed [multiples multiple]
 walls-own [first-end second-end]
-exits-own [first-end second-end patch-past appeal]
-windows-own [first-end second-end]
+exits-own [x1 y1 x2 y2 patch-past appeal]
+windows-own [x1 y1 x2 y2 ]
 fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list]
-globals [acceleration max-wall-distance scale-modifier p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [acceleration max-wall-distance p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 available
-  ]
+  population]
 ;;------------------
 extensions [csv profiler vid]
 __includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls"]
@@ -41,10 +41,11 @@ to go ; master command to run simulation
   ]
   ;Windows are turned into exits based on timings provided by NIST Documentation
   ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 57 or who = 34] [ set breed exits set color hsb  0  50 100] ask exit 57 [set appeal -10] ask exit 34 [set appeal -1]  ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 59] [ set breed exits set color hsb  0  50 100 set appeal -12] ask people [preferreddirection]]
+  if ticks = 94 [ ask windows with [who = 9 or who = 5] [ set breed exits set color hsb  0  50 100] ask exit 9 [set appeal -10] ask exit 34 [set appeal -1]  ask people [preferreddirection]]
+  if ticks = 105 [ ask windows with [who = 10] [ set breed exits set color hsb  0  50 100 set appeal -12] ask people [preferreddirection]]
   recolor-patches
   ask patches with [pcolor > 50] [set available false]
+  ask patches [set population count people-here]
 end
 
 to create-vid-interface
@@ -150,7 +151,7 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
 end
 
 to note-exits
-  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 5]) ([self] of exits with [appeal < 0]) (exit 60))
+  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 5]) ([self] of exits with [appeal < 0]) (exit 11))
   ; will note exits they can see, exits less than half a meter away
 ; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room, meaning they would have 'appeal'
 end
@@ -203,11 +204,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-880
-441
+882
+443
 -1
 -1
-2.0
+4.0
 1
 10
 1
@@ -218,9 +219,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-330
+165
 0
-210
+105
 0
 0
 1
@@ -411,17 +412,6 @@ PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
 "Links" 1.0 0 -7500403 true "" "plot count links"
 
-SWITCH
-23
-10
-131
-43
-Full-Scale
-Full-Scale
-0
-1
--1000
-
 TEXTBOX
 31
 170
@@ -486,6 +476,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+23
+10
+162
+43
+scale-modifier
+scale-modifier
+0
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

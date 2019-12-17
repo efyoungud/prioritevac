@@ -1,27 +1,27 @@
 to setup ; sets up the initial environment
  ca
  reset-ticks
-  ifelse full-scale [resize-world 0 330 0 210 set-patch-size 2 set scale-modifier 1][resize-world 0 33 0 21 set-patch-size 13 set scale-modifier .1] ; the options for scale offer accuracy vs. speed
- set-default-shape walls "line"
+ resize-world 0 (330 * scale-modifier) 0 (210 * scale-modifier) set-patch-size (2 / scale-modifier) ; the closer to 1 the scale modifier is, the more accurate and the slower
+ set-default-shape walls "square"
  set-default-shape exits "line"
  set-default-shape windows "line"
  set-default-shape fires "square"
   set-default-shape smoky "square"
   set-default-shape people "circle"
- read-building-from-file "building_nightclub.csv" "nightclub_layout.png"
+ read-building-from-file "building_nightclub.csv" 
+ read-building-from-file-stamp "building_nightclub.csv"
  read-fire-from-file "fire_nightclub_merged.csv"
   read-smoke-from-file "smoke.csv"
  read-people-from-file "people.csv"
  ask people [ note-exits set color white set-speed-limit
     set leadership-quality 0 
     set-group-constant]
-  set max-wall-distance (max [size] of walls) / 2
+ ; set max-wall-distance (max [size] of walls) / 2
  set acceleration .081 ; taken from goal-oriented traffic simulation in model library
 soclink
-  ask walls [set color hsb  216 50 100]
   ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
-  ask fires [ set color [0 0 0 0 ] if full-scale [set size 10]]
+  ask fires [ set color [0 0 0 0 ] set size (10 * scale-modifier)]
   ask smoky [set color [0 0 0 0 ]]
   set-exit-appeal
  ;;there's initially no smoke
@@ -41,7 +41,7 @@ to read-fire-from-file [ filename] ; reads in the fire from a CSV
   [ [row] ->
     create-fires 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
     [
-      ifelse full-scale [setxy item 3 row item 4 row][setxy item 0 row item 1 row]
+      setxy (item 3 row * scale-modifier) (item 4 row * scale-modifier)
       set arrival item 2 row
       set color blue
     ]
@@ -53,30 +53,36 @@ end
  ; ask items (distance myself)
 ;end
 
-to read-building-from-file [filename imagefile] ; reads in the building from a CSV
+to read-building-from-file-stamp [filename]
+  let values bf csv:from-file filename
+  foreach values
+  [[row] ->
+    let breed-name item 0 row ; defines items
+    if breed-name = "Wall"
+   [create-walls 1 [setxy (item 5 row * scale-modifier)(item 6 row * scale-modifier) set size 1
+      set second-end (list (item 7 row * scale-modifier) (item 8 row * scale-modifier))
+     set color hsb  216 50 100
+      while [distancexy (item 7 row * scale-modifier) (item 8 row * scale-modifier) > .5] [facexy (item 7 row * scale-modifier) (item 8 row * scale-modifier)  ask patch-here [set available false] stamp fd .3]]
+  ]]
+end
+
+to read-building-from-file [filename] ; reads in the building from a CSV
   let values bf csv:from-file filename
   foreach values
   [ [row] ->
     let breed-name item 0 row ; defines items
-    let x1 (item 5 row * scale-modifier); these define start and end points for a linear stretch
-    let y1 (item 6 row * scale-modifier)
-    let x2 (item 7 row * scale-modifier)
-    let y2 (item 8 row * scale-modifier)
-    let component nobody
-    if breed-name = "Wall" [ create-walls 1 [set component self]] ; sets up the breed
-    if breed-name = "Exit" [ create-exits 1 [set component self]]
-    if breed-name = "Window" [ create-windows 1 [set component self]]
-    ask component [ setxy ((x1 + x2) / 2) (y1 + y2) / 2]
-    ask component [ facexy x1 y1]
-    ask component [ set size distancexy x1 y1 + distancexy x2 y2]
-    ask component [ set first-end (list x1 y1)]
-    ask component [ set second-end (list x2 y2)]
-  ]
-  ask exit 15 [set patch-past patch-at -1 0]
-  ask exit 17 [set patch-past patch-at -1 0]
-  ask exit 60 [set patch-past patch-at 0 -1]
-  ask exit 21 [set patch-past patch-at 0 0]
-  import-pcolors imagefile
+    if breed-name = "Exit" [ create-exits 1 [set x1 (item 5 row * scale-modifier) set x2 (item 7 row * scale-modifier) set y1 (item 6 row * scale-modifier) set y2 (item 8 row * scale-modifier)
+     setxy ((x1 + x2) / 2) (y1 + y2) / 2
+   facexy x1 y1
+    set size distancexy x1 y1 + distancexy x2 y2 ] ]
+    if breed-name = "Window" [ create-windows 1 [set x1 (item 5 row * scale-modifier) set x2 (item 7 row * scale-modifier) set y1 (item 6 row * scale-modifier) set y2 (item 8 row * scale-modifier)
+     setxy ((x1 + x2) / 2) (y1 + y2) / 2
+   facexy x1 y1
+    set size distancexy x1 y1 + distancexy x2 y2  ]]]
+  ask exit 0 [set patch-past patch-at -1 0]
+  ask exit 1 [set patch-past patch-at -1 0]
+  ask exit 11 [set patch-past patch-at 0 -1]
+  ask exit 2 [set patch-past patch-at 0 0]
 end
 
 to read-smoke-from-file [ filename] ; reads in the fire from a CSV
@@ -86,7 +92,7 @@ to read-smoke-from-file [ filename] ; reads in the fire from a CSV
   [ [row] ->
     create-smoky 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
     [
-      ifelse full-scale [setxy item 0 row item 1 row][setxy item 4 row item 5 row]
+      setxy (item 0 row * scale-modifier) (item 1 row * scale-modifier)
       set arrival item 2 row
       set level item 3 row
     set color white
@@ -101,7 +107,7 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
     create-people 1
     [
       set size 5 * scale-modifier ; from Oberhagemann
-      ifelse full-scale [setxy item 10 row item 11 row][setxy item 0 row item 1 row] ; initial position, randomized within an ecology that patrons had reported when interviewd
+     setxy (item 10 row * scale-modifier) (item 11 row * scale-modifier) ; initial position, randomized within an ecology that patrons had reported when interviewd
      set age (item 2 row)
      set gender (item 3 row)
      set visited? (item 4 row) ;true or false
@@ -129,6 +135,6 @@ to set-speed-limit ; how fast people can go
 end
 
 to set-exit-appeal
-  ask exit 15 [set appeal -30]
-  ask exit 21 [set appeal 70]
+  ask exit 0 [set appeal (-30 * scale-modifier)]
+  ask exit 2 [set appeal (70 * scale-modifier)] ; the bouncer discouraged people from using this exit
 end
