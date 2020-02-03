@@ -1,0 +1,23 @@
+to srti-people-list
+ ask people [ foreach [self] of people [
+  set traits-list (list (who) (color) (heading)(xcor)(ycor)(shape)(breed)(hidden?)(size) (alarmed?) (age)(visited?)(group-number) (group-type) (group-constant)(speed) (leadership-quality) (leader) (goal) (energy)(speed-limit)
+  )]] ; doesn't include next-desired-patch or path because that's calculated each step
+  set master-list [traits-list] of people
+end
+
+to srti-wall-export
+  set srti-walls [self] of patches with [pcolor = 96] ; everything the right color is made a list
+  ; the form of the list is (patch x-coordinate y-coordinate)
+end
+
+to srti-wall-import
+  ask patch-set srti-walls [set pcolor 96 set available false] 
+  ; after the list has been set by the interface, turns it all the right color and makes it so people can't walk through it
+  ; list must be formatted (patch x-coordinate y-coordinate)(patch x-coordinate y-coordinate) etc. 
+end
+
+to srti-go ; go command for SRTI integration
+  go
+  srti-people-list
+  srti-wall-export
+end

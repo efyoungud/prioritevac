@@ -8,7 +8,7 @@ to setup ; sets up the initial environment
  set-default-shape fires "square"
   set-default-shape smoky "square"
   set-default-shape people "circle"
- read-building-from-file "building_nightclub.csv" 
+read-building-from-file "building_nightclub.csv" 
  read-building-from-file-stamp "building_nightclub.csv"
  read-fire-from-file "fire_nightclub_merged.csv"
   read-smoke-from-file "smoke.csv"
@@ -30,7 +30,8 @@ soclink
     set Cost-path 0
     set visited-patch? false
     set active? false
-    if pcolor > 50 [set available false]]
+    if pcolor > 50 [set available false]
+  ]
   ;ask people [set distance-to-exits distance-to exits ]
 end
 
@@ -60,9 +61,9 @@ to read-building-from-file-stamp [filename]
     let breed-name item 0 row ; defines items
     if breed-name = "Wall"
    [create-walls 1 [setxy (item 5 row * scale-modifier)(item 6 row * scale-modifier) set size 1
+  set color 96
       set second-end (list (item 7 row * scale-modifier) (item 8 row * scale-modifier))
-     set color hsb  216 50 100
-      while [distancexy (item 7 row * scale-modifier) (item 8 row * scale-modifier) > .5] [facexy (item 7 row * scale-modifier) (item 8 row * scale-modifier)  ask patch-here [set available false] stamp fd .3]]
+      while [distancexy (item 7 row * scale-modifier) (item 8 row * scale-modifier) > .5] [facexy (item 7 row * scale-modifier) (item 8 row * scale-modifier)  ask patch-here [set available false] set pcolor 96 fd .3]]
   ]]
 end
 

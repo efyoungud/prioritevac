@@ -17,7 +17,7 @@ smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list]
-globals [acceleration max-wall-distance p-valids start final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
+globals [acceleration max-wall-distance p-valids start srti-walls final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -25,7 +25,7 @@ available
   population]
 ;;------------------
 extensions [csv profiler vid]
-__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls"]
+__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls" "srti-commands.nls"]
 
 to go ; master command to run simulation
  tick ; makes one second of time pass
@@ -69,18 +69,6 @@ to create-vid-view
   vid:save-recording "prioritevac_view_defense.mp4"
 end
 
-to srti-lists
- ask people [ foreach [self] of people [
-  set traits-list (list (who) (color) (heading)(xcor)(ycor)(shape)(breed)(hidden?)(size) (alarmed?) (age)(visited?)(group-number) (group-type) (group-constant)(speed) (leadership-quality) (leader) (goal) (energy)(speed-limit)
-  )]] ; doesn't include next-desired-patch or path because that's calculated each step
-  set master-list [traits-list] of people
-end
-
-to srti-go ; go command for SRTI integration
-  go
-  srti-lists
-end
-
 to master-run ; runs the whole simulation for 200 seconds and then exports results
   setup
   while [ticks < 180]
@@ -110,7 +98,7 @@ end
 
 to-report see [agentset] ; makes it dynamic rather than static and frequently updated, also restricts by kind of thing people are looking at
   let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180 ; can't see through walls or thick smoke
-  report agentset in-cone ((100 * scale-modifier) - (count obscured-patches)) (180 - (count obscured-patches)) ; 10m distance except when there's stuff
+  report agentset in-cone ((100 * scale-modifier) - ((count obscured-patches) / 10)) (180 - ((count obscured-patches)) / 10) ; 10m distance except when there's stuff
 end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
@@ -204,11 +192,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-882
-443
+881
+442
 -1
 -1
-4.0
+3.3333333333333335
 1
 10
 1
@@ -219,9 +207,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-165
+198
 0
-105
+126
 0
 0
 1
@@ -466,7 +454,7 @@ BUTTON
 97
 157
 NIL
-srti-lists
+srti-go
 NIL
 1
 T
@@ -486,7 +474,7 @@ scale-modifier
 scale-modifier
 0
 1
-0.5
+0.6
 .1
 1
 NIL
