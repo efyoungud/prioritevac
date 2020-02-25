@@ -24,7 +24,7 @@ patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if t
 available
   population]
 ;;------------------
-extensions [csv profiler vid]
+extensions [csv]
 __includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls" "srti-commands.nls"]
 
 to go ; master command to run simulation
@@ -46,27 +46,8 @@ to go ; master command to run simulation
   recolor-patches
   ask patches with [pcolor > 50] [set available false]
   ask patches [set population count people-here]
-end
-
-to create-vid-interface
-   setup
-  vid:start-recorder
-  vid:record-interface
-  while [ticks < 180]
-  [carefully [go vid:record-interface]
-    [ask people [preferreddirection] go vid:record-interface]]
-  vid:save-recording "prioritevac_interface.mp4"
-end
-
-to create-vid-view
-   setup
-  vid:start-recorder
-  vid:record-view
-  while [ticks < 180]
-  [carefully [go vid:record-view]
-    [ask people [preferreddirection] go]]
-  export-results
-  vid:save-recording "prioritevac_view_defense.mp4"
+  srti-people-list
+  srti-wall-export
 end
 
 to master-run ; runs the whole simulation for 200 seconds and then exports results
@@ -447,23 +428,6 @@ Injury-divisor
 1
 NIL
 HORIZONTAL
-
-BUTTON
-23
-124
-97
-157
-NIL
-srti-go
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 SLIDER
 23
