@@ -1,22 +1,3 @@
-
-
-to profile-setup ; profiles the setup
-  clear-all
-  profiler:start ; doesn't differentiate between full and small scale - that has to be manually selected before running
-  setup
-  profiler:stop
-  print profiler:report
-  profiler:stop
-end
-
-to profile
-  profiler:start         ;; start profiling
-repeat 1 [ go ]       ;; run something you want to measure
-profiler:stop          ;; stop profiling
-print profiler:report
-  profiler:stop
-end
-
 to-report intersects-here [ variety ]
    ;; each pair of segments checks for intersections
    let result intersection self myself
