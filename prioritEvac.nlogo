@@ -18,7 +18,9 @@ people-own [gender alarmed? age visited? group-number group-type group-constant 
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list]
 globals [acceleration max-wall-distance p-valids start srti-walls final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
- count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
+ coworker-report friends-report family-report dating-report multiple-report
+ count-dead-alone count-dead-coworkers count-dead-friends count-dead-dating count-dead-family count-dead-multiple
+  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 available

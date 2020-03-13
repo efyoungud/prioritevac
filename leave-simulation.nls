@@ -19,5 +19,11 @@ to injure ; injures a person based on proximity to fire and smoke
   ;let fire-impact count fires with [arrival < ticks] in-radius (3  * scale-modifier) ; close fire is considered to be injurious
   set energy energy - (smoke-impact );+ fire-impact)
   if energy <= 0 [set count-dead count-dead + 1 output-type who output-type "died of injury at" output-type xcor output-type " " output-type ycor output-type " " output-print ticks 
+if group-type = 0 [set count-dead-alone count-dead-alone + 1]
+  if group-type = 1 [set count-dead-coworkers count-dead-coworkers + 1]
+  if group-type = 2 [set count-dead-friends count-dead-friends + 1]
+  if group-type = 3 [set count-dead-dating count-dead-dating + 1]
+  if group-type = 4 [set count-dead-family count-dead-family + 1]
+  if group-type = 5 [set count-dead-multiple count-dead-multiple + 1]
   ask patches in-radius 1 [set pcolor 124] die] ;dies and becomes an impediment
 end
