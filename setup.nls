@@ -15,7 +15,8 @@ read-building-from-file "building_nightclub.csv"
  read-people-from-file "people.csv"
  ask people [ note-exits set color white set-speed-limit
     set leadership-quality 0 
-    set-group-constant]
+    set-group-constant
+  set max-hazard 0]
  ; set max-wall-distance (max [size] of walls) / 2
  set acceleration .081 ; taken from goal-oriented traffic simulation in model library
 soclink
@@ -32,6 +33,8 @@ soclink
     set active? false
     if pcolor > 50 [set available false]
   ]
+  set leadership-tally list "This list is itemizes changes in leadership over time" leadership-tally
+  set group-abandonment-tally list "This list itemizes if and when people abandon their groups - to see this in action, adjust loyalty sliders in the interface" group-abandonment-tally
   ;ask people [set distance-to-exits distance-to exits ]
 end
 

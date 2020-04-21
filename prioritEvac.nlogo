@@ -16,9 +16,11 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
- speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list]
+ speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list
+max-hazard]
 globals [acceleration max-wall-distance p-valids start srti-walls final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
- coworker-report friends-report family-report dating-report multiple-report
+ leadership-tally group-abandonment-tally
+  coworker-report friends-report family-report dating-report multiple-report
  count-dead-alone count-dead-coworkers count-dead-friends count-dead-dating count-dead-family count-dead-multiple
   count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
 
@@ -34,7 +36,7 @@ to go ; master command to run simulation
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
   set-fh
-  ask people [ prioritize-group
+  ask people [note-hazard prioritize-group
     ifelse alarmed? != true [alert]
     [     move
     ; set goals-over-time lput goal goals-over-time
@@ -48,6 +50,7 @@ to go ; master command to run simulation
   recolor-patches
   ask patches with [pcolor > 50] [set available false]
   ask patches [set population count people-here]
+  if ticks > 25 [set leadership-tally lput (list ("at ") (ticks) ([who] of people with [leader = true])) leadership-tally]
   srti-people-list
   srti-wall-export
 end
@@ -127,6 +130,11 @@ to note-exits
 ; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room, meaning they would have 'appeal'
 end
 
+to note-hazard ;notes how dangerous an area is
+  let local-fh sum [fh] of patches in-radius 2 ; the local conditions
+  if local-fh > max-hazard [set max-hazard local-fh]
+end
+
 to-report crowdedness ; measures how crowded an area is
   report count people in-radius (2 * scale-modifier)
 end
@@ -161,7 +169,7 @@ to prioritize-group ; dictates when people will stop caring about still-living g
   let people-with-links people with [count my-links > 0]
   ask people-with-links with [(group-constant * group-heuristic) < threshold] [
     ask my-links [die] preferreddirection
-    set time-group-left ticks] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
+    set group-abandonment-tally lput (list (who)(" abandoned their ") (group-type)(" group at ")(ticks)) group-abandonment-tally] ; as the heuristic gets smaller, it will eventually hit a threshold, which will be tested
 end
 
 to set-group-constant ; allows people to have different values for the degree to which they prioritize their groups, based on group type
@@ -175,11 +183,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-881
-442
+872
+436
 -1
 -1
-3.3333333333333335
+2.5
 1
 10
 1
@@ -190,9 +198,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-198
+264
 0
-126
+168
 0
 0
 1
@@ -440,7 +448,7 @@ scale-modifier
 scale-modifier
 0
 1
-0.6
+0.8
 .1
 1
 NIL
@@ -802,7 +810,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
