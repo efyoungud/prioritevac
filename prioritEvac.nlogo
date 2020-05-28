@@ -17,7 +17,7 @@ smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list
-max-hazard]
+min-smoke-distance smoke-toxicity min-fire-distance]
 globals [acceleration max-wall-distance p-valids start srti-walls final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
  leadership-tally group-abandonment-tally
   coworker-report friends-report family-report dating-report multiple-report
@@ -36,6 +36,7 @@ to go ; master command to run simulation
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
   set-fh
+ srti-wall-import
   ask people [note-hazard prioritize-group
     ifelse alarmed? != true [alert]
     [     move
@@ -131,8 +132,10 @@ to note-exits
 end
 
 to note-hazard ;notes how dangerous an area is
-  let local-fh sum [fh] of patches in-radius 2 ; the local conditions
-  if local-fh > max-hazard [set max-hazard local-fh]
+  if fire-distance < min-fire-distance [set min-fire-distance fire-distance]
+  if count smoky with [arrival < ticks] > 0 ; a control measure so it only tries to compute if there is actually smoke
+  [if smoke-distance < min-smoke-distance [set min-smoke-distance smoke-distance] ; ends up recording the closes that smoke is
+    set smoke-toxicity [level] of (min-one-of smoky with [arrival < ticks] [distance myself])] ; records the density of the closest smoke
 end
 
 to-report crowdedness ; measures how crowded an area is
@@ -141,19 +144,19 @@ end
 
 to-report fire-distance ; reports distance to closest fire
   let lit-fires fires with [arrival < ticks] ; only the firest that are actually active are counted
-  ifelse count lit-fires = 0 [report 0] ; if there are no currently active fires, reports 0
+  ifelse count lit-fires = 0 [report 999] ; if there are no currently active fires, reports 0
   [ report distance (min-one-of lit-fires [distance myself])] ; reports the distance to the closest fire, since the closest would presumably be the most relevant
 end
 
 to-report smoke-distance ; reports distance to the closest smoke
  let active-smoke smoky with [arrival < ticks] ; only the firest that are actually active are counted
-  ifelse count active-smoke = 0 [report 0] ; if there are no currently active fires, reports 0
+  ifelse count active-smoke = 0 [report 999] ; if there are no currently active fires, reports 0
   [ report distance (min-one-of active-smoke [distance myself])]
 end
 
 to set-fh ; reports total heuristic preference
    ask patches [carefully ; carefully means that if fire-distance and crowdedness are 0 there's no error from dividing by 0 but also the two things only need to be called once instead of twice
-    [set fh (1 - (1 /  (fire-distance + crowdedness + smoke-distance)))]
+    [set fh (1 - (1 /  (fire-distance + smoke-distance)))]
     [set fh 0]]; values are presented as (1 - (1/ variable)) so that the heuristic will be admissable: that is, that it will never be larger than the movement cost
 end ; with this configuration as the added variables get larger, the (1/ variable) number will get smaller, thus leaving the final fh closer to the upper bound of 1
 
@@ -183,11 +186,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-872
-436
+881
+442
 -1
 -1
-2.5
+2.857142857142857
 1
 10
 1
@@ -198,9 +201,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-264
+231
 0
-168
+147
 0
 0
 1
@@ -448,7 +451,7 @@ scale-modifier
 scale-modifier
 0
 1
-0.8
+0.7
 .1
 1
 NIL

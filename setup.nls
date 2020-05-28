@@ -1,7 +1,7 @@
 to setup ; sets up the initial environment
  ca
  reset-ticks
- resize-world 0 (330 * scale-modifier) 0 (210 * scale-modifier) set-patch-size (2 / scale-modifier) ; the closer to 1 the scale modifier is, the more accurate and the slower
+ resize-world 0 (331 * scale-modifier) 0 (210 * scale-modifier) set-patch-size (2 / scale-modifier) ; the closer to 1 the scale modifier is, the more accurate and the slower
  set-default-shape walls "square"
  set-default-shape exits "line"
  set-default-shape windows "line"
@@ -16,7 +16,8 @@ read-building-from-file "building_nightclub.csv"
  ask people [ note-exits set color white set-speed-limit
     set leadership-quality 0 
     set-group-constant
-  set max-hazard 0]
+  set min-smoke-distance 999
+  set min-fire-distance 999]
  ; set max-wall-distance (max [size] of walls) / 2
  set acceleration .081 ; taken from goal-oriented traffic simulation in model library
 soclink
@@ -44,18 +45,11 @@ to read-fire-from-file [ filename] ; reads in the fire from a CSV
   foreach values
   [ [row] ->
     create-fires 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
-    [
-      setxy (item 3 row * scale-modifier) (item 4 row * scale-modifier)
-      set arrival item 2 row
-      set color blue
-    ]
-  ]
+    [ setxy (item 3 row * scale-modifier) (item 4 row * scale-modifier)
+      set arrival item 2 row ;the time the fire started in that particular spot
+      set color blue]]
 end
 
-;to distance-to [items] ; attempt to record distance to exits/other group members at the start
-;; ask person 610 [ask exits [show distance myself]] is operational code, just need to generalize
- ; ask items (distance myself)
-;end
 
 to read-building-from-file-stamp [filename]
   let values bf csv:from-file filename
@@ -65,9 +59,9 @@ to read-building-from-file-stamp [filename]
     if breed-name = "Wall"
    [create-walls 1 [setxy (item 5 row * scale-modifier)(item 6 row * scale-modifier) set size 1
   set color 96
-      set second-end (list (item 7 row * scale-modifier) (item 8 row * scale-modifier))
-      while [distancexy (item 7 row * scale-modifier) (item 8 row * scale-modifier) > .5] [facexy (item 7 row * scale-modifier) (item 8 row * scale-modifier)  ask patch-here [set available false] set pcolor 96 fd .3]]
-  ]]
+  set second-end (list (item 7 row * scale-modifier) (item 8 row * scale-modifier))
+  while [distancexy (item 7 row * scale-modifier) (item 8 row * scale-modifier) > .5] 
+      [facexy (item 7 row * scale-modifier) (item 8 row * scale-modifier)  ask patch-here [set available false] set pcolor 96 fd .3]]]]
 end
 
 to read-building-from-file [filename] ; reads in the building from a CSV

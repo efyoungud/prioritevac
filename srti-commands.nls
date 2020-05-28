@@ -6,12 +6,13 @@ to srti-people-list
 end
 
 to srti-wall-export
-  set srti-walls [self] of patches with [pcolor = 96] ; everything the right color is made a list
-  ; the form of the list is (patch x-coordinate y-coordinate)
+  set srti-walls [list (pxcor) (pycor)] of patches with [pcolor = 96] ; everything the right color is made a list
+  ; the form of the list is (x-coordinate y-coordinate)
 end
 
 to srti-wall-import
-  ask patch-set srti-walls [set pcolor 96 set available false] 
+  let local-walls patches with [member? self srti-walls]
+  ask local-walls [set pcolor 96 set available false] 
   ; after the list has been set by the interface, turns it all the right color and makes it so people can't walk through it
   ; list must be formatted (patch x-coordinate y-coordinate)(patch x-coordinate y-coordinate) etc. 
 end
