@@ -1,8 +1,5 @@
 to exit-building ; prints the time the agent is removed from simulation
-  output-type who
-  output-type "Exited building at exit, time"
-  output-type closest ; shows the closest exit, which should map the exit they exited by: this needs tested
-  output-print ticks ; show the time
+  output-print (list (who) (" Exited building at") (closest) (" at ") (ticks) (" with fire distance ") (min-fire-distance) ("smoke distance") (min-smoke-distance) ("smoke density") (smoke-toxicity))
   if closest = exit 11 [set count-at-main count-at-main + 1] ; makes it add to the count of the closest exit
 if closest = exit 0 [set count-at-bar count-at-bar + 1]
 if closest = exit 1 [set count-at-kitchen count-at-kitchen + 1]
@@ -18,7 +15,7 @@ to injure ; injures a person based on proximity to fire and smoke
   let smoke-impact count smoky-patches * (sum [level] of smoky-patches / injury-divisor) ; the level of smoke indicates how damaging it will be. This turns it into a percentage averaged from the local smoke
   ;let fire-impact count fires with [arrival < ticks] in-radius (3  * scale-modifier) ; close fire is considered to be injurious
   set energy energy - (smoke-impact );+ fire-impact)
-  if energy <= 0 [set count-dead count-dead + 1 output-type who output-type "died of injury at" output-type xcor output-type " " output-type ycor output-type " " output-print ticks 
+  if energy <= 0 [ set count-dead count-dead + 1 output-print (list (who) ("died of injury at") (xcor) (" ") (ycor)(" at time ") (ticks) ("fire distance") (min-fire-distance) ("smoke distance") (min-smoke-distance) ("smoke density") (smoke-toxicity))
 if group-type = 0 [set count-dead-alone count-dead-alone + 1]
   if group-type = 1 [set count-dead-coworkers count-dead-coworkers + 1]
   if group-type = 2 [set count-dead-friends count-dead-friends + 1]
