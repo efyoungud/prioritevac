@@ -13,7 +13,7 @@ undirected-link-breed [multiples multiple]
 directed-link-breed [customers customer]
 walls-own [first-end second-end]
 stairs-own [x1 y1 x2 y2 ]
-exits-own [x1 y1 x2 y2 patch-past appeal]
+exits-own [name x1 y1 x2 y2 patch-past appeal]
 windows-own [x1 y1 x2 y2 ]
 fires-own [arrival]
 smoky-own [arrival level]
@@ -131,9 +131,8 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
 end
 
 to note-exits
-  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 5]) ([self] of exits with [appeal < 0]) (exit 11))
-  ; will note exits they can see, exits less than half a meter away
-; the bar exit had a sign and the broken windows would have made noise and caused a shift in the traffic of the room, meaning they would have 'appeal'
+  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 1.7]) ([self] of exits with [appeal < 0])(exits with [name = "M"]))
+  ; will note exits they can see, exits less than half a meter away, main entrance
 end
 
 to note-hazard ;notes how dangerous an area is
@@ -191,11 +190,11 @@ end
 GRAPHICS-WINDOW
 560
 10
-907
-487
+908
+488
 -1
 -1
-1.6666666666666667
+1.0
 1
 10
 1
@@ -206,9 +205,9 @@ GRAPHICS-WINDOW
 1
 1
 0
-204
+340
 0
-282
+470
 0
 0
 1
@@ -433,7 +432,7 @@ scale-modifier
 scale-modifier
 0
 1
-0.6
+1.0
 .1
 1
 NIL
