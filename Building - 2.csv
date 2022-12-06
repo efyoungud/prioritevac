@@ -1,21 +1,31 @@
 type,x1,y1,x2,y2,Note
 Wall,26.5,61,26.5,174.5,left wall kitchen area
 Wall,26.5,174.5,32.5,174.5,wall over under construction
+Wall,26.5,139,46.5,139.5,wall to under construction area
+Wall,27,118.5,36.5,118.5,fridge
 Wall,31.5,174.5,54,174.5,under construction wall
 Wall,32.5,174.5,32.5,217.5,kitchen left wall
 Wall,32.5,217.5,37.5,217.5,kichen top wall
+Wall,36.5,118.5,36.5,139,fridge
 Wall,37.5,217.5,37.5,234,kitchen wall
 Wall,47,61,26.5,61,
 Wall,47,69.5,47,61,tiny kitchen walls
 stair,49,251,54.5,245,kitchen exit stairs
 Wall,52.5,35.5,52.5,70,main dining left wall
 Wall,53,35.5,129,35.5,main dining bottom wall
+Wall,53,70,53,103.5,basement side wall
+Wall,53,93.5,27,93.5,basement wall
+Wall,53,213.5,53,233.5,wall to under construction area
+Wall,53,64,61.5,82.5,main dining
 Wall,53.5,69.5,47,69.5,
 Wall,54,207,54,116,kitchen wall
 door,54,247.5,60,247.5,exit from garde room toward kitchen exit
 Wall,54,274.5,54,246,upper left corner side wall
 Wall,55,247.5,55,274.5,
 Wall,55,274.5,98.5,274.5,
+Wall,55,38.5,55.5,43,main dining
+Wall,55.5,43,57,43,main dining
+Wall,55.5,47,59.5,48,main dining
 Wall,57,8.5,159,8.5,check room bottom wall
 Wall,57,8.5,148,8.5,check room bottom wall
 Wall,57,35.5,52.5,35.5,main dining jut out
@@ -23,15 +33,30 @@ Wall,57,35.5,57,8.5,check room left wall
 Wall,57,35.5,129,35.5,check room top wall
 Wall,57,441.5,57,461,
 Wall,57,461,83,461,
+Wall,57,43,55.5,47,main dining
+Wall,57,91,63,91,main dining
+Wall,57.5,82.5,57,91,main dining
+Wall,59.5,48,53,64,main dining
 Wall,60,247.5,98.5,247.5,Garden room service corridor
+Wall,61,39,55,38.5,main dining
+Wall,61.5,82.5,57.5,82.5,main dining
+Wall,63,91,63,93,main dining
+Wall,64,42.5,64,39,main dining
+Wall,64,39,61,39,main dining
 Wall,67,436.5,67,441.5,
 Wall,67,441.5,57,441.5,
+Wall,67,88,81,93,main dining
 Wall,74.5,117.5,108.5,118,
 Wall,75.5,234,37,234,kitchen service corridor to outside wall
+Wall,77.5,36.5,64,42.5,main dining
 stair,78.5,460.5,83,448.5,
+Wall,81,93,89,92.5,main dining
 door,82.5,234,75.5,234,Kitchen service corridor door
 Wall,83,442.5,231.5,442.5,
 Wall,83,461,83,442.5,
+Wall,86.5,36.5,78,36.5,main dining
+Wall,89,92.5,97.5,88,main dining
+Wall,97,40.5,86.5,36.5,main dining
 Wall,98,88,98,119,
 Wall,98.5,153,140,153,dishhwashing south wall
 Wall,98.5,155.5,98.5,153,dishwashing west south wall
@@ -44,39 +69,53 @@ door,98.5,247.5,98.5,239,Door to service corridor
 Wall,98.5,264,113,264,
 Wall,98.5,274.5,98.5,264,
 Wall,98.5,274.5,54,274.5,garden room upper left corner wall
+Wall,98.5,129,98.5,156.5,empire room outside wall
 Wall,99.5,263.5,98.5,274.5,garden room wall
 Wall,107.5,129,113,136.5,empire room curve 
+Wall,109,117.5,113.5,109.5,empire room
 Wall,111,390.5,111,436.5,
 Wall,111,436.5,67,436.5,
 Wall,111.5,263.5,99.5,263.5,garden room
 Wall,113,136.5,120.5,141.5,empire room curve 
-Exit,113,264,118.5,264,
+Wall,113.5,109.5,123,105.5,empire room
 Wall,117,385,117,390.5,
 Wall,117,390.5,111,390.5,
 Wall,117,398,117,405.5,
 Wall,117,405.5,137,405.5,
 Wall,117,412,141,412,
 Wall,117,442.5,117,412,
-Exit,117.5,263.5,111.5,263.5,garden room up
+Exit,117.5,263.5,111.5,263.5,G1
 Wall,118.5,264,132.5,264,
 Wall,120.5,141.5,128,142.5,empire room curve 
+Wall,123,105.5,131,103,empire room
+Wall,123,70.5,111.5,70.5,main dining
 Wall,128,142.5,144.5,142.5,empire room curve 
+Wall,128.5,40,97,40.5,main dining
 Wall,129,92,129,69.5,main dining room main bar wall
+Wall,129,28,129,59.5,check room
+Wall,131,103,159,103,empire room
 Wall,132.5,194,225,194,wavery nonsense wall
 Wall,132.5,204,160,204,garden room wall
 Wall,132.5,264,132.5,281,
 Wall,132.5,281,156,302,
 door,137,405.5,142.5,405.5,
+Wall,138,28,129,28,check room
 Wall,140,153,140,185,dishwashing east
 Wall,140,185,185.5,185,service hall south
 door,141,412,147.5,412,
 Wall,141.5,0.5,182.5,0.5,porte cochere stairs south wall
 stair,141.5,0.5,149.5,8.5,left porte cochere stairs
-Exit,141.5,0.5,141.5,8.5,left porte cochere stairs
+Exit,141.5,0.5,141.5,8.5,M
 Wall,142.5,405.5,167.5,405.5,
 Wall,147.5,412,159,412,
 stair,148,12,176,15.5,front stairs
+Wall,148,32.5,148,38,check room
+Wall,148,38,138,28,check room
 Wall,148.5,18.5,148.5,8,east wall
+Wall,149,178.5,149,164.5,backstage empire
+Wall,149,164.5,144.5,164.5,backstage empire
+Bar,149.5,71.5,177,84.5,giant main bar
+Wall,152,181.5,149,178.5,backstage empire
 Wall,153.5,92,72,92,main bar north wall
 Wall,156,302,187,274.5,
 door,159,412,165,412,
@@ -84,34 +123,52 @@ door,159.5,8.5,166.5,8.5,front door below stairs
 door,159.5,18.5,166.5,18.5,front door
 door,160,204,166.5,204,garden room door
 Wall,165,412,191,412,
+Wall,165.5,103,196.5,102.5,empire
 Wall,166.5,204,208.5,204,garden room middle wall
 door,167.5,405.5,171.5,405.5,
+Wall,169,181.5,152,181.5,backstage empire
+Wall,169.5,50,190,50,front mens room hall
+Wall,169.5,50,169.5,42.5,front mens bathroom
 Wall,170,57.5,195.5,57.5,front ladies room hall
+Wall,170,38,280.5,38,south wall ignoring decorations
 Wall,171.5,405.5,187,405.5,
+Wall,172,164.5,172,177.5,backstage empire
+Wall,172,177.5,169,181.5,backstage empire
 stair,173.5,0.5,183,8.5,right porte cochere stairs
 Wall,179,142.5,196.5,142.5,empire room curve 
-Exit,183.5,8,183.5,0,porte cochere stairs right
+Wall,179,179.5,179,164.5,backstage empire
+Wall,179,164.5,172,164.5,backstage empire
+Exit,183.5,8,183.5,0,M
 stair,185.5,185,190,177,backstage stairs
 Wall,187,274.5,193,274.5,
 door,187,405.5,190.5,405.5,
 Wall,189,185,213,185,service hall south
+Wall,190,50,190,52.5,
+Wall,190,52.5,195.5,52.5,front mens room hall
 Wall,190.5,405.5,214,405.5,
 Wall,191,412,191,433,
 door,191,433,191,440,
 Wall,191,440,191,442.5,top crystal rooms
-Exit,193,274.5,200,274.5,
+Exit,193,274.5,200,274.5,G2
 stair,195,79.5,219,72,
 Wall,195.5,52.5,195.5,38,east wall between front ladies room and front mens room
 Wall,195.5,57.5,195.5,61,lades room wall
 Wall,195.5,61,212,61,zebra room wall over bathroom
 Wall,195.5,71.5,220,71.5,zebra room north wall
+Wall,196,185.5,195.5,174,storage room outside empire room
+Wall,196,170,196,166,storage room outside empire room
+Wall,196,163.5,196,153.5,
 Wall,196.5,142.5,206.5,140,empire room curve 
+Wall,196.5,102.5,213.5,109.5,empire
+Wall,197.5,412.5,215,411,brides room wall
 Wall,198,8.5,166.5,8.5,right south stair wall
-Wall,170,38,280.5,38,south wall ignoring decorations
 Wall,198,38,198,8,stairs wall right
+Wall,198,420.5,231.5,420.5,upstairs ladies room
 stair,198.5,429.5,220.5,420.5,
 Wall,200,274.5,204,274.5,
-Exit,204,274.5,208,274.5,
+Wall,203,268.5,203,274.5,garden room hall to exit
+Exit,204,274.5,208,274.5,GC
+Wall,207,268.5,203,268.5,garden room hall to exit
 Wall,208,274.5,211,274.5,
 door,208.5,204,215.5,204,gardem room right door
 Wall,211,274,230,248.5,cabaret room hallway
@@ -121,27 +178,44 @@ Wall,211,302.5,211,274.5,cabaret room east wall
 Wall,211,303,231,325,
 Wall,212,61.5,212,38,front ladies room zebra room wall
 Wall,212.5,136,217,131,empire room curve 
+Wall,212.5,177.5,212.5,153.5,storage room outside empire room
+Wall,212.5,169,194.5,169,storage room outside empire room
+Wall,213.5,109.5,219,115,empire
 Wall,214,385,117,385,
 Wall,214,388,214,385,
 Wall,214,405.5,214,385.5,bottom crystal rooms
+Wall,215,412.5,215,420.5,wall between brides room and ladies room
 Wall,215.5,204,229.5,204,garden room wall to corner
 Wall,217,131,218.5,126,empire room curve 
+Wall,217,115.5,213,109.5,empire room
 Wall,218.5,126,229,126,empire room to hall of mirrors
+Wall,218.5,404.5,231,404,upstairs mens room wall
+door,218.5,404.5,214,404.5,upstairs mens room door
+Wall,219,412.5,219,404,upstairs ladies room
+Wall,219,115,229,115,empire
 door,220,71.5,227.5,71.5,zebra room door
+Wall,224,232,224,246,garden room hall to exit
+Wall,224,246,207,268.5,garden room hall to exit
 Wall,227.5,71.5,229,71.5,zebra room remaiing north wall
 Wall,229,71.5,229,74,wall to set off corridor to viennese room
 Wall,229,88,229,117.5,hall of mirrors west wall
 Wall,229,92,171.5,92,main bar north wall
 door,229,126,229,115.5,empire room door to hall of mirrors
+Wall,229,38,229,73.5,zebra room ne wall
+Wall,229,126,229,153.5,outside wall of empire room
+Wall,229,153.5,185.5,153.5,outside wall of empire room
+Wall,229,65.5,241.5,66,wall from zebra into viennese
 Wall,229.5,204,229.5,221.5,garden room hall to exit
 Wall,229.5,239.5,240,239.5,
 Wall,230,248.5,229.5,239.5,
+Wall,230,232,224,232,garden room hall to exit
 Wall,230.5,324.5,240,324.5,
 Wall,231,325,240,325,
 Wall,231.5,388,214,388,
 Wall,231.5,425.5,231.5,388,
 Exit,231.5,430.5,231.5,425.5,"roof, locked"
 Wall,231.5,442.5,231.5,430.5,
+Wall,235.5,351.5,261,352,Wall from stairs to viennese
 Wall,236.5,66,236.5,94.5,viennese room
 door,236.5,94.5,236.5,101,viennese room
 Wall,236.5,101,236.5,116,viennese room
@@ -161,6 +235,7 @@ Wall,240,324.5,240,328.5,
 Wall,240,325,240,329,
 Wall,240.5,143,240,136.5,
 Wall,240.5,329,295.5,329,top wall cabaret room
+Wall,241.5,66,243,59,wall from zebra into viennese
 Wall,242,143,242,153.5,viennese mens room left wall
 Wall,243.5,134.5,246.5,134.5,viennese room north wall
 door,246.5,134.5,253,134.5,viennese room door to restroom hall
@@ -168,18 +243,28 @@ Wall,247.5,143,240.5,143,
 door,251,139,247.5,143,mens room door
 Wall,253,134.5,275.5,134.5,viennese room north wall center
 Wall,254.5,183,275.5,183,
+door,261,352,267,352,zebra door
 door,267,134.5,267,139,viennese ladies room
 Wall,267,139,251,139,ladies room hall
+Wall,273.5,329,273.5,334,cabaret room portico
+Wall,273.5,334,293.5,334,cabaret room portico
 door,275.5,134.5,281,134.5,viennese room door to storage?
 Wall,275.5,183,281,178.5,
+Wall,280.5,38,280.5,153.5,inside wall on Viennese room
+door,280.5,102,280.5,95,viennese room door to exit corridor
 Wall,281,94,281,37.5,
 Wall,281,178.5,281,101,
+Exit,286,130.5,293.5,130.5,V
 Wall,288.5,189.5,300,222.5,cabaret back hall
+Wall,291,328,293,321,cabaret bar
 Wall,291.5,304.5,295.5,290.5,
-Exit,294.5,334,302,334,cabaret room north exit
+Wall,293,189,301,189,cabaret dressing room hall
+stair,293.5,130.5,285.5,139.5,back of viennese room
+Exit,294.5,334,302,334,C
 door,295,328.5,300.5,328.5,cabaret room north portico door
+Wall,295,313.5,316,313.5,cabaret bar
 Wall,295.5,290.5,300,291,
-Exit,297,173,301,173.5,
+Exit,297,173,301,173.5,S
 stair,297,178,301,173.5,cabaret east exit stairs
 Wall,297,182.5,287,182.5,cabaret room south wall
 stair,297.5,234.5,302,229,stage stairs south
@@ -188,110 +273,25 @@ Wall,298.5,313,300.5,309,
 Wall,300,291,302,282,cabaret room walls
 Wall,300,291,296,308,
 door,300.5,309,301.5,305.5,
+Wall,300.5,326,304,326,cabaret room bar
+Wall,301,189,301,214,cabaret dressing room hall
+Wall,301,214,309.5,214,cabaret dressing room hall
 Wall,301.5,214.5,292,189.5,Carabet back hall
 Wall,301.5,305.5,303.5,295,
+Wall,301.5,206.5,309.5,206.5,cabaret dressing room hall
+Wall,301.5,330.5,300.5,326,cabaret room bar
 Wall,302,277.5,312,277.5,backstage wall north
 Wall,302,282,315.5,282,mens room south wall
+Wall,303,334,310.5,334,cabaret room portico
 Wall,303.5,295,316.5,293.5,ladies room
 door,303.5,295,299.5,292.5,mens room door
 Wall,304.5,328.5,316.5,328.5,top wall cabaret room
+Wall,309.5,214,309.5,209,cabaret dressing room hall
 Wall,310.5,328.5,310.5,334,cabaret room portico east wall
+Wall,310.5,334,310.5,329,cabaret room portico
 Wall,311.5,238,301.5,238,backstage wall south
 Wall,312,277.5,311.5,238,backstage wall east
+Wall,313.5,206.5,316.5,206.5,cabaret dressing room hall
 Wall,316,183,301,183,cabaret room south wall
 Wall,316,183,316,328.5,cabaret room east wall
-Wall,218.5,404.5,231,404,upstairs mens room wall
-door,218.5,404.5,214,404.5,upstairs mens room door
-Wall,197.5,412.5,215,411,brides room wall
-Wall,215,412.5,215,420.5,wall between brides room and ladies room
-Wall,198,420.5,231.5,420.5,upstairs ladies room
-Wall,219,412.5,219,404,upstairs ladies room
-Wall,53,70,53,103.5,basement side wall
-Wall,53,93.5,27,93.5,basement wall
-Wall,27,118.5,36.5,118.5,fridge
-Wall,36.5,118.5,36.5,139,fridge
-Wall,26.5,139,46.5,139.5,wall to under construction area
-Wall,53,213.5,53,233.5,wall to under construction area
-Wall,217,115.5,213,109.5,empire room
-Wall,229,38,229,73.5,zebra room ne wall
-Wall,280.5,38,280.5,153.5,inside wall on Viennese room
-door,280.5,102,280.5,95,viennese room door to exit corridor
-Wall,109,117.5,113.5,109.5,empire room
-Wall,113.5,109.5,123,105.5,empire room
-Wall,123,105.5,131,103,empire room
-Wall,131,103,159,103,empire room
-Wall,98.5,129,98.5,156.5,empire room outside wall
-Wall,148,32.5,148,38,check room
-Wall,148,38,138,28,check room
-Wall,138,28,129,28,check room
-Wall,129,28,129,59.5,check room
-Exit,286,130.5,293.5,130.5,back of viennese room
-stair,293.5,130.5,285.5,139.5,back of viennese room
-Wall,123,70.5,111.5,70.5,main dining
-Bar,149.5,71.5,177,84.5,giant main bar
-Wall,230,232,224,232,garden room hall to exit
-Wall,224,232,224,246,garden room hall to exit
-Wall,224,246,207,268.5,garden room hall to exit
-Wall,207,268.5,203,268.5,garden room hall to exit
-Wall,203,268.5,203,274.5,garden room hall to exit
-Wall,293,189,301,189,cabaret dressing room hall
-Wall,301,189,301,214,cabaret dressing room hall
-Wall,301,214,309.5,214,cabaret dressing room hall
-Wall,309.5,214,309.5,209,cabaret dressing room hall
-Wall,301.5,206.5,309.5,206.5,cabaret dressing room hall
-Wall,313.5,206.5,316.5,206.5,cabaret dressing room hall
-Wall,273.5,329,273.5,334,cabaret room portico
-Wall,273.5,334,293.5,334,cabaret room portico
-Wall,303,334,310.5,334,cabaret room portico
-Wall,310.5,334,310.5,329,cabaret room portico
-Wall,301.5,330.5,300.5,326,cabaret room bar
-Wall,300.5,326,304,326,cabaret room bar
-Wall,169.5,50,190,50,front mens room hall
-Wall,190,50,190,52.5,
-Wall,190,52.5,195.5,52.5,front mens room hall
-Wall,169.5,50,169.5,42.5,front mens bathroom
-Wall,128.5,40,97,40.5,main dining
-Wall,97,40.5,86.5,36.5,main dining
-Wall,86.5,36.5,78,36.5,main dining
-Wall,77.5,36.5,64,42.5,main dining
-Wall,64,42.5,64,39,main dining
-Wall,64,39,61,39,main dining
-Wall,61,39,55,38.5,main dining
-Wall,55,38.5,55.5,43,main dining
-Wall,55.5,43,57,43,main dining
-Wall,57,43,55.5,47,main dining
-Wall,55.5,47,59.5,48,main dining
-Wall,59.5,48,53,64,main dining
-Wall,53,64,61.5,82.5,main dining
-Wall,61.5,82.5,57.5,82.5,main dining
-Wall,57.5,82.5,57,91,main dining
-Wall,57,91,63,91,main dining
-Wall,63,91,63,93,main dining
-Wall,67,88,81,93,main dining
-Wall,81,93,89,92.5,main dining
-Wall,89,92.5,97.5,88,main dining
-Wall,295,313.5,316,313.5,cabaret bar
-Wall,291,328,293,321,cabaret bar
-Wall,165.5,103,196.5,102.5,empire
-Wall,196.5,102.5,213.5,109.5,empire
-Wall,213.5,109.5,219,115,empire
-Wall,219,115,229,115,empire
-Wall,229,126,229,153.5,outside wall of empire room
-Wall,229,153.5,185.5,153.5,outside wall of empire room
-Wall,212.5,177.5,212.5,153.5,storage room outside empire room
-Wall,212.5,169,194.5,169,storage room outside empire room
-Wall,196,185.5,195.5,174,storage room outside empire room
-Wall,196,170,196,166,storage room outside empire room
-Wall,196,163.5,196,153.5,
-Wall,179,179.5,179,164.5,backstage empire
-Wall,179,164.5,172,164.5,backstage empire
-Wall,172,164.5,172,177.5,backstage empire
-Wall,172,177.5,169,181.5,backstage empire
-Wall,169,181.5,152,181.5,backstage empire
-Wall,152,181.5,149,178.5,backstage empire
-Wall,149,178.5,149,164.5,backstage empire
-Wall,149,164.5,144.5,164.5,backstage empire
-Wall,229,65.5,241.5,66,wall from zebra into viennese
-Wall,241.5,66,243,59,wall from zebra into viennese
-Wall,235.5,351.5,261,352,Wall from stairs to viennese
-door,261,352,267,352,zebra door
+Exit,52,258,48,248,K
