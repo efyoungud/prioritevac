@@ -13,12 +13,12 @@ read-building-from-file "Building - 2.csv"  ; currently has to have files hand-c
  read-building-from-file-stamp "Building - 2.csv"
 ; read-fire-from-file "fire_nightclub_merged.csv"
 ;  read-smoke-from-file "smoke.csv"
-; read-people-from-file "people.csv"
- ;ask people [ note-exits set color white set-speed-limit
+ read-people-from-file "bhsc people.csv"
+ ask people [ note-exits set color white set-speed-limit
   ;  set leadership-quality 0 
    ; set-group-constant
   ;set min-smoke-distance 999
-  ;set min-fire-distance 999]
+  set min-fire-distance 999]
  ; set max-wall-distance (max [size] of walls) / 2
  set acceleration .081 ; taken from goal-oriented traffic simulation in model library
 soclink
@@ -74,7 +74,8 @@ to read-building-from-file [filename] ; reads in the building from a CSV
     if breed-name = "Exit" [ create-exits 1 [set x1 (item 1 row * scale-modifier) set x2 (item 3 row * scale-modifier) set y1 (item 2 row * scale-modifier) set y2 (item 4 row * scale-modifier)
      setxy ((x1 + x2) / 2) (y1 + y2) / 2
    facexy x1 y1
-    set size distancexy x1 y1 + distancexy x2 y2 ] ]
+    set size distancexy x1 y1 + distancexy x2 y2 
+    set name item 5 row] ]  ;named exits from notes and layout
     if breed-name = "Window" [ create-windows 1 [set x1 (item 1 row * scale-modifier) set x2 (item 3 row * scale-modifier) set y1 (item 2 row * scale-modifier) set y2 (item 4 row * scale-modifier)
      setxy ((x1 + x2) / 2) (y1 + y2) / 2
    facexy x1 y1
@@ -84,6 +85,10 @@ to read-building-from-file [filename] ; reads in the building from a CSV
    set color green
       facexy x1 y1
     set size distancexy x1 y1 + distancexy x2 y2 ] ]]
+  ask exits [if name = "M" ; the main entrance
+    [set patch-past patch-at (154 * scale-modifier) 0]]
+  
+  ;;station exits
   ;ask exit 0 [set patch-past patch-at -1 0]
   ;ask exit 1 [set patch-past patch-at -1 0]
   ;ask exit 11 [set patch-past patch-at 0 -1]
@@ -111,14 +116,14 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
   [[row] ->
     create-people 1
     [
-      set size 5 * scale-modifier ; from Oberhagemann
+      set size 1.7 * scale-modifier ; from Oberhagemann
      setxy (item 0 row * scale-modifier) (item 1 row * scale-modifier) ; initial position, taken from evacuation maps
      set age (item 2 row)
      set gender (item 3 row)
-     set visited? (item 4 row) ;true or false, true for employees but not patrons or contractors
+     set visited? (item 4 row) ;true or false, true for employees and contractors but not patrons
      set group-number (item 6 row) ; people were assigned group numbers based on the people they came with
      set group-type (item 7 row) ; based on composition of group
-     set energy (item 9 row) ;from Jieshi and Eric's work
+     set energy (item 9 row) ;from Jieshi and Eric's work, for BHSC just set all to 100 as preliminary
       set role (item 11 row) ; new for bhsc: whether patron, musician, tipped or untipped employee
   ]]
 end
@@ -137,7 +142,7 @@ end
 
 to set-speed-limit ; how fast people can go
   ; units are m/s, from Isobe
-  ask people [set speed-limit (11 * scale-modifier) + random-float (2 * scale-modifier)]
+  ask people [set speed-limit (3 * scale-modifier) + random-float (2 * scale-modifier)]
 end
 
 to set-exit-appeal
