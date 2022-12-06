@@ -1,12 +1,12 @@
 to exit-building ; prints the time the agent is removed from simulation
   output-print (list (who) (" Exited building at") (closest) (" at ") (ticks) (" with fire distance ") (min-fire-distance) ("smoke distance") (min-smoke-distance) ("smoke density") (smoke-toxicity))
-  if closest = exit 11 [set count-at-main count-at-main + 1] ; makes it add to the count of the closest exit
-if closest = exit 0 [set count-at-bar count-at-bar + 1]
-if closest = exit 1 [set count-at-kitchen count-at-kitchen + 1]
-if closest = exit 2 [set count-at-stage count-at-stage + 1]
-  if ticks > 105 [if closest = exit 10 [set count-at-bar-windows count-at-bar-windows + 1]]
- if ticks > 94 [if closest = exit 9 [set count-at-bar-windows count-at-bar-windows + 1]
-    if closest = exit 5 [set count-at-sunroom-window count-at-sunroom-window + 1]]
+ ; if closest = exit 11 [set count-at-main count-at-main + 1] ; makes it add to the count of the closest exit
+;if closest = exit 0 [set count-at-bar count-at-bar + 1]
+;if closest = exit 1 [set count-at-kitchen count-at-kitchen + 1]
+;if closest = exit 2 [set count-at-stage count-at-stage + 1]
+  ;if ticks > 105 [if closest = exit 10 [set count-at-bar-windows count-at-bar-windows + 1]]
+ ;if ticks > 94 [if closest = exit 9 [set count-at-bar-windows count-at-bar-windows + 1]
+  ;  if closest = exit 5 [set count-at-sunroom-window count-at-sunroom-window + 1]]
   die ; removes from simulation
 end
 

@@ -1,23 +1,24 @@
 to setup ; sets up the initial environment
  ca
  reset-ticks
- resize-world 0 (331 * scale-modifier) 0 (210 * scale-modifier) set-patch-size (2 / scale-modifier) ; the closer to 1 the scale modifier is, the more accurate and the slower
+ resize-world 0 (340 * scale-modifier) 0 (470 * scale-modifier) set-patch-size (1 / scale-modifier) ; the closer to 1 the scale modifier is, the more accurate and the slower
  set-default-shape walls "square"
  set-default-shape exits "line"
  set-default-shape windows "line"
- set-default-shape fires "square"
+ set-default-shape stairs "box"
+  set-default-shape fires "square"
   set-default-shape smoky "square"
   set-default-shape people "circle"
-read-building-from-file "building_nightclub.csv" 
- read-building-from-file-stamp "building_nightclub.csv"
- read-fire-from-file "fire_nightclub_merged.csv"
-  read-smoke-from-file "smoke.csv"
- read-people-from-file "people.csv"
- ask people [ note-exits set color white set-speed-limit
-    set leadership-quality 0 
-    set-group-constant
-  set min-smoke-distance 999
-  set min-fire-distance 999]
+read-building-from-file "Building - 2.csv"  ; currently has to have files hand-coded: I should eventually add a button to browse and select files
+ read-building-from-file-stamp "Building - 2.csv"
+; read-fire-from-file "fire_nightclub_merged.csv"
+;  read-smoke-from-file "smoke.csv"
+; read-people-from-file "people.csv"
+ ;ask people [ note-exits set color white set-speed-limit
+  ;  set leadership-quality 0 
+   ; set-group-constant
+  ;set min-smoke-distance 999
+  ;set min-fire-distance 999]
  ; set max-wall-distance (max [size] of walls) / 2
  set acceleration .081 ; taken from goal-oriented traffic simulation in model library
 soclink
@@ -25,7 +26,7 @@ soclink
  ask windows [set color hsb 80 50 100]
   ask fires [ set color [0 0 0 0 ] set size (10 * scale-modifier)]
   ask smoky [set color [0 0 0 0 ]]
-  set-exit-appeal
+  ;set-exit-appeal
  ;;there's initially no smoke
  ask patches [
     set father nobody
@@ -57,11 +58,12 @@ to read-building-from-file-stamp [filename]
   [[row] ->
     let breed-name item 0 row ; defines items
     if breed-name = "Wall"
-   [create-walls 1 [setxy (item 5 row * scale-modifier)(item 6 row * scale-modifier) set size 1
+   [create-walls 1 [setxy (item 1 row * scale-modifier)(item 2 row * scale-modifier) set size 1
   set color 96
-  set second-end (list (item 7 row * scale-modifier) (item 8 row * scale-modifier))
-  while [distancexy (item 7 row * scale-modifier) (item 8 row * scale-modifier) > .5] 
-      [facexy (item 7 row * scale-modifier) (item 8 row * scale-modifier)  ask patch-here [set available false] set pcolor 96 fd .3]]]]
+  set second-end (list (item 3 row * scale-modifier) (item 4 row * scale-modifier))
+  while [distancexy (item 3 row * scale-modifier) (item 4 row * scale-modifier) > .5] 
+      [facexy (item 3 row * scale-modifier) (item 4 row * scale-modifier)  ask patch-here [set available false] set pcolor 96 fd .3]]
+  ]]
 end
 
 to read-building-from-file [filename] ; reads in the building from a CSV
@@ -69,18 +71,23 @@ to read-building-from-file [filename] ; reads in the building from a CSV
   foreach values
   [ [row] ->
     let breed-name item 0 row ; defines items
-    if breed-name = "Exit" [ create-exits 1 [set x1 (item 5 row * scale-modifier) set x2 (item 7 row * scale-modifier) set y1 (item 6 row * scale-modifier) set y2 (item 8 row * scale-modifier)
+    if breed-name = "Exit" [ create-exits 1 [set x1 (item 1 row * scale-modifier) set x2 (item 3 row * scale-modifier) set y1 (item 2 row * scale-modifier) set y2 (item 4 row * scale-modifier)
      setxy ((x1 + x2) / 2) (y1 + y2) / 2
    facexy x1 y1
     set size distancexy x1 y1 + distancexy x2 y2 ] ]
-    if breed-name = "Window" [ create-windows 1 [set x1 (item 5 row * scale-modifier) set x2 (item 7 row * scale-modifier) set y1 (item 6 row * scale-modifier) set y2 (item 8 row * scale-modifier)
+    if breed-name = "Window" [ create-windows 1 [set x1 (item 1 row * scale-modifier) set x2 (item 3 row * scale-modifier) set y1 (item 2 row * scale-modifier) set y2 (item 4 row * scale-modifier)
      setxy ((x1 + x2) / 2) (y1 + y2) / 2
    facexy x1 y1
-    set size distancexy x1 y1 + distancexy x2 y2  ]]]
-  ask exit 0 [set patch-past patch-at -1 0]
-  ask exit 1 [set patch-past patch-at -1 0]
-  ask exit 11 [set patch-past patch-at 0 -1]
-  ask exit 2 [set patch-past patch-at 0 0]
+    set size distancexy x1 y1 + distancexy x2 y2  ]]
+  if breed-name = "stair" [ create-stairs 1 [set x1 (item 1 row * scale-modifier) set x2 (item 3 row * scale-modifier) set y1 (item 2 row * scale-modifier) set y2 (item 4 row * scale-modifier)
+     setxy ((x1 + x2) / 2) (y1 + y2) / 2
+   set color green
+      facexy x1 y1
+    set size distancexy x1 y1 + distancexy x2 y2 ] ]]
+  ;ask exit 0 [set patch-past patch-at -1 0]
+  ;ask exit 1 [set patch-past patch-at -1 0]
+  ;ask exit 11 [set patch-past patch-at 0 -1]
+  ;ask exit 2 [set patch-past patch-at 0 0]
 end
 
 to read-smoke-from-file [ filename] ; reads in the fire from a CSV
@@ -105,13 +112,14 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
     create-people 1
     [
       set size 5 * scale-modifier ; from Oberhagemann
-     setxy (item 10 row * scale-modifier) (item 11 row * scale-modifier) ; initial position, randomized within an ecology that patrons had reported when interviewd
+     setxy (item 0 row * scale-modifier) (item 1 row * scale-modifier) ; initial position, taken from evacuation maps
      set age (item 2 row)
      set gender (item 3 row)
-     set visited? (item 4 row) ;true or false
+     set visited? (item 4 row) ;true or false, true for employees but not patrons or contractors
      set group-number (item 6 row) ; people were assigned group numbers based on the people they came with
      set group-type (item 7 row) ; based on composition of group
      set energy (item 9 row) ;from Jieshi and Eric's work
+      set role (item 11 row) ; new for bhsc: whether patron, musician, tipped or untipped employee
   ]]
 end
 

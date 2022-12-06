@@ -4,17 +4,21 @@ breed [ windows window]
 breed [ fires fire]
 breed [ smoky smoke]
 breed [ people person]
+breed [ stairs stair]
 undirected-link-breed [friends friend]
 undirected-link-breed [coworkers coworker]
 undirected-link-breed [partners partner]
 undirected-link-breed [families family]
 undirected-link-breed [multiples multiple]
+directed-link-breed [customers customer]
 walls-own [first-end second-end]
+stairs-own [x1 y1 x2 y2 ]
 exits-own [x1 y1 x2 y2 patch-past appeal]
 windows-own [x1 y1 x2 y2 ]
 fires-own [arrival]
 smoky-own [arrival level]
-people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed leadership-quality leader  ;; the speed of the turtle
+people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed ; variable based on person - limited in children and slightly lower in women because of high heels
+  leadership-quality leader  role;; new for bhsc: patron musician tipped or untipped employee
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list
 min-smoke-distance smoke-toxicity min-fire-distance]
@@ -22,7 +26,8 @@ globals [acceleration max-wall-distance p-valids start srti-walls final-cost;; t
  leadership-tally group-abandonment-tally
   coworker-report friends-report family-report dating-report multiple-report
  count-dead-alone count-dead-coworkers count-dead-friends count-dead-dating count-dead-family count-dead-multiple
-  count-dead count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window master-list]
+ count-dead ;count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window
+  master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
 available
@@ -184,26 +189,26 @@ to set-group-constant ; allows people to have different values for the degree to
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+560
 10
-881
-442
+907
+487
 -1
 -1
-2.857142857142857
+1.6666666666666667
 1
 10
 1
 1
 1
 0
-0
-0
+1
+1
 1
 0
-231
+204
 0
-147
+282
 0
 0
 1
@@ -287,7 +292,7 @@ threshold
 threshold
 0
 100
-2.0
+27.0
 1
 1
 NIL
@@ -302,7 +307,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-10.0
+100.0
 1
 1
 NIL
@@ -332,7 +337,7 @@ Dating-constant
 Dating-constant
 0
 100
-30.0
+36.0
 1
 1
 NIL
@@ -362,7 +367,7 @@ Multiple-constant
 Multiple-constant
 0
 100
-40.0
+92.0
 1
 1
 NIL
@@ -404,39 +409,16 @@ Group Loyalty
 0.0
 1
 
-PLOT
-575
-541
-775
-691
-Exit Counts
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"Bar" 1.0 0 -16777216 true "" "plot count-at-bar"
-"Main" 1.0 0 -7500403 true "" "plot count-at-main"
-"Kitchen" 1.0 0 -2674135 true "" "plot count-at-kitchen"
-"Stage" 1.0 0 -955883 true "" "plot count-at-stage"
-"Dead" 1.0 0 -6459832 true "" "plot count-dead"
-"Windows" 1.0 0 -1184463 true "" "plot count-at-bar-windows + count-at-sunroom-window"
-
 SLIDER
-586
-459
-758
-492
+232
+192
+404
+225
 Injury-divisor
 Injury-divisor
 0
 100
-70.0
+100.0
 1
 1
 NIL
@@ -451,7 +433,7 @@ scale-modifier
 scale-modifier
 0
 1
-0.7
+0.6
 .1
 1
 NIL
@@ -813,7 +795,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
