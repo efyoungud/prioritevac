@@ -125,6 +125,9 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
      set group-type (item 7 row) ; based on composition of group
      set energy (item 9 row) ;from Jieshi and Eric's work, for BHSC just set all to 100 as preliminary
       set role (item 11 row) ; new for bhsc: whether patron, musician, tipped or untipped employee
+      ifelse role  = "tipped staff" [set employee? TRUE]
+      [set employee? FALSE]
+      if role = "non-tipped" [set employee? TRUE]
   ]]
 end
 
@@ -140,12 +143,16 @@ if group-type = 5 [ask other people with [group-number = [group-number] of mysel
   ask links [hide-link]
 end
 
-to set-speed-limit ; how fast people can go
-  ; units are m/s, from Isobe
-  ask people [set speed-limit (3 * scale-modifier) + random-float (2 * scale-modifier)]
+to customer-link
+  
 end
 
-to set-exit-appeal
-  ask exit 0 [set appeal (-30 * scale-modifier)]
-  ask exit 2 [set appeal (70 * scale-modifier)] ; the bouncer discouraged people from using this exit
+to set-speed-limit ; how fast people can go
+  ; units are m/s, from Isobe, adjusted for the size of BHSC
+  ask people [set speed-limit (.3 * scale-modifier) + random-float (.2 * scale-modifier)]
 end
+
+;to set-exit-appeal ;specific to Station fire
+ ; ask exit 0 [set appeal (-30 * scale-modifier)]
+  ;ask exit 2 [set appeal (70 * scale-modifier)] ; the bouncer discouraged people from using this exit
+;end

@@ -19,6 +19,7 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed ; variable based on person - limited in children and slightly lower in women because of high heels
   leadership-quality leader  role;; new for bhsc: patron musician tipped or untipped employee
+  employee?
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list
 min-smoke-distance smoke-toxicity min-fire-distance]
@@ -34,14 +35,14 @@ available
   population]
 ;;------------------
 extensions [csv]
-__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls" "srti-commands.nls"]
+__includes [ "tests.nls" "goal-setting.nls" "setup.nls" "paths.nls" "utilities.nls" "leave-simulation.nls" ]
 
 to go ; master command to run simulation
  tick ; makes one second of time pass
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
   set-fh
- srti-wall-import
+
   ask people [note-hazard prioritize-group
     ifelse alarmed? != true [alert]
     [     move
@@ -49,21 +50,15 @@ to go ; master command to run simulation
     ]
     injure
   ]
-  ;Windows are turned into exits based on timings provided by NIST Documentation
-  ;Windows are then recolored to represent exits
-  if ticks = 94 [ ask windows with [who = 9 or who = 5] [ set breed exits set color hsb  0  50 100] ask exit 9 [set appeal -10] ask exit 34 [set appeal -1]  ask people [preferreddirection]]
-  if ticks = 105 [ ask windows with [who = 10] [ set breed exits set color hsb  0  50 100 set appeal -12] ask people [preferreddirection]]
   recolor-patches
   ask patches with [pcolor > 50] [set available false]
   ask patches [set population count people-here]
   if ticks > 25 [set leadership-tally lput (list ("at ") (ticks) ([who] of people with [leader = true])) leadership-tally]
-  srti-people-list
-  srti-wall-export
 end
 
 to master-run ; runs the whole simulation for 200 seconds and then exports results
   setup
-  while [ticks < 180]
+  while [ticks < 210]
   [carefully [go]
     [ask people [preferreddirection] go]] ; if an error is encountered it is expected to be in priorities
   ; so people are asked to reassess their priorities and then go
@@ -73,6 +68,7 @@ end
 
 to move ; governs where and how people move, triggers goal-setting
   preferreddirection ;assess goals
+  second-floor ; takes into account the different dimensional rules of a multi-story building
   set-path ; circumstances are dynamic, so paths also need to be
   face next-desired-patch ;; person heads towards its goal
   set-speed
@@ -186,12 +182,38 @@ to set-group-constant ; allows people to have different values for the degree to
   if group-type = 4 [set group-constant Family-Constant]
   if group-type = 5 [set group-constant Multiple-Constant]
 end
+
+to stairs-operations
+  ask people
+  [if (min-one-of stairs [distance myself] < 1) = true
+    [set speed speed / 2 ; people move more slowly on stairs. this halves speed
+  ]]
+end
+to-report best-stairs
+ let close-stairs stairs with [ycor > (369 * scale-modifier) = true] ; defines the stairs on the second floor
+  let prioritized-stairs sort-on [exit-heuristic] turtle-set close-stairs
+  report item 0 prioritized-stairs
+end
+
+to second-floor
+  ask people with [ycor > (369 * scale-modifier) = true] ;people at the top of the diagram, in the second floor area
+  [set goal best-stairs]
+end
+
+to teleport ; since people have to move from the second floor to the first floor but I'm not re-rendering the whole thing in 3d we have an awkward workaround
+  ask people with [ycor > (369 * scale-modifier) = true] ; for people on the section of the map corresponding to the second floor
+  [if (min-one-of stairs [distance myself] < .5) = true ; if they are actually on the stairs
+    [ifelse (min-one-of stairs [distance myself] < .5) = stair 1 ; and it is the back stairs
+      [setxy (80 * scale-modifier) (103 * scale-modifier)] ; they move to the corresponding bottom of the staircase
+      [setxy (199 * scale-modifier) (87 * scale-modifier)] ; or the bottom of the Cinderella staircase
+  ]]; these movements stay consistent no matter the scale modifier
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 560
 10
-908
-488
+909
+490
 -1
 -1
 1.0

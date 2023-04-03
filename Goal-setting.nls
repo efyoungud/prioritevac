@@ -1,7 +1,8 @@
 to-report preferredexit ; reports which exit should be the goal for a person
-   ifelse visited? = false
+   ifelse employee? = true ; for the Station fire this was based on prior visits (visited? = true) but for BHSC it's employees
     [report listed-visible-exits]
-  [report listed-exits] ;the logic is that people with previous acquaintance with the bar will know where the exits are
+  [report listed-exits] ;the logic is that people with previous acquaintance with the bar will know where the exits are. But for the BHSC fire the building is significantly more complicated and only employees would know most or all of them
+  ; the exception is for musicians who worked the Cabaret room: they would know the backstage entrance there, per interviews. upstairs musicians did not
 end
 
 to-report listed-exits
@@ -69,8 +70,13 @@ to leader-follower ; designates a group leader within a small group and then set
  set-leadership
   let group-leader close-group with [leader = true] ; defines who the leader is
  ; the person with the highest leadership quality is made the leader
-  ask group-leader [ifelse ((goal = nobody) or (all? link-neighbors [distance myself <= (20 * scale-modifier)])) = true; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
+  ask group-leader [ifelse ((goal = nobody) or (all? link-neighbors [distance myself <= (6 * scale-modifier)])) = true; the leader selects the next goal. if the other people they were looking for are removed from simulation or all group members are within 2m, sets the goal for their preferred exit
     [set goal preferredexit]
-    [set goal min-one-of link-neighbors with [distance myself > (20 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
+    [set goal min-one-of link-neighbors with [distance myself > (6 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
   ask close-group with [leader != true] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
+end
+
+to directed-exit
+  ;in the Cabaret Room people were directed to exits 4 and 17
+  
 end
