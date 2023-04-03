@@ -49,7 +49,7 @@ Wall,67,88,81,93,main dining
 Wall,74.5,117.5,108.5,118,
 Wall,75.5,234,37,234,kitchen service corridor to outside wall
 Wall,77.5,36.5,64,42.5,main dining
-stair,78.5,460.5,83,448.5,
+stair,78.5,460.5,83,448.5,second floor employee
 Wall,81,93,89,92.5,main dining
 door,82.5,234,75.5,234,Kitchen service corridor door
 Wall,83,442.5,231.5,442.5,
@@ -150,7 +150,7 @@ Wall,191,412,191,433,
 door,191,433,191,440,
 Wall,191,440,191,442.5,top crystal rooms
 Exit,193,274.5,200,274.5,G2
-stair,195,79.5,219,72,
+stair,195,79.5,219,72,first floor cinderella stairs
 Wall,195.5,52.5,195.5,38,east wall between front ladies room and front mens room
 Wall,195.5,57.5,195.5,61,lades room wall
 Wall,195.5,61,212,61,zebra room wall over bathroom
@@ -164,7 +164,7 @@ Wall,197.5,412.5,215,411,brides room wall
 Wall,198,8.5,166.5,8.5,right south stair wall
 Wall,198,38,198,8,stairs wall right
 Wall,198,420.5,231.5,420.5,upstairs ladies room
-stair,198.5,429.5,220.5,420.5,
+stair,198.5,429.5,220.5,420.5,second floor cinderella stairs
 Wall,200,274.5,204,274.5,
 Wall,203,268.5,203,274.5,garden room hall to exit
 Exit,204,274.5,208,274.5,GC
@@ -295,3 +295,8 @@ Wall,313.5,206.5,316.5,206.5,cabaret dressing room hall
 Wall,316,183,301,183,cabaret room south wall
 Wall,316,183,316,328.5,cabaret room east wall
 Exit,52,258,48,248,K
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+stair,78,96,83,110,first floor of second floor stairs
