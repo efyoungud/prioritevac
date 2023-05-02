@@ -215,7 +215,6 @@ Wall,231.5,388,214,388,
 Wall,231.5,425.5,231.5,388,
 Exit,231.5,430.5,231.5,425.5,"roof, locked"
 Wall,231.5,442.5,231.5,430.5,
-Wall,235.5,351.5,261,352,Wall from stairs to viennese
 Wall,236.5,66,236.5,94.5,viennese room
 door,236.5,94.5,236.5,101,viennese room
 Wall,236.5,101,236.5,116,viennese room
@@ -243,7 +242,7 @@ Wall,247.5,143,240.5,143,
 door,251,139,247.5,143,mens room door
 Wall,253,134.5,275.5,134.5,viennese room north wall center
 Wall,254.5,183,275.5,183,
-door,261,352,267,352,zebra door
+door,261,71,267,71,zebra door
 door,267,134.5,267,139,viennese ladies room
 Wall,267,139,251,139,ladies room hall
 Wall,273.5,329,273.5,334,cabaret room portico

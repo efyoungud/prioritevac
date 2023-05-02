@@ -35,18 +35,17 @@ soclink
     set active? false
     if pcolor > 50 [set available false]
   ]
-  set leadership-tally list "This list is itemizes changes in leadership over time" leadership-tally
   set group-abandonment-tally list "This list itemizes if and when people abandon their groups - to see this in action, adjust loyalty sliders in the interface" group-abandonment-tally
   ;ask people [set distance-to-exits distance-to exits ]
 end
 
 to read-fire-from-file [ filename] ; reads in the fire from a CSV
-  ;;header: x y time x for large canvas y for large canvas
+  ;;header: x y time 
   let values bf csv:from-file filename
   foreach values
   [ [row] ->
     create-fires 1; this means the fires are always there, and so the patch color is the only way to access where a fire is at a certain tick
-    [ setxy (item 3 row * scale-modifier) (item 4 row * scale-modifier)
+    [ setxy (item 0 row * scale-modifier) (item 1 row * scale-modifier)
       set arrival item 2 row ;the time the fire started in that particular spot
       set color blue]]
 end
@@ -86,13 +85,15 @@ to read-building-from-file [filename] ; reads in the building from a CSV
       facexy x1 y1
     set size distancexy x1 y1 + distancexy x2 y2 ] ]]
   ask exits [if name = "M" ; the main entrance
-    [set patch-past patch-at (154 * scale-modifier) 0]]
-  
-  ;;station exits
-  ;ask exit 0 [set patch-past patch-at -1 0]
-  ;ask exit 1 [set patch-past patch-at -1 0]
-  ;ask exit 11 [set patch-past patch-at 0 -1]
-  ;ask exit 2 [set patch-past patch-at 0 0]
+    [set patch-past patch-at (154 * scale-modifier) 0]
+  if name = "G1" [set patch-past patch-at (114 * scale-modifier) (264 * scale-modifier)]
+    if name = "G2" [set patch-past patch-at (196 * scale-modifier) (275 * scale-modifier)]
+    if name = "GC" [set patch-past patch-at (206 * scale-modifier) (275 * scale-modifier)]
+    if name = "V" [set patch-past patch-at (290 * scale-modifier) (131 * scale-modifier)]
+    if name = "C" [set patch-past patch-at (298 * scale-modifier) (335 * scale-modifier)]
+    if name = "S"[set patch-past patch-at (299 * scale-modifier) (172 * scale-modifier)]
+    if name = "K"  [set patch-past patch-at (50 * scale-modifier) (257 * scale-modifier)]
+  ]
 end
 
 to read-smoke-from-file [ filename] ; reads in the fire from a CSV
@@ -124,6 +125,7 @@ to read-people-from-file [filename] ; information was encoded in a CSV based on 
      set group-number (item 6 row) ; people were assigned group numbers based on the people they came with
      set group-type (item 7 row) ; based on composition of group
      set energy (item 9 row) ;from Jieshi and Eric's work, for BHSC just set all to 100 as preliminary
+      set starting-room (item 19 row) ;which room they started in, used for exit directions for Cabaret room
       set role (item 11 row) ; new for bhsc: whether patron, musician, tipped or untipped employee
       ifelse role  = "tipped staff" [set employee? TRUE]
       [set employee? FALSE]
@@ -149,7 +151,7 @@ end
 
 to set-speed-limit ; how fast people can go
   ; units are m/s, from Isobe, adjusted for the size of BHSC
-  ask people [set speed-limit (.3 * scale-modifier) + random-float (.2 * scale-modifier)]
+  ask people [set speed-limit (1 * scale-modifier) + random-float (.2 * scale-modifier)]
 end
 
 ;to set-exit-appeal ;specific to Station fire

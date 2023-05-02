@@ -43,7 +43,6 @@ to go ; master command to run simulation
    ;If Arrival time of fire is less than time (in seconds), smoke is set off in that area,
   ;people in that area die and surrounding people that live move to the closest exit
   set-fh
-
   ask people [note-hazard prioritize-group
     ifelse alarmed? != true [alert]
     [     move
@@ -54,7 +53,6 @@ to go ; master command to run simulation
   recolor-patches
   ask patches with [pcolor > 50] [set available false]
   ask patches [set population count people-here]
-  if ticks > 25 [set leadership-tally lput (list ("at ") (ticks) ([who] of people with [leader = true])) leadership-tally]
 end
 
 to master-run ; runs the whole simulation for 200 seconds and then exports results
@@ -196,7 +194,7 @@ to stairs-operations
 end
 to-report best-stairs
  let close-stairs stairs with [ycor > (369 * scale-modifier) = true] ; defines the stairs on the second floor
-  let prioritized-stairs sort-on [exit-heuristic] turtle-set close-stairs
+  let prioritized-stairs sort-on [stair-heuristic] turtle-set close-stairs
   report item 0 prioritized-stairs
 end
 
