@@ -20,6 +20,11 @@ to-report exit-heuristic
   report distance myself + local-fh + appeal ; measures distance, manual appeal, and relative danger of the exit
 end
 
+to-report stair-heuristic
+  let local-fh sum [fh] of patches in-radius 2 ; adjustable variable to determine how sensitive people are to danger and crowdedness at exits
+  report distance myself + local-fh ; measures distance, manual appeal, and relative danger of the exit
+end
+
 to-report closestvisible ; selects closest visible exit
   let seen sort-by [distance myself] noted-exits 
   report item 0 seen ;if they can see an exit (including the main exit) they will head towards the closest, otherwise they will go towards the main exit, which everyone noted
