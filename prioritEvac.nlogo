@@ -87,7 +87,7 @@ end
 
 to-report see [agentset] ; makes it dynamic rather than static and frequently updated, also restricts by kind of thing people are looking at
   let obscured-patches patches with [pcolor = white or pcolor = hsb 216 50 100] in-cone (100 * scale-modifier) 180 ; can't see through walls or thick smoke
-  report agentset in-cone ((100 * scale-modifier) - ((count obscured-patches) / 10)) (180 - ((count obscured-patches)) / 10) ; 10m distance except when there's stuff
+  report agentset in-cone ((30 * scale-modifier) - ((count obscured-patches) / 10)) (180 - ((count obscured-patches)) / 10) ; 10m distance except when there's stuff
 end
 
 to export-results ; creates a csv with all of the parameters for the simulation as well as the results
@@ -112,19 +112,19 @@ to speed-up  ;; turtle procedure to increase the speed of the person
 end
 
 to slow-down
-  if speed > 1
-  [set speed speed - (acceleration / 10)]
+  set speed speed - (acceleration / 10)
 end
 
-to alert ; manages alert, aim is for activation between 10 and 24 seconds in order to mimic actual events
+to alert ; manages alert
   let visible-smoke count smoky with [arrival < ticks] ; smoke that has arrived. does not discriminate by amount of smoke. all smoke would be considered alarming
   ;perpetual issue of visibility: it's defined as an agentset, and people can see through walls
-  let seen people in-cone (100 * scale-modifier) 180 with [alarmed? = true]
-  let proximal people in-radius (50 * scale-modifier) with [alarmed? = true]
-  let visible-fire fires with [arrival < ticks] in-cone (100  * scale-modifier) 180
-  let smoky-patches smoky with [arrival < ticks] in-radius (50 * scale-modifier)
-  if (count seen + count visible-fire + count proximal + count smoky-patches ) > 10
-  [set alarmed? true set speed 1] ; aim is for an average of 29s per Ben's comment
+  let seen people in-cone (33 * scale-modifier) 180 with [alarmed? = true]
+  let proximal people in-radius (10 * scale-modifier) with [alarmed? = true]
+  let visible-fire fires with [arrival < ticks] in-cone (33  * scale-modifier) 180
+  let smoky-patches smoky with [arrival < ticks] in-radius (17 * scale-modifier)
+  let unconcerned-staff people with [employee? = true and alarmed? = 0] in-radius (17 * scale-modifier) ;interview data from the main dining room demonstrates patrons who were told that there was no need to evacuate, while data from the Viennese Room shows appetizers being served a few minutes after the fire was discovered because those staff hadn't yet been informed
+  if (count seen + count visible-fire + count proximal + count smoky-patches - count unconcerned-staff) > 10
+  [set alarmed? true set speed speed-limit]
 end
 
 to note-exits
@@ -235,8 +235,8 @@ GRAPHICS-WINDOW
 340
 0
 470
-0
-0
+1
+1
 1
 ticks
 30.0
