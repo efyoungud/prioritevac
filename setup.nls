@@ -11,12 +11,12 @@ to setup ; sets up the initial environment
   set-default-shape people "circle"
 read-building-from-file "Building - 2.csv"  ; currently has to have files hand-coded: I should eventually add a button to browse and select files
  read-building-from-file-stamp "Building - 2.csv"
-; read-fire-from-file "fire_nightclub_merged.csv"
-;  read-smoke-from-file "smoke.csv"
+read-fire-from-file "fire.csv"
+  read-smoke-from-file "smoke.csv"
  read-people-from-file "bhsc people.csv"
  ask people [ note-exits set color white set-speed-limit
-  ;  set leadership-quality 0 
-   ; set-group-constant
+    set leadership-quality 0 
+    set-group-constant
   ;set min-smoke-distance 999
   set min-fire-distance 999]
  ; set max-wall-distance (max [size] of walls) / 2
@@ -24,7 +24,7 @@ read-building-from-file "Building - 2.csv"  ; currently has to have files hand-c
 soclink
   ask exits [set color hsb  0  50 100]
  ask windows [set color hsb 80 50 100]
-  ask fires [ set color [0 0 0 0 ] set size (10 * scale-modifier)]
+  ask fires [ set color [0 0 0 0 ] set size 1]
   ask smoky [set color [0 0 0 0 ]]
   ;set-exit-appeal
  ;;there's initially no smoke
