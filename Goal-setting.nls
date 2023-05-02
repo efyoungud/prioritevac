@@ -80,8 +80,3 @@ to leader-follower ; designates a group leader within a small group and then set
     [set goal min-one-of link-neighbors with [distance myself > (6 * scale-modifier)] [distance myself]]] ; aims for the closest group member who is outside the 2m radius
   ask close-group with [leader != true] [set goal one-of group-leader] ; other group members aim to follow the leader rather than set individual goals
 end
-
-to directed-exit
-  ;in the Cabaret Room people were directed to exits 4 and 17
-  
-end

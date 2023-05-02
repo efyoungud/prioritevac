@@ -19,6 +19,7 @@ fires-own [arrival]
 smoky-own [arrival level]
 people-own [gender alarmed? age visited? group-number group-type group-constant path vision speed ; variable based on person - limited in children and slightly lower in women because of high heels
   leadership-quality leader  role;; new for bhsc: patron musician tipped or untipped employee
+  starting-room
   employee?
   goal  energy  next-desired-patch ;; where am I currently headed
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list
@@ -127,8 +128,12 @@ to alert ; manages alert, aim is for activation between 10 and 24 seconds in ord
 end
 
 to note-exits
-  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < 1.7]) ([self] of exits with [appeal < 0])(exits with [name = "M"]))
-  ; will note exits they can see, exits less than half a meter away, main entrance
+  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < (.5 * scale-modifier)]) ([self] of exits with [appeal < 0])(exits with [name = "M"]))
+  ; will note exits they can see, exits less than .67 meters away, main entrance
+ if ticks > 126 = true ; approximate time of announcement on the Cabaret Room stage
+  [ask people with [starting-room = "cabaret room" = true] ; telling people in the Cabaret Room explicitly to exit from the Cabaret Room exits
+    [set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < (.5 * scale-modifier)]) (exits with [name = "M"])(exits with [name = "C"])(exits with [name = "S"]))
+]]
 end
 
 to note-hazard ;notes how dangerous an area is
