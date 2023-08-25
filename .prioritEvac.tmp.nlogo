@@ -25,10 +25,10 @@ people-own [gender alarmed? age visited? group-number group-type group-constant 
  speed-limit time-group-left noted-exits goals-over-time distance-to-exits traits-list
 min-smoke-distance smoke-toxicity min-fire-distance]
 globals [acceleration max-wall-distance p-valids start srti-walls final-cost;; the constant that controls how much a person speeds up or slows down by if it is to accelerate or decelerate
- leadership-tally group-abandonment-tally
+group-abandonment-tally
   coworker-report friends-report family-report dating-report multiple-report
  count-dead-alone count-dead-coworkers count-dead-friends count-dead-dating count-dead-family count-dead-multiple
- count-dead ;count-at-main count-at-bar count-at-kitchen count-at-stage count-at-bar-windows count-at-sunroom-window
+ count-dead count-at-gc count-at-g1 count-at-k count-at-g2 count-at-c count-at-s count-at-m count-at-v
   master-list]
 
 patches-own [ temp-smoke fh father cost-path visited-patch? active? ;; true if the patch is at the intersection of two roads
@@ -53,6 +53,12 @@ to go ; master command to run simulation
   recolor-patches
   ask patches with [pcolor > 50] [set available false]
   ask patches [set population count people-here]
+ if ticks = 50 ; approximate time people started being directed out the kitchen exit
+  [ask exit 21 [set appeal -30]
+  ask exit 12 [set appeal -15]] ; directs people towards kitchen exit
+  if ticks = 30 ; earliest directions out the garden
+  [ask exit 9 [set appeal -5]] ; directs people directly out the garden
+  if ticks = 130 [ask people [set alarmed? true]] ; 40 seconds after the Cabaret Room announcement all people are set to become alarmed. this man
 end
 
 to master-run ; runs the whole simulation for 200 seconds and then exports results
@@ -126,11 +132,12 @@ to alert ; manages alert
 end
 
 to note-exits
-  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < (.5 * scale-modifier)]) ([self] of exits with [appeal < 0])(exits with [name = "M"]))
+  set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < (25 * scale-modifier)]) ([self] of exits with [appeal < 0])(exits with [name = "M"]))
   ; will note exits they can see, exits less than .67 meters away, main entrance
+
  if ticks > 126 = true ; approximate time of announcement on the Cabaret Room stage
   [ask people with [starting-room = "cabaret room" = true] ; telling people in the Cabaret Room explicitly to exit from the Cabaret Room exits
-    [set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < (.5 * scale-modifier)]) (exits with [name = "M"])(exits with [name = "C"])(exits with [name = "S"]))
+    [set noted-exits (list ([self] of see exits) ([self] of exits with [distance myself < (.5 * scale-modifier)])([self] of exits with [appeal < 0]) (exits with [name = "M"])(exits with [name = "C"])(exits with [name = "S"]))
 ]]
 end
 
@@ -215,11 +222,11 @@ end
 GRAPHICS-WINDOW
 560
 10
-909
-490
+907
+485
 -1
 -1
-1.0
+5.0
 1
 10
 1
@@ -230,11 +237,11 @@ GRAPHICS-WINDOW
 1
 1
 0
-340
+68
 0
-470
-0
-0
+94
+1
+1
 1
 ticks
 30.0
@@ -316,7 +323,7 @@ threshold
 threshold
 0
 100
-27.0
+10.0
 1
 1
 NIL
@@ -331,7 +338,7 @@ Coworkers-Constant
 Coworkers-Constant
 0
 100
-100.0
+15.0
 1
 1
 NIL
@@ -421,7 +428,6 @@ true
 "" ""
 PENS
 "People" 1.0 0 -16777216 true "" "plot count people"
-"Links" 1.0 0 -7500403 true "" "plot count links"
 
 TEXTBOX
 31
@@ -457,11 +463,21 @@ scale-modifier
 scale-modifier
 0
 1
-1.0
+0.2
 .1
 1
 NIL
 HORIZONTAL
+
+CHOOSER
+197
+15
+335
+60
+meter-per-patch
+meter-per-patch
+1 3
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -823,6 +839,44 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>carefully[go]
+[ask people [preferreddirection] go]
+  ask people [set count-dead count-dead + 1 die]</go>
+    <final>export-results</final>
+    <timeLimit steps="210"/>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="Coworkers-Constant">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Family-constant">
+      <value value="40"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Multiple-constant">
+      <value value="92"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="meter-per-patch">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Injury-divisor">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Dating-constant">
+      <value value="36"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scale-modifier">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Friends-Constant">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="threshold">
+      <value value="10"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
